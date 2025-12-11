@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * The plugin bootstrap file
+ *
+ * This file is read by WordPress to generate the plugin information in the plugin
+ * admin area. This file also includes all of the dependencies used by the plugin,
+ * registers the activation and deactivation functions, and defines a function
+ * that starts the plugin.
+ *
+ * @link              http://preview-ai.com
+ * @since             1.0.0
+ * @package           Preview_Ai
+ *
+ * @wordpress-plugin
+ * Plugin Name:       Preview AI
+ * Plugin URI:        http://preview-ai.com/
+ * Description:       Preview AI is a plugin that allows your customers to preview your products in real-time using AI image generation.
+ * Version:           1.0.0
+ * Author:            Preview AI
+ * Author URI:        http://preview-ai.com/
+ * License:           GPL-2.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain:       preview-ai
+ * Domain Path:       /languages
+ */
+
+// If this file is called directly, abort.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
+
+/**
+ * Currently plugin version.
+ * Start at version 1.0.0 and use SemVer - https://semver.org
+ * Rename this for your plugin and update it as you release new versions.
+ */
+define( 'PREVIEW_AI_VERSION', '1.0.0' );
+
+/**
+ * The code that runs during plugin activation.
+ * This action is documented in includes/class-preview-ai-activator.php
+ */
+function activate_Preview_Ai() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-preview-ai-activator.php';
+	PREVIEW_AI_Activator::activate();
+}
+
+/**
+ * The code that runs during plugin deactivation.
+ * This action is documented in includes/class-preview-ai-deactivator.php
+ */
+function deactivate_Preview_Ai() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-preview-ai-deactivator.php';
+	PREVIEW_AI_Deactivator::deactivate();
+}
+
+register_activation_hook( __FILE__, 'activate_Preview_Ai' );
+register_deactivation_hook( __FILE__, 'deactivate_Preview_Ai' );
+
+/**
+ * The core plugin class that is used to define internationalization,
+ * admin-specific hooks, and public-facing site hooks.
+ */
+require plugin_dir_path( __FILE__ ) . 'includes/class-preview-ai.php';
+
+/**
+ * Begins execution of the plugin.
+ *
+ * Since everything within the plugin is registered via hooks,
+ * then kicking off the plugin from this point in the file does
+ * not affect the page life cycle.
+ *
+ * @since    1.0.0
+ */
+function run_Preview_Ai() {
+
+	$plugin = new Preview_Ai();
+	$plugin->run();
+
+}
+run_Preview_Ai();
