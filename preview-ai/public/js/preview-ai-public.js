@@ -2,19 +2,47 @@
 	'use strict';
 
 	$( function() {
-		var $form   = $( '#preview-ai-form' );
-		if ( ! $form.length ) {
-			return;
-		}
+		var $form       = $( '#preview-ai-form' );
+		var $file       = $( '#preview_ai_image' );
+		var $status     = $( '#preview-ai-status' );
+		var $submit     = $( '#preview-ai-submit' );
+		var $result     = $( '#preview-ai-result' );
+		var $thumb      = $( '#preview-ai-thumb' );
+		var $lightbox   = $( '#preview-ai-lightbox' );
+		var $full       = $( '#preview-ai-full' );
+		var $uploadIcon = $( '#preview-ai-upload-icon' );
+		var $uploadText = $( '#preview-ai-upload-text' );
 
-		var $file   = $( '#preview_ai_image' );
-		var $status = $( '#preview-ai-status' );
+		// Show filename when file selected
+		$file.on( 'change', function() {
+			if ( this.files.length ) {
+				var name = this.files[0].name;
+				if ( name.length > 26 ) {
+					name = name.substring( 0, 19 ) + '...';
+				}
+				$uploadIcon.text( '✓' );
+				$uploadText.text( name );
+				$( '.preview-ai-upload' ).addClass( 'has-file' );
+			}
+		} );
 
+		// Open lightbox on thumbnail click
+		$thumb.on( 'click', function() {
+			$full.attr( 'src', $thumb.attr( 'src' ) );
+			$lightbox.addClass( 'is-open' );
+		} );
+
+		// Close lightbox on click anywhere
+		$lightbox.on( 'click', function() {
+			$lightbox.removeClass( 'is-open' );
+		} );
+
+		// Form submit
 		$form.on( 'submit', function( e ) {
 			e.preventDefault();
 
 			if ( ! $file[0].files.length ) {
-				$status.text( previewAiData && previewAiData.i18n && previewAiData.i18n.noFile ? previewAiData.i18n.noFile : 'Please select an image.' );
+				$status.text( 'Select a photo' );
 				return;
 			}
 
@@ -22,17 +50,17 @@
 			formData.append( 'action', 'preview_ai_upload' );
 			formData.append( 'nonce', previewAiData.nonce );
 			formData.append( 'product_id', previewAiData.productId );
-			var variationId = '';
-			var $variationInput = $( 'input.variation_id' );
-			if ( $variationInput.length && $variationInput.val() ) {
-				variationId = $variationInput.val();
-			} else if ( previewAiData.variationId ) {
-				variationId = previewAiData.variationId;
+
+			var $var = $( 'input.variation_id' );
+			if ( $var.length && $var.val() ) {
+				formData.append( 'variation_id', $var.val() );
 			}
-			formData.append( 'variation_id', variationId );
+
 			formData.append( 'image', $file[0].files[0] );
 
-			$status.text( previewAiData && previewAiData.i18n && previewAiData.i18n.loading ? previewAiData.i18n.loading : 'Uploading...' );
+			$status.text( 'Generating...' );
+			$submit.prop( 'disabled', true );
+			$result.hide();
 
 			$.ajax( {
 				url: previewAiData.ajaxUrl,
@@ -40,17 +68,21 @@
 				data: formData,
 				contentType: false,
 				processData: false,
-				success: function( response ) {
-					if ( response && response.success ) {
-						$status.text( previewAiData && previewAiData.i18n && previewAiData.i18n.success ? previewAiData.i18n.success : 'Preview ready!' );
+				success: function( res ) {
+					$submit.prop( 'disabled', false );
+
+					if ( res?.success && res?.data?.generated_image_url ) {
+						$status.text( '' );
+						$thumb.attr( 'src', res.data.generated_image_url );
+						$result.fadeIn();
 					} else {
-						var msg = response && response.data && response.data.message ? response.data.message : 'Error.';
-						$status.text( msg );
+						$status.text( res?.data?.message || 'Error' );
 					}
 				},
 				error: function() {
-					$status.text( previewAiData && previewAiData.i18n && previewAiData.i18n.error ? previewAiData.i18n.error : 'Error occurred.' );
-				},
+					$submit.prop( 'disabled', false );
+					$status.text( 'Error' );
+				}
 			} );
 		} );
 	} );

@@ -1,4 +1,105 @@
 /**
- * All of the CSS for your public-facing functionality should be
- * included in this file.
+ * Preview AI - Simple Widget + Lightbox
  */
+
+/* Widget */
+.preview-ai-widget {
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	background: #fafafa;
+}
+
+/* Upload */
+.preview-ai-upload {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border: 2px dashed #ccc;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: border-color 0.2s, background 0.2s;
+}
+
+.preview-ai-upload.has-file {
+	border-color: #22c55e;
+	border-style: solid;
+	background: #f0fdf4;
+}
+
+.preview-ai-upload.has-file #preview-ai-upload-icon {
+	color: #22c55e;
+}
+
+.preview-ai-upload input {
+	display: none;
+}
+
+/* Submit */
+#preview-ai-submit {
+	width: 100%;
+	padding: 0.75rem;
+	margin-top: 0.75rem;
+	border: none;
+	border-radius: 6px;
+	background: #111;
+	color: #fff;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+#preview-ai-submit:disabled {
+	opacity: 0.5;
+}
+
+/* Status */
+#preview-ai-status {
+	margin-top: 0.5rem;
+	font-size: 0.875rem;
+	color: #666;
+}
+
+/* Result thumbnail */
+.preview-ai-result {
+	display: none;
+	margin-top: 1rem;
+	text-align: center;
+	cursor: pointer;
+}
+
+.preview-ai-result img {
+	max-width: 100%;
+	max-height: 200px;
+	border-radius: 6px;
+}
+
+.preview-ai-hint {
+	display: block;
+	margin-top: 0.25rem;
+	font-size: 0.75rem;
+	color: #999;
+}
+
+/* Lightbox */
+.preview-ai-lightbox {
+	display: none;
+	position: fixed;
+	inset: 0;
+	z-index: 999999;
+	background: rgba(0,0,0,0.95);
+	cursor: pointer;
+}
+
+.preview-ai-lightbox.is-open {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.preview-ai-lightbox img {
+	max-width: 95%;
+	max-height: 95%;
+	border-radius: 4px;
+}

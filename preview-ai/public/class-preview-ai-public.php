@@ -95,12 +95,18 @@ class PREVIEW_AI_Public {
 	}
 
 	/**
-	 * Render the widget in product detail page.
+	 * Render the widget in product detail page (via WooCommerce hook).
 	 *
 	 * @since 1.0.0
 	 */
 	public function render_widget() {
 		if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+			return;
+		}
+
+		// Check display mode.
+		$display_mode = get_option( 'preview_ai_display_mode', 'auto' );
+		if ( 'manual' === $display_mode ) {
 			return;
 		}
 
@@ -110,19 +116,53 @@ class PREVIEW_AI_Public {
 			return;
 		}
 
-		if ( ! $this->is_enabled_for_product( $product->get_id() ) ) {
+		if ( ! self::is_enabled_for_product( $product->get_id() ) ) {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in render method.
+		echo self::render_widget_output( $product->get_id() );
+	}
+
+	/**
+	 * Render widget output (static for shortcode/Elementor use).
+	 *
+	 * @since 1.0.0
+	 * @param int   $product_id Product ID.
+	 * @param array $branding   Optional branding overrides.
+	 * @return string HTML output.
+	 */
+	public static function render_widget_output( $product_id, $branding = array() ) {
+		if ( ! $product_id ) {
+			return '';
+		}
+
+		// Merge with global branding settings.
+		$defaults = PREVIEW_AI_Admin::get_branding_settings();
+		$branding = wp_parse_args( $branding, $defaults );
+
+		// Set default texts if empty.
+		if ( empty( $branding['button_text'] ) ) {
+			$branding['button_text'] = __( 'Generate', 'preview-ai' );
+		}
+		if ( empty( $branding['upload_text'] ) ) {
+			$branding['upload_text'] = __( 'Upload your photo', 'preview-ai' );
+		}
+
+		// Enqueue assets.
+		wp_enqueue_style( 'preview-ai' );
+		wp_enqueue_script( 'preview-ai' );
+
+		// Localize script data.
 		wp_localize_script(
-			$this->Preview_Ai,
+			'preview-ai',
 			'previewAiData',
 			array(
-				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-				'nonce'     => wp_create_nonce( 'preview_ai_ajax' ),
-				'productId' => $product->get_id(),
+				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+				'nonce'       => wp_create_nonce( 'preview_ai_ajax' ),
+				'productId'   => $product_id,
 				'variationId' => '',
-				'i18n'      => array(
+				'i18n'        => array(
 					'noFile'  => esc_html__( 'Please select an image.', 'preview-ai' ),
 					'loading' => esc_html__( 'Uploading...', 'preview-ai' ),
 					'success' => esc_html__( 'Preview ready!', 'preview-ai' ),
@@ -131,7 +171,24 @@ class PREVIEW_AI_Public {
 			)
 		);
 
+		// Custom CSS for branding.
+		$custom_css = '';
+		if ( ! empty( $branding['primary_color'] ) && '#111111' !== $branding['primary_color'] ) {
+			$color = sanitize_hex_color( $branding['primary_color'] );
+			if ( $color ) {
+				$custom_css = sprintf(
+					'<style>.preview-ai-widget-%d #preview-ai-submit{background:%s;}</style>',
+					absint( $product_id ),
+					esc_attr( $color )
+				);
+			}
+		}
+
+		ob_start();
+		// CSS is sanitized above with sanitize_hex_color() and esc_attr().
+		echo $custom_css; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-public-display.php';
+		return ob_get_clean();
 	}
 
 	/**
@@ -140,7 +197,7 @@ class PREVIEW_AI_Public {
 	 * @param int $product_id Product ID.
 	 * @return bool
 	 */
-	private function is_enabled_for_product( $product_id ) {
+	public static function is_enabled_for_product( $product_id ) {
 		$enabled = get_post_meta( $product_id, '_preview_ai_enabled', true );
 
 		if ( '' === $enabled ) {

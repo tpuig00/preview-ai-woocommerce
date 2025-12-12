@@ -109,6 +109,7 @@ class PREVIEW_AI_Api {
 			'name'           => $product_data['name'],
 			'product_images' => $product_data['images'],
 			'product_type'   => $product_data['type'],
+			'product_subtype' => $product_data['subtype'],
 		), 120 );
 
 		if ( ! is_wp_error( $result ) ) {

@@ -127,11 +127,11 @@ class PREVIEW_AI_Ajax {
 			$product = wc_get_product( $product_id );
 		}
 
-		// Get type (product override or global).
-		$type = get_post_meta( $product_id, '_preview_ai_product_type', true );
-		if ( empty( $type ) ) {
-			$type = get_option( 'preview_ai_product_type', 'generic' );
-		}
+		// Currently only clothing is supported.
+		$type = 'clothing';
+
+		// Get recommended subtype from catalog analysis (stored in parent product).
+		$subtype = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
 
 		// Get product image IDs: prioritize variation, fallback to parent.
 		$image_ids = array();
@@ -167,6 +167,7 @@ class PREVIEW_AI_Ajax {
 			'parentId' => $product_id,
 			'name'     => $product->get_name(),
 			'type'     => $type,
+			'subtype'  => $subtype ? $subtype : 'mixed',
 			'images'   => $images,
 		);
 	}

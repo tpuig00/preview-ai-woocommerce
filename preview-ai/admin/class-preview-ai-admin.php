@@ -69,21 +69,58 @@ class PREVIEW_AI_Admin {
 		register_setting( 'preview_ai_settings', 'preview_ai_enabled', 'absint' );
 		register_setting( 'preview_ai_settings', 'preview_ai_product_type', 'sanitize_key' );
 		register_setting( 'preview_ai_settings', 'preview_ai_clothing_subtype', 'sanitize_key' );
+
+		// Display mode.
+		register_setting( 'preview_ai_settings', 'preview_ai_display_mode', 'sanitize_key' );
+
+		// Branding settings.
+		register_setting( 'preview_ai_settings', 'preview_ai_primary_color', 'sanitize_hex_color' );
+		register_setting( 'preview_ai_settings', 'preview_ai_button_text', 'sanitize_text_field' );
+		register_setting( 'preview_ai_settings', 'preview_ai_upload_text', 'sanitize_text_field' );
+	}
+
+	/**
+	 * Get branding settings with defaults.
+	 *
+	 * @since    1.0.0
+	 * @return   array
+	 */
+	public static function get_branding_settings() {
+		return array(
+			'primary_color' => get_option( 'preview_ai_primary_color', '#111111' ),
+			'button_text'   => get_option( 'preview_ai_button_text', '' ),
+			'upload_text'   => get_option( 'preview_ai_upload_text', '' ),
+		);
 	}
 
 	/**
 	 * Get available product types for AI context.
 	 *
 	 * @since    1.0.0
-	 * @return   array    List of product types.
+	 * @return   array    List of product types with availability status.
 	 */
 	public static function get_product_types() {
 		return array(
-			'clothing'   => __( 'Clothing', 'preview-ai' ),
-			'furniture'  => __( 'Furniture', 'preview-ai' ),
-			'decoration' => __( 'Decoration', 'preview-ai' ),
-			'crafts'     => __( 'Crafts', 'preview-ai' ),
-			'generic'    => __( 'Other (Generic)', 'preview-ai' ),
+			'clothing' => array(
+				'label'     => __( 'Clothing', 'preview-ai' ),
+				'available' => true,
+			),
+			'furniture' => array(
+				'label'     => __( 'Furniture', 'preview-ai' ),
+				'available' => false,
+			),
+			'decoration' => array(
+				'label'     => __( 'Decoration', 'preview-ai' ),
+				'available' => false,
+			),
+			'crafts' => array(
+				'label'     => __( 'Crafts', 'preview-ai' ),
+				'available' => false,
+			),
+			'generic' => array(
+				'label'     => __( 'Other (Generic)', 'preview-ai' ),
+				'available' => false,
+			),
 		);
 	}
 
@@ -163,6 +200,14 @@ class PREVIEW_AI_Admin {
 			$this->version,
 			'all'
 		);
+
+		// Color picker on widget settings tab.
+		$screen = get_current_screen();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+		if ( $screen && 'product_page_preview-ai' === $screen->id && 'widget' === $tab ) {
+			wp_enqueue_style( 'wp-color-picker' );
+		}
 	}
 
 	/**
@@ -172,10 +217,20 @@ class PREVIEW_AI_Admin {
 	 * @param    string $hook    The current admin page hook.
 	 */
 	public function enqueue_scripts( $hook ) {
+		$deps = array( 'jquery' );
+
+		// Add color picker on widget settings tab.
+		$screen = get_current_screen();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+		if ( $screen && 'product_page_preview-ai' === $screen->id && 'widget' === $tab ) {
+			$deps[] = 'wp-color-picker';
+		}
+
 		wp_enqueue_script(
 			$this->plugin_name,
 			plugin_dir_url( __FILE__ ) . 'js/preview-ai-admin.js',
-			array( 'jquery' ),
+			$deps,
 			$this->version,
 			true
 		);
@@ -186,21 +241,13 @@ class PREVIEW_AI_Admin {
 		$is_product_page  = ( 'post.php' === $hook || 'post-new.php' === $hook );
 
 		if ( $is_settings_page || $is_product_page ) {
-			$clothing_subtypes = self::get_clothing_subtypes();
 			wp_localize_script(
 				$this->plugin_name,
 				'previewAiAdmin',
 				array(
-					'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
-					'nonce'           => wp_create_nonce( 'preview_ai_learn_catalog' ),
-					'subtypeExamples' => array_map(
-						function( $data ) {
-							return $data['examples'];
-						},
-						$clothing_subtypes
-					),
-					'i18n'            => array(
-						'examples'   => __( 'Examples:', 'preview-ai' ),
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'preview_ai_learn_catalog' ),
+					'i18n'    => array(
 						'error'      => __( 'An error occurred.', 'preview-ai' ),
 						'apiPending' => __( '(API integration pending)', 'preview-ai' ),
 					),
@@ -232,113 +279,111 @@ class PREVIEW_AI_Admin {
 	 */
 	public function render_product_data_panel() {
 		global $post;
-		$enabled = get_post_meta( $post->ID, '_preview_ai_enabled', true );
-		$type    = get_post_meta( $post->ID, '_preview_ai_product_type', true );
+		$enabled        = get_post_meta( $post->ID, '_preview_ai_enabled', true );
+		$subtype        = get_post_meta( $post->ID, '_preview_ai_recommended_subtype', true );
+		$global_enabled = get_option( 'preview_ai_enabled', 0 );
 
-		$global_enabled      = get_option( 'preview_ai_enabled', 0 );
-		$global_type         = get_option( 'preview_ai_product_type', 'generic' );
-		$product_types       = self::get_product_types();
-		$global_type_text    = isset( $product_types[ $global_type ] ) ? $product_types[ $global_type ] : $product_types['generic'];
-		
-		$enabled_options = array(
-			'' => $global_enabled
-				? __( 'Yes (default)', 'preview-ai' )
-				: __( 'No (default)', 'preview-ai' ),
-		);
-		if ( $global_enabled ) {
-			$enabled_options['no'] = __( 'No', 'preview-ai' );
+		// Determine current state.
+		$is_enabled = false;
+		if ( 'yes' === $enabled ) {
+			$is_enabled = true;
+		} elseif ( 'no' === $enabled ) {
+			$is_enabled = false;
 		} else {
-			$enabled_options['yes'] = __( 'Yes', 'preview-ai' );
+			$is_enabled = (bool) $global_enabled;
+		}
+
+		// Determine status for display.
+		$status_class = 'preview-ai-col--disabled';
+		$status_text  = __( 'Disabled', 'preview-ai' );
+		$status_icon  = '—';
+
+		if ( 'no' === $enabled ) {
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'Disabled', 'preview-ai' );
+			$status_icon  = '—';
+		} elseif ( $is_enabled && ! empty( $subtype ) ) {
+			$status_class = 'preview-ai-col--active';
+			$status_text  = __( 'Active', 'preview-ai' );
+			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
+		} else {
+			$status_class = 'preview-ai-col--configure';
+			$status_text  = __( 'Configure', 'preview-ai' );
+			$status_icon  = '<span class="dashicons dashicons-admin-generic"></span>';
 		}
 
 		?>
 		<div id="preview_ai_product_data" class="panel woocommerce_options_panel">
+
+			<!-- Status + Toggle row -->
+			<div class="preview-ai-metabox-header">
+				<div class="preview-ai-metabox-header__left">
+					<span class="preview-ai-metabox-header__title"><?php esc_html_e( 'Preview AI', 'preview-ai' ); ?></span>
+					<span class="preview-ai-col <?php echo esc_attr( $status_class ); ?>">
+						<?php echo $status_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> 
+						<?php echo esc_html( $status_text ); ?>
+					</span>
+				</div>
+				<label class="preview-ai-switch">
+					<input type="checkbox" 
+						   id="_preview_ai_enabled" 
+						   name="_preview_ai_enabled" 
+						   value="yes" 
+						   <?php checked( $is_enabled ); ?> 
+					/>
+					<span class="preview-ai-switch__track"></span>
+				</label>
+			</div>
+
 			<?php
+
+			// Clothing subtype select.
+			$subtype_options   = array( '' => __( 'Select clothing type...', 'preview-ai' ) );
+			$clothing_subtypes = self::get_clothing_subtypes();
+			foreach ( $clothing_subtypes as $key => $data ) {
+				$subtype_options[ $key ] = $data['label'] . ' — ' . $data['examples'];
+			}
+
 			woocommerce_wp_select(
 				array(
-					'id'          => '_preview_ai_enabled',
-					'label'       => __( 'Enable Preview AI', 'preview-ai' ),
-					'options'     => $enabled_options,
-					'value'       => $enabled,
+					'id'          => '_preview_ai_clothing_subtype',
+					'label'       => __( 'Clothing Type', 'preview-ai' ),
+					'options'     => $subtype_options,
+					'value'       => $subtype,
 					'desc_tip'    => true,
-					'description' => __( 'Override the global setting for this product.', 'preview-ai' ),
+					'description' => __( 'Select what type of clothing this product is. This helps the AI generate accurate previews.', 'preview-ai' ),
 				)
 			);
 
-			$type_options = array( '' => sprintf( __( '%s (default)', 'preview-ai' ), $global_type_text ) );
-			foreach ( $product_types as $key => $label ) {
-				if ( $key !== $global_type ) {
-					$type_options[ $key ] = $label;
-				}
-			}
-
-		woocommerce_wp_select(
-			array(
-				'id'          => '_preview_ai_product_type',
-				'label'       => __( 'Product Type', 'preview-ai' ),
-				'options'     => $type_options,
-				'value'       => $type,
-				'desc_tip'    => true,
-				'description' => __( 'Override the default product type for AI preview.', 'preview-ai' ),
-			)
-		);
-
-		$product                  = wc_get_product( $post->ID );
-		$variations_without_image = array();
+		// Check if product has variations without images.
+		$product                = wc_get_product( $post->ID );
+		$has_shared_images      = false;
 
 		if ( $product && $product->is_type( 'variable' ) ) {
-			$variation_ids = $product->get_children();
-
-			foreach ( $variation_ids as $variation_id ) {
-				$variation_image = get_post_meta( $variation_id, '_thumbnail_id', true );
-
-				if ( empty( $variation_image ) ) {
-					$variation = wc_get_product( $variation_id );
-					if ( ! $variation ) {
-						continue;
-					}
-					$variation_attributes = $variation->get_variation_attributes();
-					$attribute_values     = array_filter( $variation_attributes );
-					$formatted_values = array_map( 'ucfirst', $attribute_values );
-					$variation_name   = ! empty( $formatted_values ) ? implode( ' / ', $formatted_values ) : '#' . $variation_id;
-					$variations_without_image[] = $variation_name;
+			foreach ( $product->get_children() as $variation_id ) {
+				if ( empty( get_post_meta( $variation_id, '_thumbnail_id', true ) ) ) {
+					$has_shared_images = true;
+					break;
 				}
 			}
 		}
 
+		// Show notice only if there are variations sharing images.
+		if ( $has_shared_images ) :
 		?>
-
-		<div class="form-field" style="margin-top: 15px; padding: 12px; background: #F7F8FA; border: 1px solid #D7DDE4; border-radius: 6px;">
-			<strong style="display: block; margin-bottom: 12px; color: #1F1F1F; font-size: 14px;"><?php esc_html_e( 'Image Settings', 'preview-ai' ); ?></strong>
-
-			<?php if ( ! empty( $variations_without_image ) ) : ?>
-				<?php $variations_list = esc_html( implode( ', ', $variations_without_image ) ); ?>
-				<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 12px; background: #FEF8E8; border-left: 3px solid #dba617; border-radius: 2px; font-size: 13px; color: #5D4800;">
-					<span class="dashicons dashicons-info" style="color: #dba617; flex-shrink: 0;"></span>
-					<span><?php esc_html_e( 'These variations don\'t have their specific variation image, using base image:', 'preview-ai' ); ?> <strong><?php echo $variations_list; ?></strong></span>
-				</div>
-			<?php endif; ?>
-
-			<div style="margin-bottom: 12px;">
-				<strong style="display: block; margin-bottom: 8px; color: #1F1F1F; font-size: 13px;"><?php esc_html_e( 'Base image priority:', 'preview-ai' ); ?></strong>
-				<div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: #1F1F1F;">
-					<span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #4C82F7; color: white; border-radius: 50%; font-size: 11px; font-weight: 600;">1</span>
-					<?php esc_html_e( 'Variation', 'preview-ai' ); ?>
-					<span style="color: #D7DDE4;">→</span>
-					<span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #4C82F7; color: white; border-radius: 50%; font-size: 11px; font-weight: 600;">2</span>
-					<?php esc_html_e( 'Featured', 'preview-ai' ); ?>
-					<span style="color: #D7DDE4;">→</span>
-					<span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #4C82F7; color: white; border-radius: 50%; font-size: 11px; font-weight: 600;">3</span>
-					<?php esc_html_e( 'Gallery', 'preview-ai' ); ?>
+		<div class="options_group">
+			<div class="preview-ai-notice">
+				<span class="preview-ai-notice__icon">ℹ️</span>
+				<div class="preview-ai-notice__content">
+					<?php esc_html_e( "Some variations don't have their own image.", 'preview-ai' ); ?><br>
+					<span class="preview-ai-notice__sub"><?php esc_html_e( 'Preview AI will use the main product image, so the preview will look the same for those variations.', 'preview-ai' ); ?></span><br>
+					<a href="#" class="preview-ai-notice__link" title="<?php esc_attr_e( 'Add an image to each variation for more accurate previews.', 'preview-ai' ); ?>"><?php esc_html_e( 'See how to improve', 'preview-ai' ); ?> →</a>
 				</div>
 			</div>
-
-			<div style="display: flex; align-items: flex-start; gap: 6px; padding-top: 10px; border-top: 1px solid #E5E8EB;">
-				<span class="dashicons dashicons-lightbulb" style="font-size: 14px; width: 14px; height: 14px; color: #4C82F7; flex-shrink: 0; margin-top: 2px;"></span>
-				<p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">
-					<?php esc_html_e( 'For the most realistic previews, upload clear images with a neutral background and good lighting. Images with harsh shadows or busy backgrounds may produce lower quality previews.', 'preview-ai' ); ?>
-				</p>
-			</div>
+		</div>
+		<?php
+		endif;
+		?>
 		</div>
 		<?php
 	}
@@ -351,12 +396,82 @@ class PREVIEW_AI_Admin {
 	 */
 	public function save_product_data( $post_id ) {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce handles nonce.
-		$enabled = isset( $_POST['_preview_ai_enabled'] ) ? sanitize_key( $_POST['_preview_ai_enabled'] ) : '';
+		$enabled = isset( $_POST['_preview_ai_enabled'] ) ? 'yes' : 'no';
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$type = isset( $_POST['_preview_ai_product_type'] ) ? sanitize_key( $_POST['_preview_ai_product_type'] ) : '';
+		$subtype = isset( $_POST['_preview_ai_clothing_subtype'] ) ? sanitize_key( $_POST['_preview_ai_clothing_subtype'] ) : '';
 
 		update_post_meta( $post_id, '_preview_ai_enabled', $enabled );
-		update_post_meta( $post_id, '_preview_ai_product_type', $type );
+		update_post_meta( $post_id, '_preview_ai_recommended_subtype', $subtype );
+	}
+
+	/**
+	 * Add Preview AI column to product list.
+	 *
+	 * @since    1.0.0
+	 * @param    array $columns    Existing columns.
+	 * @return   array             Modified columns.
+	 */
+	public function add_product_column( $columns ) {
+		$new_columns = array();
+
+		foreach ( $columns as $key => $value ) {
+			$new_columns[ $key ] = $value;
+			if ( 'name' === $key ) {
+				$new_columns['preview_ai'] = __( 'Preview AI', 'preview-ai' );
+			}
+		}
+
+		return $new_columns;
+	}
+
+	/**
+	 * Render Preview AI column content.
+	 *
+	 * @since    1.0.0
+	 * @param    string $column     Column name.
+	 * @param    int    $post_id    Product ID.
+	 */
+	public function render_product_column( $column, $post_id ) {
+		if ( 'preview_ai' !== $column ) {
+			return;
+		}
+
+		$enabled        = get_post_meta( $post_id, '_preview_ai_enabled', true );
+		$subtype        = get_post_meta( $post_id, '_preview_ai_recommended_subtype', true );
+		$global_enabled = get_option( 'preview_ai_enabled', 0 );
+
+		// Determine if enabled.
+		$is_enabled = false;
+		if ( 'yes' === $enabled ) {
+			$is_enabled = true;
+		} elseif ( 'no' === $enabled ) {
+			$is_enabled = false;
+		} else {
+			$is_enabled = (bool) $global_enabled;
+		}
+
+		// State A: Disabled / Not applicable.
+		if ( 'no' === $enabled ) {
+			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
+			return;
+		}
+
+		// State B: Active (enabled + has subtype).
+		if ( $is_enabled && ! empty( $subtype ) ) {
+			$subtypes      = self::get_clothing_subtypes();
+			$subtype_label = isset( $subtypes[ $subtype ] ) ? $subtypes[ $subtype ]['label'] : '';
+			echo '<span class="preview-ai-col preview-ai-col--active" title="' . esc_attr__( 'Preview AI active on this product', 'preview-ai' ) . '">';
+			echo '<span class="dashicons dashicons-visibility"></span> ';
+			echo esc_html__( 'Active', 'preview-ai' );
+			echo '</span>';
+			return;
+		}
+
+		// State C: Needs configuration.
+		echo '<span class="preview-ai-col preview-ai-col--configure" title="' . esc_attr__( 'Configure Preview AI for this product', 'preview-ai' ) . '">';
+		echo '<span class="dashicons dashicons-admin-generic"></span> ';
+		echo esc_html__( 'Configure', 'preview-ai' );
+		echo '</span>';
 	}
 
 	/**

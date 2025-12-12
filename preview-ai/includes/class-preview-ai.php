@@ -137,6 +137,17 @@ class Preview_Ai {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-logger.php';
 
+		/**
+		 * Shortcode handler.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-shortcode.php';
+		new PREVIEW_AI_Shortcode();
+
+		/**
+		 * Elementor integration.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-elementor.php';
+
 		$this->loader = new PREVIEW_AI_Loader();
 
 	}
@@ -178,6 +189,10 @@ class Preview_Ai {
 		$this->loader->add_filter( 'woocommerce_product_data_tabs', $plugin_admin, 'add_product_data_tab' );
 		$this->loader->add_action( 'woocommerce_product_data_panels', $plugin_admin, 'render_product_data_panel' );
 		$this->loader->add_action( 'woocommerce_process_product_meta', $plugin_admin, 'save_product_data' );
+
+		// Product list column.
+		$this->loader->add_filter( 'manage_edit-product_columns', $plugin_admin, 'add_product_column' );
+		$this->loader->add_action( 'manage_product_posts_custom_column', $plugin_admin, 'render_product_column', 10, 2 );
 
 		// Admin AJAX handlers.
 		$this->loader->add_action( 'wp_ajax_preview_ai_learn_catalog', $plugin_admin, 'handle_learn_catalog' );

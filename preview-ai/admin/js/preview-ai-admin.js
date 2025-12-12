@@ -3,25 +3,9 @@
 
 	$( function() {
 
-		// Settings page functionality.
-		var productTypeSelect = document.getElementById( 'preview_ai_product_type' );
-		var subtypeRow = document.getElementById( 'preview_ai_clothing_subtype_row' );
-		var subtypeSelect = document.getElementById( 'preview_ai_clothing_subtype' );
-		var examplesEl = document.getElementById( 'preview_ai_subtype_examples' );
-
-		// Toggle clothing subtype visibility.
-		if ( productTypeSelect && subtypeRow ) {
-			productTypeSelect.addEventListener( 'change', function() {
-				subtypeRow.style.display = this.value === 'clothing' ? '' : 'none';
-			});
-		}
-
-		// Update subtype examples on change.
-		if ( subtypeSelect && examplesEl && typeof previewAiAdmin !== 'undefined' ) {
-			subtypeSelect.addEventListener( 'change', function() {
-				var examples = previewAiAdmin.subtypeExamples[ this.value ] || '';
-				examplesEl.textContent = examples ? previewAiAdmin.i18n.examples + ' ' + examples : '';
-			});
+		// Initialize color picker (only if available and elements exist).
+		if ( $.fn.wpColorPicker && $( '.preview-ai-color-picker' ).length ) {
+			$( '.preview-ai-color-picker' ).wpColorPicker();
 		}
 
 		// Learn My Catalog functionality.
