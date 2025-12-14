@@ -2,7 +2,7 @@
 /**
  * Shortcode handler for Preview AI widget.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -17,6 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class PREVIEW_AI_Shortcode
  *
  * Registers [preview_ai] shortcode.
+ *
+ * Usage:
+ * [preview_ai]
+ * [preview_ai product_id="123"]
+ * [preview_ai button_text="See it on you" button_icon="camera" button_position="left"]
  */
 class PREVIEW_AI_Shortcode {
 
@@ -36,10 +41,10 @@ class PREVIEW_AI_Shortcode {
 	public function render( $atts ) {
 		$atts = shortcode_atts(
 			array(
-				'product_id'    => 0,
-				'primary_color' => '',
-				'button_text'   => '',
-				'upload_text'   => '',
+				'product_id'      => 0,
+				'button_text'     => '',
+				'button_icon'     => '',
+				'button_position' => '',
 			),
 			$atts,
 			'preview_ai'
@@ -56,16 +61,21 @@ class PREVIEW_AI_Shortcode {
 			return '';
 		}
 
-		// Build branding overrides from shortcode atts.
-		$branding = array_filter(
-			array(
-				'primary_color' => sanitize_hex_color( $atts['primary_color'] ),
-				'button_text'   => sanitize_text_field( $atts['button_text'] ),
-				'upload_text'   => sanitize_text_field( $atts['upload_text'] ),
-			)
-		);
+		// Build overrides from shortcode atts (only non-empty values).
+		$overrides = array();
 
-		return PREVIEW_AI_Public::render_widget_output( $product_id, $branding );
+		if ( ! empty( $atts['button_text'] ) ) {
+			$overrides['button_text'] = sanitize_text_field( $atts['button_text'] );
+		}
+
+		if ( ! empty( $atts['button_icon'] ) ) {
+			$overrides['button_icon'] = sanitize_key( $atts['button_icon'] );
+		}
+
+		if ( ! empty( $atts['button_position'] ) ) {
+			$overrides['button_position'] = sanitize_key( $atts['button_position'] );
+		}
+
+		return PREVIEW_AI_Public::render_widget_output( $product_id, $overrides );
 	}
 }
-

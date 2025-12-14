@@ -3,7 +3,7 @@
 /**
  * Fired during plugin activation
  *
- * @link       http://example.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -18,7 +18,7 @@
  * @since      1.0.0
  * @package    Preview_Ai
  * @subpackage Preview_Ai/includes
- * @author     Your Name <email@example.com>
+ * @author     Preview AI <hello@previewai.app>
  */
 class PREVIEW_AI_Activator {
 

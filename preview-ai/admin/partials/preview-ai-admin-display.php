@@ -2,7 +2,7 @@
 /**
  * Admin settings page view.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -31,10 +31,9 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		</a>
 	</nav>
 
-	<form method="post" action="options.php">
-		<?php settings_fields( 'preview_ai_settings' ); ?>
-
-		<?php if ( 'general' === $active_tab ) : ?>
+	<?php if ( 'general' === $active_tab ) : ?>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'preview_ai_general_settings' ); ?>
 			<!-- General Tab -->
 			<table class="form-table" role="presentation">
 				<tbody>
@@ -47,6 +46,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</th>
 						<td>
 							<label class="preview-ai-toggle">
+								<input type="hidden" name="preview_ai_enabled" value="0" />
 								<input type="checkbox" 
 									   id="preview_ai_enabled" 
 									   name="preview_ai_enabled" 
@@ -125,6 +125,10 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 								   value="<?php echo esc_attr( get_option( 'preview_ai_api_key', '' ) ); ?>" 
 								   class="regular-text" 
 							/>
+							<button type="button" id="preview_ai_verify_btn" class="button" style="margin-left: 8px;">
+								<?php esc_html_e( 'Verify', 'preview-ai' ); ?>
+							</button>
+							<span id="preview_ai_verify_status" style="margin-left: 8px;"></span>
 							<p class="description">
 								<?php esc_html_e( 'Your API key for authentication.', 'preview-ai' ); ?>
 							</p>
@@ -161,9 +165,16 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 
 				<div id="preview_ai_learn_catalog_result" style="display: none; margin-top: 16px; padding: 12px 16px; border-radius: 4px;"></div>
 			</div>
+		</form>
 
-		<?php else : ?>
+	<?php else : ?>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'preview_ai_widget_settings' ); ?>
 			<!-- Widget Tab -->
+			<?php
+			$widget_settings = PREVIEW_AI_Admin::get_widget_settings();
+			$button_icons    = PREVIEW_AI_Admin::get_button_icons();
+			?>
 			<table class="form-table" role="presentation">
 				<tbody>
 					<!-- Display Mode -->
@@ -188,27 +199,6 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</td>
 					</tr>
 
-					<!-- Primary Color -->
-					<tr>
-						<th scope="row">
-							<label for="preview_ai_primary_color">
-								<?php esc_html_e( 'Primary Color', 'preview-ai' ); ?>
-							</label>
-						</th>
-						<td>
-							<input type="text"
-								   id="preview_ai_primary_color" 
-								   name="preview_ai_primary_color" 
-								   value="<?php echo esc_attr( get_option( 'preview_ai_primary_color', '#111111' ) ); ?>" 
-								   class="preview-ai-color-picker" 
-								   data-default-color="#111111"
-							/>
-							<p class="description">
-								<?php esc_html_e( 'Button and accent color.', 'preview-ai' ); ?>
-							</p>
-						</td>
-					</tr>
-
 					<!-- Button Text -->
 					<tr>
 						<th scope="row">
@@ -220,28 +210,80 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							<input type="text"
 								   id="preview_ai_button_text" 
 								   name="preview_ai_button_text" 
-								   value="<?php echo esc_attr( get_option( 'preview_ai_button_text', '' ) ); ?>" 
+								   value="<?php echo esc_attr( $widget_settings['button_text'] ); ?>" 
 								   class="regular-text" 
-								   placeholder="<?php esc_attr_e( 'Generate', 'preview-ai' ); ?>"
+								   placeholder="<?php esc_attr_e( 'See it on you', 'preview-ai' ); ?>"
 							/>
+							<p class="description">
+								<?php esc_html_e( 'Leave empty to use the default text.', 'preview-ai' ); ?>
+							</p>
 						</td>
 					</tr>
 
-					<!-- Upload Text -->
+					<!-- Button Icon -->
 					<tr>
 						<th scope="row">
-							<label for="preview_ai_upload_text">
-								<?php esc_html_e( 'Upload Text', 'preview-ai' ); ?>
+							<?php esc_html_e( 'Button Icon', 'preview-ai' ); ?>
+						</th>
+						<td>
+							<div class="preview-ai-icon-selector">
+								<?php foreach ( $button_icons as $key => $icon ) : ?>
+									<label class="preview-ai-icon-option <?php echo $widget_settings['button_icon'] === $key ? 'is-selected' : ''; ?>">
+										<input type="radio" 
+											   name="preview_ai_button_icon" 
+											   value="<?php echo esc_attr( $key ); ?>"
+											   <?php checked( $widget_settings['button_icon'], $key ); ?>
+										/>
+										<span class="preview-ai-icon-preview">
+											<?php echo $icon['svg']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+										</span>
+										<span class="preview-ai-icon-label"><?php echo esc_html( $icon['label'] ); ?></span>
+									</label>
+								<?php endforeach; ?>
+							</div>
+						</td>
+					</tr>
+
+					<!-- Button Position -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_button_position">
+								<?php esc_html_e( 'Button Position', 'preview-ai' ); ?>
+							</label>
+						</th>
+						<td>
+							<select id="preview_ai_button_position" name="preview_ai_button_position">
+								<option value="left" <?php selected( $widget_settings['button_position'], 'left' ); ?>>
+									<?php esc_html_e( 'Left', 'preview-ai' ); ?>
+								</option>
+								<option value="center" <?php selected( $widget_settings['button_position'], 'center' ); ?>>
+									<?php esc_html_e( 'Center', 'preview-ai' ); ?>
+								</option>
+								<option value="right" <?php selected( $widget_settings['button_position'], 'right' ); ?>>
+									<?php esc_html_e( 'Right', 'preview-ai' ); ?>
+								</option>
+							</select>
+						</td>
+					</tr>
+
+					<!-- Accent Color -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_accent_color">
+								<?php esc_html_e( 'Accent Color', 'preview-ai' ); ?>
 							</label>
 						</th>
 						<td>
 							<input type="text"
-								   id="preview_ai_upload_text" 
-								   name="preview_ai_upload_text" 
-								   value="<?php echo esc_attr( get_option( 'preview_ai_upload_text', '' ) ); ?>" 
-								   class="regular-text" 
-								   placeholder="<?php esc_attr_e( 'Upload your photo', 'preview-ai' ); ?>"
+								   id="preview_ai_accent_color" 
+								   name="preview_ai_accent_color" 
+								   value="<?php echo esc_attr( $widget_settings['accent_color'] ); ?>" 
+								   class="preview-ai-color-picker"
+								   data-default-color="#3b82f6"
 							/>
+							<p class="description">
+								<?php esc_html_e( 'Choose the accent color for the widget and modal buttons.', 'preview-ai' ); ?>
+							</p>
 						</td>
 					</tr>
 				</tbody>
@@ -249,6 +291,14 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 
 			<?php submit_button(); ?>
 
-		<?php endif; ?>
-	</form>
+			<!-- Shortcode info -->
+			<div class="preview-ai-shortcode-info" style="margin-top: 20px; padding: 16px 20px; background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1;">
+				<h3 style="margin: 0 0 8px; font-size: 14px;"><?php esc_html_e( 'Shortcode', 'preview-ai' ); ?></h3>
+				<code style="display: inline-block; padding: 8px 12px; background: #f0f0f1; border-radius: 4px; font-size: 13px;">[preview_ai]</code>
+				<p class="description" style="margin-top: 8px;">
+					<?php esc_html_e( 'Use this shortcode to manually place the widget anywhere on your product pages.', 'preview-ai' ); ?>
+				</p>
+			</div>
+		</form>
+	<?php endif; ?>
 </div>

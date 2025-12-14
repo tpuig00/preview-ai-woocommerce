@@ -6,7 +6,7 @@
  * A class definition that includes attributes and functions used across both the
  * public-facing side of the site and the admin area.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -25,7 +25,7 @@
  * @since      1.0.0
  * @package    Preview_Ai
  * @subpackage Preview_Ai/includes
- * @author     Preview AI <info@preview-ai.com>
+ * @author     Preview AI <hello@previewai.app>
  */
 class Preview_Ai {
 
@@ -133,6 +133,11 @@ class Preview_Ai {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-ajax.php';
 
 		/**
+		 * Conversion tracking.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-tracking.php';
+
+		/**
 		 * Logger utility for debugging and development.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-logger.php';
@@ -196,6 +201,10 @@ class Preview_Ai {
 
 		// Admin AJAX handlers.
 		$this->loader->add_action( 'wp_ajax_preview_ai_learn_catalog', $plugin_admin, 'handle_learn_catalog' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_verify_api_key', $plugin_admin, 'handle_verify_api_key' );
+
+		// Admin notices for API status.
+		$this->loader->add_action( 'admin_notices', $plugin_admin, 'display_admin_notices' );
 
 	}
 
@@ -212,12 +221,17 @@ class Preview_Ai {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-		$this->loader->add_action( 'woocommerce_single_product_summary', $plugin_public, 'render_widget', 35 );
+		$this->loader->add_action( 'woocommerce_single_product_summary', $plugin_public, 'render_widget', 31 );
 
 		// AJAX handlers.
 		$ajax_handler = new PREVIEW_AI_Ajax();
 		$this->loader->add_action( 'wp_ajax_preview_ai_upload', $ajax_handler, 'handle_upload' );
 		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_upload', $ajax_handler, 'handle_upload' );
+
+		// Conversion tracking.
+		$this->loader->add_action( 'woocommerce_checkout_order_processed', 'PREVIEW_AI_Tracking', 'save_to_order' );
+		$this->loader->add_action( 'woocommerce_order_status_completed', 'PREVIEW_AI_Tracking', 'track_completed' );
+		$this->loader->add_action( 'woocommerce_order_status_refunded', 'PREVIEW_AI_Tracking', 'track_refunded' );
 
 	}
 

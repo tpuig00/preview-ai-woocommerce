@@ -3,7 +3,7 @@
 /**
  * The admin-specific functionality of the plugin.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -64,32 +64,67 @@ class PREVIEW_AI_Admin {
 	 * @since    1.0.0
 	 */
 	public function register_settings() {
-		register_setting( 'preview_ai_settings', 'preview_ai_api_endpoint', 'esc_url_raw' );
-		register_setting( 'preview_ai_settings', 'preview_ai_api_key', 'sanitize_text_field' );
-		register_setting( 'preview_ai_settings', 'preview_ai_enabled', 'absint' );
-		register_setting( 'preview_ai_settings', 'preview_ai_product_type', 'sanitize_key' );
-		register_setting( 'preview_ai_settings', 'preview_ai_clothing_subtype', 'sanitize_key' );
+		// General settings group.
+		register_setting( 'preview_ai_general_settings', 'preview_ai_api_endpoint', 'esc_url_raw' );
+		register_setting( 'preview_ai_general_settings', 'preview_ai_api_key', 'sanitize_text_field' );
+		register_setting( 'preview_ai_general_settings', 'preview_ai_enabled', 'absint' );
+		register_setting( 'preview_ai_general_settings', 'preview_ai_product_type', 'sanitize_key' );
+		register_setting( 'preview_ai_general_settings', 'preview_ai_clothing_subtype', 'sanitize_key' );
 
-		// Display mode.
-		register_setting( 'preview_ai_settings', 'preview_ai_display_mode', 'sanitize_key' );
+		// Widget settings group.
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_display_mode', 'sanitize_key' );
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_text', 'sanitize_text_field' );
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_icon', 'sanitize_key' );
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_position', 'sanitize_key' );
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_accent_color', 'sanitize_hex_color' );
 
-		// Branding settings.
-		register_setting( 'preview_ai_settings', 'preview_ai_primary_color', 'sanitize_hex_color' );
-		register_setting( 'preview_ai_settings', 'preview_ai_button_text', 'sanitize_text_field' );
-		register_setting( 'preview_ai_settings', 'preview_ai_upload_text', 'sanitize_text_field' );
+		// Clear account status when API key changes.
+		add_action( 'update_option_preview_ai_api_key', array( 'PREVIEW_AI_Api', 'clear_account_status' ) );
 	}
 
 	/**
-	 * Get branding settings with defaults.
+	 * Get available button icons.
 	 *
 	 * @since    1.0.0
 	 * @return   array
 	 */
-	public static function get_branding_settings() {
+	public static function get_button_icons() {
 		return array(
-			'primary_color' => get_option( 'preview_ai_primary_color', '#111111' ),
-			'button_text'   => get_option( 'preview_ai_button_text', '' ),
-			'upload_text'   => get_option( 'preview_ai_upload_text', '' ),
+			'wand'   => array(
+				'label' => __( 'Magic Wand', 'preview-ai' ),
+				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>',
+			),
+			'camera' => array(
+				'label' => __( 'Camera', 'preview-ai' ),
+				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+			),
+			'eye'    => array(
+				'label' => __( 'Eye / Preview', 'preview-ai' ),
+				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+			),
+			'shirt'  => array(
+				'label' => __( 'T-Shirt', 'preview-ai' ),
+				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>',
+			),
+			'spark'  => array(
+				'label' => __( 'Sparkles / AI', 'preview-ai' ),
+				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>',
+			),
+		);
+	}
+
+	/**
+	 * Get widget settings with defaults.
+	 *
+	 * @since    1.0.0
+	 * @return   array
+	 */
+	public static function get_widget_settings() {
+		return array(
+			'button_text'     => get_option( 'preview_ai_button_text', '' ),
+			'button_icon'     => get_option( 'preview_ai_button_icon', 'wand' ),
+			'button_position' => get_option( 'preview_ai_button_position', 'center' ),
+			'accent_color'    => get_option( 'preview_ai_accent_color', '#3b82f6' ),
 		);
 	}
 
@@ -125,54 +160,114 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
-	 * Get clothing subtypes with example items.
+	 * Get clothing subtypes with example items and tips.
 	 *
 	 * @since    1.0.0
 	 * @return   array    List of clothing subtypes.
 	 */
 	public static function get_clothing_subtypes() {
 		return array(
-			'mixed'        => array(
+			'mixed' => array(
 				'label'    => __( 'Mixed / All types', 'preview-ai' ),
 				'examples' => __( 'Set the correct subtype per product for precise results', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Selfie or mirror photo', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'upper_body'   => array(
+		
+			'upper_body' => array(
 				'label'    => __( 'Upper Body', 'preview-ai' ),
 				'examples' => __( 'T-shirts, shirts, blouses, jackets, hoodies, tops', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Mirror photo or front selfie showing shoulders and chest', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'lower_body'   => array(
+		
+			'lower_body' => array(
 				'label'    => __( 'Lower Body', 'preview-ai' ),
 				'examples' => __( 'Pants, shorts, leggings, skirts', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Mirror photo showing waist and legs', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'full_body'    => array(
+		
+			'full_body' => array(
 				'label'    => __( 'Full Body', 'preview-ai' ),
 				'examples' => __( 'Dresses, jumpsuits, full suits', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Mirror photo showing most of your body', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'headwear'     => array(
+		
+			'headwear' => array(
 				'label'    => __( 'Headwear', 'preview-ai' ),
 				'examples' => __( 'Caps, hats, berets, head scarves', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Selfie showing your head clearly', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'footwear'     => array(
+		
+			'footwear' => array(
 				'label'    => __( 'Footwear', 'preview-ai' ),
 				'examples' => __( 'Shoes, boots, sandals, slippers', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Photo showing both feet completely', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'neckwear'     => array(
+		
+			'neckwear' => array(
 				'label'    => __( 'Neckwear', 'preview-ai' ),
 				'examples' => __( 'Necklaces, scarves, chokers', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Close-up photo of your neck', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'waistwear'    => array(
+		
+			'waistwear' => array(
 				'label'    => __( 'Waistwear', 'preview-ai' ),
 				'examples' => __( 'Belts, fanny packs, waist bags', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Mirror photo showing your waist', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'wrist_hand'   => array(
+		
+			'wrist_hand' => array(
 				'label'    => __( 'Wrist & Hand', 'preview-ai' ),
 				'examples' => __( 'Bracelets, watches, rings', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Close-up photo of your hand or wrist', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
-			'ear'          => array(
+		
+			'ear' => array(
 				'label'    => __( 'Ear Accessories', 'preview-ai' ),
 				'examples' => __( 'Earrings, hoops, ear cuffs', 'preview-ai' ),
+				'tips'     => array(
+					__( 'Good lighting', 'preview-ai' ),
+					__( 'Close-up photo of your ear', 'preview-ai' ),
+					__( 'Clear, steady photo', 'preview-ai' ),
+				),
 			),
 		);
+		
 	}
 
 	/**
@@ -201,13 +296,8 @@ class PREVIEW_AI_Admin {
 			'all'
 		);
 
-		// Color picker on widget settings tab.
-		$screen = get_current_screen();
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
-		if ( $screen && 'product_page_preview-ai' === $screen->id && 'widget' === $tab ) {
-			wp_enqueue_style( 'wp-color-picker' );
-		}
+		// Color picker styles for settings page.
+		wp_enqueue_style( 'wp-color-picker' );
 	}
 
 	/**
@@ -217,20 +307,10 @@ class PREVIEW_AI_Admin {
 	 * @param    string $hook    The current admin page hook.
 	 */
 	public function enqueue_scripts( $hook ) {
-		$deps = array( 'jquery' );
-
-		// Add color picker on widget settings tab.
-		$screen = get_current_screen();
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
-		if ( $screen && 'product_page_preview-ai' === $screen->id && 'widget' === $tab ) {
-			$deps[] = 'wp-color-picker';
-		}
-
 		wp_enqueue_script(
 			$this->plugin_name,
 			plugin_dir_url( __FILE__ ) . 'js/preview-ai-admin.js',
-			$deps,
+			array( 'jquery', 'wp-color-picker' ),
 			$this->version,
 			true
 		);
@@ -245,9 +325,10 @@ class PREVIEW_AI_Admin {
 				$this->plugin_name,
 				'previewAiAdmin',
 				array(
-					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-					'nonce'   => wp_create_nonce( 'preview_ai_learn_catalog' ),
-					'i18n'    => array(
+					'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+					'nonce'       => wp_create_nonce( 'preview_ai_learn_catalog' ),
+					'verifyNonce' => wp_create_nonce( 'preview_ai_verify_api_key' ),
+					'i18n'        => array(
 						'error'      => __( 'An error occurred.', 'preview-ai' ),
 						'apiPending' => __( '(API integration pending)', 'preview-ai' ),
 					),
@@ -279,6 +360,8 @@ class PREVIEW_AI_Admin {
 	 */
 	public function render_product_data_panel() {
 		global $post;
+		$product        = wc_get_product( $post->ID );
+		$has_image      = $product && $product->get_image_id();
 		$enabled        = get_post_meta( $post->ID, '_preview_ai_enabled', true );
 		$subtype        = get_post_meta( $post->ID, '_preview_ai_recommended_subtype', true );
 		$global_enabled = get_option( 'preview_ai_enabled', 0 );
@@ -293,12 +376,21 @@ class PREVIEW_AI_Admin {
 			$is_enabled = (bool) $global_enabled;
 		}
 
+		// Can't be enabled without image.
+		if ( ! $has_image ) {
+			$is_enabled = false;
+		}
+
 		// Determine status for display.
 		$status_class = 'preview-ai-col--disabled';
 		$status_text  = __( 'Disabled', 'preview-ai' );
 		$status_icon  = '—';
 
-		if ( 'no' === $enabled ) {
+		if ( ! $has_image ) {
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'No image', 'preview-ai' );
+			$status_icon  = '⚠️';
+		} elseif ( 'no' === $enabled ) {
 			$status_class = 'preview-ai-col--disabled';
 			$status_text  = __( 'Disabled', 'preview-ai' );
 			$status_icon  = '—';
@@ -315,6 +407,15 @@ class PREVIEW_AI_Admin {
 		?>
 		<div id="preview_ai_product_data" class="panel woocommerce_options_panel">
 
+			<?php if ( ! $has_image ) : ?>
+			<div class="preview-ai-notice" style="margin: 12px; background: #fff8e5; border-left: 4px solid #ffb900;">
+				<span class="preview-ai-notice__icon">⚠️</span>
+				<div class="preview-ai-notice__content">
+					<?php esc_html_e( 'This product has no image. Add a product image to enable Preview AI.', 'preview-ai' ); ?>
+				</div>
+			</div>
+			<?php endif; ?>
+
 			<!-- Status + Toggle row -->
 			<div class="preview-ai-metabox-header">
 				<div class="preview-ai-metabox-header__left">
@@ -330,6 +431,7 @@ class PREVIEW_AI_Admin {
 						   name="_preview_ai_enabled" 
 						   value="yes" 
 						   <?php checked( $is_enabled ); ?> 
+						   <?php disabled( ! $has_image ); ?>
 					/>
 					<span class="preview-ai-switch__track"></span>
 				</label>
@@ -399,6 +501,14 @@ class PREVIEW_AI_Admin {
 		$enabled = isset( $_POST['_preview_ai_enabled'] ) ? 'yes' : 'no';
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$subtype = isset( $_POST['_preview_ai_clothing_subtype'] ) ? sanitize_key( $_POST['_preview_ai_clothing_subtype'] ) : '';
+
+		// Can't enable if product has no image.
+		if ( 'yes' === $enabled ) {
+			$product = wc_get_product( $post_id );
+			if ( $product && ! $product->get_image_id() ) {
+				$enabled = 'no';
+			}
+		}
 
 		update_post_meta( $post_id, '_preview_ai_enabled', $enabled );
 		update_post_meta( $post_id, '_preview_ai_recommended_subtype', $subtype );
@@ -599,5 +709,134 @@ class PREVIEW_AI_Admin {
 		}
 
 		return $stats;
+	}
+
+	/**
+	 * Handle AJAX request to verify API key.
+	 *
+	 * @since 1.0.0
+	 */
+	public function handle_verify_api_key() {
+		check_ajax_referer( 'preview_ai_verify_api_key', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
+		}
+
+		$api    = new PREVIEW_AI_Api();
+		$result = $api->verify_api_key();
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		$credits = isset( $result['credits_remaining'] ) ? intval( $result['credits_remaining'] ) : 0;
+
+		wp_send_json_success( array(
+			'credits' => $credits,
+			'message' => sprintf(
+				/* translators: %d: credits remaining */
+				__( '✓ Valid. %d credits remaining.', 'preview-ai' ),
+				$credits
+			),
+		) );
+	}
+
+	/**
+	 * Display admin notices for API issues.
+	 *
+	 * @since 1.0.0
+	 */
+	public function display_admin_notices() {
+		// Only show on relevant admin pages.
+		$screen = get_current_screen();
+		if ( ! $screen ) {
+			return;
+		}
+
+		$relevant_screens = array( 'product_page_preview-ai', 'product', 'edit-product' );
+		if ( ! in_array( $screen->id, $relevant_screens, true ) ) {
+			return;
+		}
+
+		$api_key = get_option( 'preview_ai_api_key', '' );
+
+		// No API key configured.
+		if ( empty( $api_key ) ) {
+			?>
+			<div class="notice notice-warning">
+				<p>
+					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
+					<?php esc_html_e( 'API key not configured. The widget is hidden from your customers.', 'preview-ai' ); ?>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai' ) ); ?>">
+						<?php esc_html_e( 'Configure now', 'preview-ai' ); ?>
+					</a>
+				</p>
+			</div>
+			<?php
+			return;
+		}
+
+		// Check account status.
+		$status = PREVIEW_AI_Api::get_account_status();
+
+		if ( empty( $status ) ) {
+			return;
+		}
+
+		// No credits left.
+		if ( isset( $status['credits_remaining'] ) && $status['credits_remaining'] <= 0 ) {
+			?>
+			<div class="notice notice-error">
+				<p>
+					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
+					<?php esc_html_e( '⚠️ Your credits have run out. The widget has been automatically disabled and your customers cannot preview products.', 'preview-ai' ); ?>
+					<a href="https://previewai.app/pricing" target="_blank" style="font-weight: bold;">
+						<?php esc_html_e( 'Upgrade your plan →', 'preview-ai' ); ?>
+					</a>
+				</p>
+			</div>
+			<?php
+			return;
+		}
+
+		// Account deactivated.
+		if ( isset( $status['active'] ) && ! $status['active'] ) {
+			?>
+			<div class="notice notice-error">
+				<p>
+					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
+					<?php esc_html_e( '⚠️ Your account has been deactivated. The widget is hidden from your customers.', 'preview-ai' ); ?>
+					<a href="https://previewai.app/support" target="_blank">
+						<?php esc_html_e( 'Contact support', 'preview-ai' ); ?>
+					</a>
+				</p>
+			</div>
+			<?php
+			return;
+		}
+
+		// Low credits warning (less than 10%).
+		if ( isset( $status['credits_remaining'], $status['credits_total'] ) &&
+			$status['credits_total'] > 0 &&
+			( $status['credits_remaining'] / $status['credits_total'] ) < 0.1 ) {
+			?>
+			<div class="notice notice-warning is-dismissible">
+				<p>
+					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
+					<?php
+					printf(
+						/* translators: %d: credits remaining */
+						esc_html__( 'You have only %d credits remaining this month.', 'preview-ai' ),
+						intval( $status['credits_remaining'] )
+					);
+					?>
+					<a href="https://previewai.app/pricing" target="_blank">
+						<?php esc_html_e( 'Upgrade your plan', 'preview-ai' ); ?>
+					</a>
+				</p>
+			</div>
+			<?php
+		}
 	}
 }

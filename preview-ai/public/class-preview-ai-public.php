@@ -3,7 +3,7 @@
 /**
  * The public-facing functionality of the plugin.
  *
- * @link       http://example.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -18,7 +18,7 @@
  *
  * @package    Preview_Ai
  * @subpackage Preview_Ai/public
- * @author     Your Name <email@example.com>
+ * @author     Preview AI <hello@previewai.app>
  */
 class PREVIEW_AI_Public {
 
@@ -61,19 +61,14 @@ class PREVIEW_AI_Public {
 	 */
 	public function enqueue_styles() {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in PREVIEW_AI_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The PREVIEW_AI_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
 		wp_enqueue_style( $this->Preview_Ai, plugin_dir_url( __FILE__ ) . 'css/preview-ai-public.css', array(), $this->version, 'all' );
+
+		// Add custom accent color if set.
+		$accent_color = get_option( 'preview_ai_accent_color', '#3b82f6' );
+
+		if ( '#3b82f6' !== $accent_color && ! empty( $accent_color ) ) {
+			wp_add_inline_style( $this->Preview_Ai, ':root { --pai-accent: ' . esc_attr( $accent_color ) . '; }' );
+		}
 
 	}
 
@@ -100,6 +95,11 @@ class PREVIEW_AI_Public {
 	 * @since 1.0.0
 	 */
 	public function render_widget() {
+		// Check if widget is available (API key + credits).
+		if ( ! PREVIEW_AI_Api::is_widget_available() ) {
+			return;
+		}
+
 		if ( ! function_exists( 'is_product' ) || ! is_product() ) {
 			return;
 		}
@@ -129,24 +129,17 @@ class PREVIEW_AI_Public {
 	 *
 	 * @since 1.0.0
 	 * @param int   $product_id Product ID.
-	 * @param array $branding   Optional branding overrides.
+	 * @param array $overrides  Optional. Override default settings.
 	 * @return string HTML output.
 	 */
-	public static function render_widget_output( $product_id, $branding = array() ) {
-		if ( ! $product_id ) {
+	public static function render_widget_output( $product_id, $overrides = array() ) {
+		// Check if widget is available (API key + credits).
+		if ( ! PREVIEW_AI_Api::is_widget_available() ) {
 			return '';
 		}
 
-		// Merge with global branding settings.
-		$defaults = PREVIEW_AI_Admin::get_branding_settings();
-		$branding = wp_parse_args( $branding, $defaults );
-
-		// Set default texts if empty.
-		if ( empty( $branding['button_text'] ) ) {
-			$branding['button_text'] = __( 'Generate', 'preview-ai' );
-		}
-		if ( empty( $branding['upload_text'] ) ) {
-			$branding['upload_text'] = __( 'Upload your photo', 'preview-ai' );
+		if ( ! $product_id ) {
+			return '';
 		}
 
 		// Enqueue assets.
@@ -162,31 +155,43 @@ class PREVIEW_AI_Public {
 				'nonce'       => wp_create_nonce( 'preview_ai_ajax' ),
 				'productId'   => $product_id,
 				'variationId' => '',
-				'i18n'        => array(
-					'noFile'  => esc_html__( 'Please select an image.', 'preview-ai' ),
-					'loading' => esc_html__( 'Uploading...', 'preview-ai' ),
-					'success' => esc_html__( 'Preview ready!', 'preview-ai' ),
-					'error'   => esc_html__( 'Error occurred.', 'preview-ai' ),
-				),
+			'i18n'        => array(
+				'error'       => __( 'Something went wrong. Please try again later.', 'preview-ai' ),
+				'openCamera'  => __( 'Open camera', 'preview-ai' ),
+				'uploadPhoto' => __( 'Upload photo', 'preview-ai' ),
+			),
 			)
 		);
 
-		// Custom CSS for branding.
-		$custom_css = '';
-		if ( ! empty( $branding['primary_color'] ) && '#111111' !== $branding['primary_color'] ) {
-			$color = sanitize_hex_color( $branding['primary_color'] );
-			if ( $color ) {
-				$custom_css = sprintf(
-					'<style>.preview-ai-widget-%d #preview-ai-submit{background:%s;}</style>',
-					absint( $product_id ),
-					esc_attr( $color )
-				);
-			}
+		// Get widget settings and merge with overrides.
+		$widget_settings = PREVIEW_AI_Admin::get_widget_settings();
+		$widget_settings = wp_parse_args( $overrides, $widget_settings );
+		$button_icons    = PREVIEW_AI_Admin::get_button_icons();
+
+		// Prepare button text.
+		$button_text = ! empty( $widget_settings['button_text'] )
+			? $widget_settings['button_text']
+			: __( 'See it on you', 'preview-ai' );
+
+		// Prepare button icon SVG.
+		$icon_key   = ! empty( $widget_settings['button_icon'] ) ? $widget_settings['button_icon'] : 'wand';
+		$button_svg = isset( $button_icons[ $icon_key ] ) ? $button_icons[ $icon_key ]['svg'] : $button_icons['wand']['svg'];
+
+		// Button position.
+		$button_position = ! empty( $widget_settings['button_position'] ) ? $widget_settings['button_position'] : 'center';
+
+		// Get clothing subtype and tips for this product.
+		$clothing_subtype  = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
+		$clothing_subtypes = PREVIEW_AI_Admin::get_clothing_subtypes();
+
+		// Default to 'mixed' if no subtype set.
+		if ( empty( $clothing_subtype ) || ! isset( $clothing_subtypes[ $clothing_subtype ] ) ) {
+			$clothing_subtype = 'mixed';
 		}
 
+		$tips = $clothing_subtypes[ $clothing_subtype ]['tips'];
+
 		ob_start();
-		// CSS is sanitized above with sanitize_hex_color() and esc_attr().
-		echo $custom_css; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-public-display.php';
 		return ob_get_clean();
 	}

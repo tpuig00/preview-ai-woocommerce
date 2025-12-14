@@ -2,7 +2,7 @@
 /**
  * API client for AI backend communication.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -26,6 +26,11 @@ class PREVIEW_AI_Api {
 	private $api_key;
 
 	/**
+	 * Option key for account status (permanent, no expiry).
+	 */
+	const STATUS_OPTION = 'preview_ai_account_status';
+
+	/**
 	 * Initialize API client.
 	 */
 	public function __construct() {
@@ -35,7 +40,7 @@ class PREVIEW_AI_Api {
 	/**
 	 * Central method to make API requests.
 	 *
-	 * Automatically includes api_key and domain in all requests.
+	 * Updates account status cache from every response.
 	 *
 	 * @param string $path    API endpoint path (e.g., 'generate/', 'catalog/analyze').
 	 * @param array  $data    Request data to send.
@@ -60,11 +65,6 @@ class PREVIEW_AI_Api {
 			)
 		);
 
-		# Error codes:
-		# 401: Missing or invalid API key.
-		# 403: API key is deactivated.
-		# 429: Monthly limit reached.
-
 		if ( is_wp_error( $response ) ) {
 			PREVIEW_AI_Logger::error( 'API request failed', array(
 				'path'  => $path,
@@ -73,9 +73,31 @@ class PREVIEW_AI_Api {
 			return $response;
 		}
 
-		$code = wp_remote_retrieve_response_code( $response );
-		$body = wp_remote_retrieve_body( $response );
+		$code   = wp_remote_retrieve_response_code( $response );
+		$body   = wp_remote_retrieve_body( $response );
 		$result = json_decode( $body, true );
+
+		// Update account status from response (backend includes this in every response).
+		if ( is_array( $result ) && isset( $result['account'] ) ) {
+			self::update_account_status( $result['account'] );
+		}
+
+		// Handle error codes.
+		if ( 429 === $code ) {
+			// Credits exhausted.
+			self::update_account_status( array(
+				'credits_remaining' => 0,
+				'active'            => true,
+			) );
+		}
+
+		if ( 403 === $code ) {
+			// Account deactivated.
+			self::update_account_status( array(
+				'credits_remaining' => 0,
+				'active'            => false,
+			) );
+		}
 
 		if ( $code >= 400 ) {
 			$message = isset( $result['error'] ) ? $result['error'] : __( 'API request failed', 'preview-ai' );
@@ -84,10 +106,78 @@ class PREVIEW_AI_Api {
 				'status_code'   => $code,
 				'error_message' => $message,
 			) );
-			return new WP_Error( 'api_error', $message );
+			return new WP_Error( 'api_error', $message, array( 'status' => $code ) );
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Check if widget can be displayed.
+	 * Returns false if no API key, deactivated, or no credits.
+	 *
+	 * @return bool
+	 */
+	public static function is_widget_available() {
+		$api_key = get_option( 'preview_ai_api_key', '' );
+
+		// No API key = don't show widget.
+		if ( empty( $api_key ) ) {
+			return false;
+		}
+
+		// Check account status.
+		$status = self::get_account_status();
+
+		// No status yet = first time, allow widget (will update after first request).
+		if ( empty( $status ) ) {
+			return true;
+		}
+
+		// No credits left.
+		if ( isset( $status['credits_remaining'] ) && $status['credits_remaining'] <= 0 ) {
+			return false;
+		}
+
+		// Account deactivated.
+		if ( isset( $status['active'] ) && ! $status['active'] ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Get account status from database.
+	 *
+	 * @return array Account status or empty array.
+	 */
+	public static function get_account_status() {
+		return get_option( self::STATUS_OPTION, array() );
+	}
+
+	/**
+	 * Update account status in database (permanent, no expiry).
+	 *
+	 * @param array $status Status data from backend.
+	 */
+	public static function update_account_status( $status ) {
+		if ( ! is_array( $status ) ) {
+			return;
+		}
+
+		// Merge with existing to preserve fields.
+		$current = self::get_account_status();
+		$updated = array_merge( $current, $status );
+
+		update_option( self::STATUS_OPTION, $updated, false );
+	}
+
+	/**
+	 * Clear account status (used when API key changes).
+	 */
+	public static function clear_account_status() {
+		delete_option( self::STATUS_OPTION );
 	}
 
 	/**
@@ -103,12 +193,12 @@ class PREVIEW_AI_Api {
 		) );
 
 		$result = $this->request( 'generate/', array(
-			'user_image'     => $user_image,
-			'product_id'     => $product_data['id'],
-			'parent_id'      => $product_data['parentId'],
-			'name'           => $product_data['name'],
-			'product_images' => $product_data['images'],
-			'product_type'   => $product_data['type'],
+			'user_image'      => $user_image,
+			'product_id'      => $product_data['id'],
+			'parent_id'       => $product_data['parentId'],
+			'name'            => $product_data['name'],
+			'product_images'  => $product_data['images'],
+			'product_type'    => $product_data['type'],
 			'product_subtype' => $product_data['subtype'],
 		), 120 );
 
@@ -136,6 +226,21 @@ class PREVIEW_AI_Api {
 
 		if ( ! is_wp_error( $result ) ) {
 			PREVIEW_AI_Logger::info( 'Catalog analysis completed successfully' );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Verify API key and get account status.
+	 *
+	 * @return array|WP_Error Account status or error.
+	 */
+	public function verify_api_key() {
+		$result = $this->request( 'account/status', array(), 10 );
+
+		if ( ! is_wp_error( $result ) && is_array( $result ) ) {
+			self::update_account_status( $result );
 		}
 
 		return $result;

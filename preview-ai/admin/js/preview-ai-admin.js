@@ -3,10 +3,50 @@
 
 	$( function() {
 
-		// Initialize color picker (only if available and elements exist).
-		if ( $.fn.wpColorPicker && $( '.preview-ai-color-picker' ).length ) {
-			$( '.preview-ai-color-picker' ).wpColorPicker();
-		}
+		// Initialize color picker.
+		$( '.preview-ai-color-picker' ).wpColorPicker();
+
+		// Icon selector - update visual state on change.
+		$( '.preview-ai-icon-option input' ).on( 'change', function() {
+			$( '.preview-ai-icon-option' ).removeClass( 'is-selected' );
+			$( this ).closest( '.preview-ai-icon-option' ).addClass( 'is-selected' );
+		} );
+
+		// Verify API Key functionality.
+		$( '#preview_ai_verify_btn' ).on( 'click', function() {
+			var $btn = $( this );
+			var $status = $( '#preview_ai_verify_status' );
+			var apiKey = $( '#preview_ai_api_key' ).val();
+
+			if ( ! apiKey ) {
+				$status.html( '<span style="color:#d63638;">✗ Enter an API key first</span>' );
+				return;
+			}
+
+			$btn.prop( 'disabled', true ).text( '...' );
+			$status.html( '' );
+
+			$.ajax( {
+				url: previewAiAdmin.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'preview_ai_verify_api_key',
+					nonce: previewAiAdmin.verifyNonce
+				},
+				success: function( res ) {
+					$btn.prop( 'disabled', false ).text( 'Verify' );
+					if ( res.success ) {
+						$status.html( '<span style="color:#00a32a;">' + res.data.message + '</span>' );
+					} else {
+						$status.html( '<span style="color:#d63638;">✗ ' + res.data.message + '</span>' );
+					}
+				},
+				error: function() {
+					$btn.prop( 'disabled', false ).text( 'Verify' );
+					$status.html( '<span style="color:#d63638;">✗ Connection error</span>' );
+				}
+			} );
+		} );
 
 		// Learn My Catalog functionality.
 		var learnBtn = document.getElementById( 'preview_ai_learn_catalog_btn' );

@@ -282,7 +282,7 @@ delete_option( 'preview_ai_api_key' );
 ```php
 <div id="preview-ai-widget" class="preview-ai-container">
     <button type="button" id="preview-ai-trigger">
-        <?php esc_html_e( 'Try it on', 'preview-ai' ); ?>
+        <?php esc_html_e( 'See it on you', 'preview-ai' ); ?>
     </button>
     <div id="preview-ai-modal" class="preview-ai-modal" style="display:none;">
         <input type="file" id="preview-ai-upload" accept="image/*" />

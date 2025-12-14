@@ -12,15 +12,17 @@ Objetivo: no robar protagonismo al producto, sino realzar la confianza del compr
 
 La paleta se basa en WooCommerce y WordPress, con sutiles acentos para comunicar IA sin sobresaturar.
 
-Propósito	Color	Hex
-Primario: énfasis IA moderno (acento)	Soft Electric Blue	#4C82F7
-Neutral oscuro: textos	Charcoal	#1F1F1F
-Neutral medio: bordes / UI	Slate Gray	#D7DDE4
-Neutral claro: backgrounds limpios	Off-White	#F7F8FA
-Éxito (generado)	Mint Green	#3DD5A2
-Error / invalidación	Soft Red	#E76A6A
+| Propósito                          | Color              | Hex       |
+|------------------------------------|--------------------|-----------|
+| **Primary**: marca + CTAs          | Electric Blue      | `#3B82F6` |
+| **Secondary**: acentos secundarios | Soft Purple        | `#7C3AED` |
+| Neutral oscuro: textos             | Charcoal           | `#1F1F1F` |
+| Neutral medio: bordes / UI         | Slate Gray         | `#D7DDE4` |
+| Neutral claro: backgrounds limpios | Off-White          | `#F7F8FA` |
+| Éxito (generado)                   | Mint Green         | `#3DD5A2` |
+| Error / invalidación               | Soft Red           | `#E76A6A` |
 
-Regla: El azul IA se usa solo en acciones (botones y resaltados), nunca en fondos completos.
+Regla: El azul primario se usa en acciones principales (botones CTA). El morado secundario para acentos y estados hover cuando sea apropiado.
 
 3. Tipografía
 

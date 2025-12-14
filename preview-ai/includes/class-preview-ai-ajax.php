@@ -2,7 +2,7 @@
 /**
  * AJAX handler for frontend requests.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -63,6 +63,9 @@ class PREVIEW_AI_Ajax {
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
+
+		// Track preview for conversion.
+		PREVIEW_AI_Tracking::track_preview( $product_id );
 
 		wp_send_json_success( $result );
 	}

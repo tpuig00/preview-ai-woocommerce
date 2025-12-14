@@ -8,17 +8,17 @@
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
  *
- * @link              http://preview-ai.com
+ * @link              https://previewai.app
  * @since             1.0.0
  * @package           Preview_Ai
  *
  * @wordpress-plugin
  * Plugin Name:       Preview AI
- * Plugin URI:        http://preview-ai.com/
+ * Plugin URI:        https://previewai.app/
  * Description:       Preview AI is a plugin that allows your customers to preview your products in real-time using AI image generation.
  * Version:           1.0.0
  * Author:            Preview AI
- * Author URI:        http://preview-ai.com/
+ * Author URI:        https://previewai.app/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       preview-ai

@@ -4,7 +4,7 @@
  *
  * Provides simple logging functions for development and debugging.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai

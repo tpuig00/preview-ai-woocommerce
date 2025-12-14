@@ -2,7 +2,7 @@
 /**
  * Elementor widget for Preview AI.
  *
- * @link       http://preview-ai.com
+ * @link       https://previewai.app
  * @since      1.0.0
  *
  * @package    Preview_Ai
@@ -71,7 +71,7 @@ class PREVIEW_AI_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'content_section',
 			array(
-				'label' => __( 'Content', 'preview-ai' ),
+				'label' => __( 'Button', 'preview-ai' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
 			)
 		);
@@ -81,16 +81,25 @@ class PREVIEW_AI_Elementor_Widget extends \Elementor\Widget_Base {
 			array(
 				'label'       => __( 'Button Text', 'preview-ai' ),
 				'type'        => \Elementor\Controls_Manager::TEXT,
-				'placeholder' => __( 'Generate', 'preview-ai' ),
+				'placeholder' => __( 'See it on you', 'preview-ai' ),
+				'description' => __( 'Leave empty to use global settings.', 'preview-ai' ),
 			)
 		);
 
 		$this->add_control(
-			'upload_text',
+			'button_icon',
 			array(
-				'label'       => __( 'Upload Text', 'preview-ai' ),
-				'type'        => \Elementor\Controls_Manager::TEXT,
-				'placeholder' => __( 'Upload your photo', 'preview-ai' ),
+				'label'   => __( 'Button Icon', 'preview-ai' ),
+				'type'    => \Elementor\Controls_Manager::SELECT,
+				'default' => '',
+				'options' => array(
+					''       => __( 'Use Global Setting', 'preview-ai' ),
+					'wand'   => __( 'Magic Wand', 'preview-ai' ),
+					'camera' => __( 'Camera', 'preview-ai' ),
+					'eye'    => __( 'Eye / Preview', 'preview-ai' ),
+					'shirt'  => __( 'T-Shirt', 'preview-ai' ),
+					'spark'  => __( 'Sparkles / AI', 'preview-ai' ),
+				),
 			)
 		);
 
@@ -100,17 +109,33 @@ class PREVIEW_AI_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_section',
 			array(
-				'label' => __( 'Style', 'preview-ai' ),
+				'label' => __( 'Button', 'preview-ai' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
 
 		$this->add_control(
-			'primary_color',
+			'button_position',
 			array(
-				'label'   => __( 'Primary Color', 'preview-ai' ),
-				'type'    => \Elementor\Controls_Manager::COLOR,
+				'label'   => __( 'Alignment', 'preview-ai' ),
+				'type'    => \Elementor\Controls_Manager::CHOOSE,
 				'default' => '',
+				'options' => array(
+					'left'   => array(
+						'title' => __( 'Left', 'preview-ai' ),
+						'icon'  => 'eicon-text-align-left',
+					),
+					'center' => array(
+						'title' => __( 'Center', 'preview-ai' ),
+						'icon'  => 'eicon-text-align-center',
+					),
+					'right'  => array(
+						'title' => __( 'Right', 'preview-ai' ),
+						'icon'  => 'eicon-text-align-right',
+					),
+				),
+				'toggle'      => true,
+				'description' => __( 'Leave unselected to use global settings.', 'preview-ai' ),
 			)
 		);
 
@@ -128,7 +153,7 @@ class PREVIEW_AI_Elementor_Widget extends \Elementor\Widget_Base {
 		$product_id = $product ? $product->get_id() : 0;
 		if ( ! $product_id ) {
 			if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
-				echo '<p style="padding:20px;background:#f0f0f0;text-align:center;">';
+				echo '<p style="padding:20px;background:#f0f0f0;text-align:center;border-radius:8px;">';
 				echo esc_html__( 'Preview AI: Use this widget on a product page.', 'preview-ai' );
 				echo '</p>';
 			}
@@ -137,18 +162,23 @@ class PREVIEW_AI_Elementor_Widget extends \Elementor\Widget_Base {
 
 		$settings = $this->get_settings_for_display();
 
-		// Sanitize Elementor settings before use.
-		$branding = array_filter(
-			array(
-				'primary_color' => sanitize_hex_color( $settings['primary_color'] ),
-				'button_text'   => sanitize_text_field( $settings['button_text'] ),
-				'upload_text'   => sanitize_text_field( $settings['upload_text'] ),
-			)
-		);
+		// Build overrides array (only non-empty values).
+		$overrides = array();
+
+		if ( ! empty( $settings['button_text'] ) ) {
+			$overrides['button_text'] = sanitize_text_field( $settings['button_text'] );
+		}
+
+		if ( ! empty( $settings['button_icon'] ) ) {
+			$overrides['button_icon'] = sanitize_key( $settings['button_icon'] );
+		}
+
+		if ( ! empty( $settings['button_position'] ) ) {
+			$overrides['button_position'] = sanitize_key( $settings['button_position'] );
+		}
 
 		// Output is escaped in PREVIEW_AI_Public::render_widget_output().
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		echo PREVIEW_AI_Public::render_widget_output( $product_id, $branding );
+		echo PREVIEW_AI_Public::render_widget_output( $product_id, $overrides );
 	}
 }
-
