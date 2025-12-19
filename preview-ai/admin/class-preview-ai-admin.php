@@ -171,9 +171,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Mixed / All types', 'preview-ai' ),
 				'examples' => __( 'Set the correct subtype per product for precise results', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Selfie or mirror photo', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'One person only', 'preview-ai' ),
+					__( 'Front-facing, good lighting', 'preview-ai' ),
+					__( 'Avoid heavy cropping and occlusions', 'preview-ai' ),
 				),
 			),
 		
@@ -181,9 +181,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Upper Body', 'preview-ai' ),
 				'examples' => __( 'T-shirts, shirts, blouses, jackets, hoodies, tops', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Mirror photo or front selfie showing shoulders and chest', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Front-facing with shoulders and torso visible', 'preview-ai' ),
+					__( 'Arms relaxed', 'preview-ai' ),
+					__( 'Good light, no torso occlusions', 'preview-ai' ),
 				),
 			),
 		
@@ -191,9 +191,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Lower Body', 'preview-ai' ),
 				'examples' => __( 'Pants, shorts, leggings, skirts', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Mirror photo showing waist and legs', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Hips, knees and full feet visible (no crop)', 'preview-ai' ),
+					__( 'Standing, front-facing', 'preview-ai' ),
+					__( 'Good light, no leg occlusions', 'preview-ai' ),
 				),
 			),
 		
@@ -201,9 +201,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Full Body', 'preview-ai' ),
 				'examples' => __( 'Dresses, jumpsuits, full suits', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Mirror photo showing most of your body', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Full body head-to-toe (no crop)', 'preview-ai' ),
+					__( 'Front-facing and upright (avoid side pose or crouching)', 'preview-ai' ),
+					__( 'One person, simple background, good light', 'preview-ai' ),
 				),
 			),
 		
@@ -211,9 +211,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Headwear', 'preview-ai' ),
 				'examples' => __( 'Caps, hats, berets, head scarves', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Selfie showing your head clearly', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Include head plus some torso', 'preview-ai' ),
+					__( 'Front-facing, good lighting', 'preview-ai' ),
+					__( 'No occlusions over the head (hair/hands/objects)', 'preview-ai' ),
 				),
 			),
 		
@@ -221,9 +221,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Footwear', 'preview-ai' ),
 				'examples' => __( 'Shoes, boots, sandals, slippers', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Photo showing both feet completely', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Both feet fully visible (not cropped)', 'preview-ai' ),
+					__( 'Best framing: knees-to-feet, front-facing', 'preview-ai' ),
+					__( 'Good light, sharp photo', 'preview-ai' ),
 				),
 			),
 		
@@ -231,9 +231,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Neckwear', 'preview-ai' ),
 				'examples' => __( 'Necklaces, scarves, chokers', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Close-up photo of your neck', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Include face, neck and some torso (no extreme close-up)', 'preview-ai' ),
+					__( 'Front-facing, good lighting', 'preview-ai' ),
+					__( 'No occlusions over the accessory', 'preview-ai' ),
 				),
 			),
 		
@@ -241,9 +241,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Waistwear', 'preview-ai' ),
 				'examples' => __( 'Belts, fanny packs, waist bags', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Mirror photo showing your waist', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Front-facing with waist and hips visible', 'preview-ai' ),
+					__( 'No hands/objects covering the waist area', 'preview-ai' ),
+					__( 'One person, good lighting', 'preview-ai' ),
 				),
 			),
 		
@@ -251,9 +251,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Wrist & Hand', 'preview-ai' ),
 				'examples' => __( 'Bracelets, watches, rings', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Close-up photo of your hand or wrist', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Include arm and some torso (no extreme close-up)', 'preview-ai' ),
+					__( 'Keep the accessory visible (no motion blur)', 'preview-ai' ),
+					__( 'Good light, simple background', 'preview-ai' ),
 				),
 			),
 		
@@ -261,9 +261,9 @@ class PREVIEW_AI_Admin {
 				'label'    => __( 'Ear Accessories', 'preview-ai' ),
 				'examples' => __( 'Earrings, hoops, ear cuffs', 'preview-ai' ),
 				'tips'     => array(
-					__( 'Good lighting', 'preview-ai' ),
-					__( 'Close-up photo of your ear', 'preview-ai' ),
-					__( 'Clear, steady photo', 'preview-ai' ),
+					__( 'Include face and some torso (no extreme close-up)', 'preview-ai' ),
+					__( 'Good light, ear not covered by hair/hands', 'preview-ai' ),
+					__( 'One person only', 'preview-ai' ),
 				),
 			),
 		);
@@ -325,10 +325,11 @@ class PREVIEW_AI_Admin {
 				$this->plugin_name,
 				'previewAiAdmin',
 				array(
-					'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-					'nonce'       => wp_create_nonce( 'preview_ai_learn_catalog' ),
-					'verifyNonce' => wp_create_nonce( 'preview_ai_verify_api_key' ),
-					'i18n'        => array(
+					'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+					'nonce'        => wp_create_nonce( 'preview_ai_learn_catalog' ),
+					'verifyNonce'  => wp_create_nonce( 'preview_ai_verify_api_key' ),
+					'dismissNonce' => wp_create_nonce( 'preview_ai_dismiss_notice' ),
+					'i18n'         => array(
 						'error'      => __( 'An error occurred.', 'preview-ai' ),
 						'apiPending' => __( '(API integration pending)', 'preview-ai' ),
 					),
@@ -723,22 +724,26 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
 		}
 
-		$api    = new PREVIEW_AI_Api();
-		$result = $api->verify_api_key();
+		// Use API key from field if provided, otherwise from DB.
+		$api_key = isset( $_POST['api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) : null;
+		$api     = new PREVIEW_AI_Api( $api_key );
+		$result  = $api->verify_api_key();
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		$credits = isset( $result['credits_remaining'] ) ? intval( $result['credits_remaining'] ) : 0;
+		if ( $api_key ) {
+			update_option( 'preview_ai_api_key', $api_key );
+		}
+
+		$tokens     = isset( $result['tokens_remaining'] ) ? intval( $result['tokens_remaining'] ) : 0;
+		$period_end = isset( $result['current_period_end'] ) ? $result['current_period_end'] : null;
+		$renew_date = $period_end ? date_i18n( 'F j, Y', strtotime( $period_end ) ) : '';
 
 		wp_send_json_success( array(
-			'credits' => $credits,
-			'message' => sprintf(
-				/* translators: %d: credits remaining */
-				__( '✓ Valid. %d credits remaining.', 'preview-ai' ),
-				$credits
-			),
+			'tokens'     => $tokens,
+			'renew_date' => $renew_date,
 		) );
 	}
 
@@ -784,13 +789,14 @@ class PREVIEW_AI_Admin {
 			return;
 		}
 
-		// No credits left.
-		if ( isset( $status['credits_remaining'] ) && $status['credits_remaining'] <= 0 ) {
+		// No tokens left (only show if account is still active).
+		if ( isset( $status['tokens_remaining'] ) && $status['tokens_remaining'] <= 0 &&
+			( ! isset( $status['active'] ) || $status['active'] ) ) {
 			?>
 			<div class="notice notice-error">
 				<p>
 					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
-					<?php esc_html_e( '⚠️ Your credits have run out. The widget has been automatically disabled and your customers cannot preview products.', 'preview-ai' ); ?>
+					<?php esc_html_e( '⚠️ Your tokens have run out. The widget has been automatically disabled and your customers cannot preview products.', 'preview-ai' ); ?>
 					<a href="https://previewai.app/pricing" target="_blank" style="font-weight: bold;">
 						<?php esc_html_e( 'Upgrade your plan →', 'preview-ai' ); ?>
 					</a>
@@ -806,7 +812,7 @@ class PREVIEW_AI_Admin {
 			<div class="notice notice-error">
 				<p>
 					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
-					<?php esc_html_e( '⚠️ Your account has been deactivated. The widget is hidden from your customers.', 'preview-ai' ); ?>
+					<?php esc_html_e( '⚠️ Your subscription has been deactivated. The widget is hidden from your customers.', 'preview-ai' ); ?>
 					<a href="https://previewai.app/support" target="_blank">
 						<?php esc_html_e( 'Contact support', 'preview-ai' ); ?>
 					</a>
@@ -816,19 +822,24 @@ class PREVIEW_AI_Admin {
 			return;
 		}
 
-		// Low credits warning (less than 10%).
-		if ( isset( $status['credits_remaining'], $status['credits_total'] ) &&
-			$status['credits_total'] > 0 &&
-			( $status['credits_remaining'] / $status['credits_total'] ) < 0.1 ) {
+		// Low tokens warning (less than 10%).
+		if ( isset( $status['tokens_remaining'], $status['tokens_limit'] ) &&
+			$status['tokens_limit'] > 0 &&
+			( $status['tokens_remaining'] / $status['tokens_limit'] ) < 0.1 ) {
+			
+			$user_id = get_current_user_id();
+			if ( get_user_meta( $user_id, 'preview_ai_dismissed_low_tokens', true ) ) {
+				return;
+			}
 			?>
-			<div class="notice notice-warning is-dismissible">
+			<div class="notice notice-warning is-dismissible" data-notice="preview_ai_low_tokens">
 				<p>
 					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
 					<?php
 					printf(
-						/* translators: %d: credits remaining */
-						esc_html__( 'You have only %d credits remaining this month.', 'preview-ai' ),
-						intval( $status['credits_remaining'] )
+						/* translators: %d: tokens remaining */
+						esc_html__( 'You have only %d tokens remaining this month.', 'preview-ai' ),
+						intval( $status['tokens_remaining'] )
 					);
 					?>
 					<a href="https://previewai.app/pricing" target="_blank">
@@ -838,5 +849,22 @@ class PREVIEW_AI_Admin {
 			</div>
 			<?php
 		}
+	}
+
+	/**
+	 * Handle AJAX request to dismiss admin notice.
+	 *
+	 * @since 1.0.0
+	 */
+	public function handle_dismiss_notice() {
+		check_ajax_referer( 'preview_ai_dismiss_notice', 'nonce' );
+
+		$notice = isset( $_POST['notice'] ) ? sanitize_key( $_POST['notice'] ) : '';
+
+		if ( 'preview_ai_low_tokens' === $notice ) {
+			update_user_meta( get_current_user_id(), 'preview_ai_dismissed_low_tokens', true );
+		}
+
+		wp_send_json_success();
 	}
 }

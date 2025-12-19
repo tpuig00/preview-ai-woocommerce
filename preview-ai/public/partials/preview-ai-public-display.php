@@ -49,20 +49,43 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 		<!-- Instructions -->
 		<div id="preview-ai-instructions" class="preview-ai-instructions">
 			<div class="preview-ai-instructions-header">
-				<span class="preview-ai-instructions-icon">🪄</span>
 				<h3><?php esc_html_e( 'See it on you', 'preview-ai' ); ?></h3>
 				<p><?php esc_html_e( 'See how this product looks on you', 'preview-ai' ); ?></p>
 			</div>
 
+			<?php
+			// `$clothing_subtype` is set by `PREVIEW_AI_Public::render_widget_output()`.
+			$clothing_subtype = isset( $clothing_subtype ) ? sanitize_key( $clothing_subtype ) : 'mixed';
+
+			// For now, we only show examples for: full_body, upper_body, lower_body (legs).
+			$ui_subtype = $clothing_subtype;
+			if ( 'lower_body' === $ui_subtype ) {
+				$ui_subtype = 'legs';
+			}
+			if ( ! in_array( $ui_subtype, array( 'full_body', 'upper_body', 'legs' ), true ) ) {
+				$ui_subtype = 'full_body';
+			}
+
+			$subtype_class = 'pai-subtype-' . sanitize_html_class( $ui_subtype );
+			$label         = 'upper_body' === $ui_subtype ? __( 'Upper body', 'preview-ai' ) : ( 'legs' === $ui_subtype ? __( 'Legs', 'preview-ai' ) : __( 'Full body', 'preview-ai' ) );
+
+			$img_base = plugin_dir_url( __FILE__ ) . '../images/';
+			$img_good = $img_base . 'example_good.png';
+			$img_bad  = $img_base . 'example_bad.png';
+			?>
+
 			<div class="preview-ai-illustration">
-				<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<circle cx="60" cy="35" r="18" fill="#e5e7eb"/>
-					<path d="M30 95c0-16.569 13.431-30 30-30s30 13.431 30 30" fill="#e5e7eb"/>
-					<rect x="72" y="50" width="22" height="38" rx="3" fill="#3b82f6"/>
-					<rect x="74" y="53" width="18" height="28" rx="1" fill="#818cf8"/>
-					<circle cx="83" cy="59" r="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1"/>
-					<ellipse cx="78" cy="82" rx="8" ry="6" fill="#d1d5db"/>
-				</svg>
+				<div class="pai-examples <?php echo esc_attr( $subtype_class ); ?>" aria-hidden="true">
+					<div class="pai-examples__stage">
+						<figure class="pai-example pai-example--good">
+							<img src="<?php echo esc_url( $img_good ); ?>" alt="<?php esc_attr_e( 'Good example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
+						</figure>
+						<figure class="pai-example pai-example--bad">
+							<img src="<?php echo esc_url( $img_bad ); ?>" alt="<?php esc_attr_e( 'Bad example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
+						</figure>
+					</div>
+					<div class="pai-examples__label"><?php echo esc_html( $label ); ?></div>
+				</div>
 			</div>
 
 			<div class="preview-ai-tips">
@@ -111,6 +134,7 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 			<button type="button" id="preview-ai-generate" class="preview-ai-generate">
 				<?php esc_html_e( 'Generate preview', 'preview-ai' ); ?>
 			</button>
+			<div id="preview-ai-check-status" class="preview-ai-check-status" role="status" aria-live="polite"></div>
 			<div id="preview-ai-result-actions" class="preview-ai-result-actions">
 				<button type="button" id="preview-ai-download" class="preview-ai-action-btn">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -71,6 +71,46 @@ class PREVIEW_AI_Ajax {
 	}
 
 	/**
+	 * Handle image pre-check (quality validation) before generating.
+	 */
+	public function handle_check() {
+		check_ajax_referer( 'preview_ai_ajax', 'nonce' );
+
+		if ( empty( $_FILES['image'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'No image provided', 'preview-ai' ) ) );
+		}
+
+		$product_id   = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+		if ( ! $product_id ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid product', 'preview-ai' ) ) );
+		}
+
+		if ( ! $this->is_enabled_for_product( $product_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Preview AI not enabled for this product', 'preview-ai' ) ) );
+		}
+
+		$validation = $this->validate_upload_file( $_FILES['image'] );
+		if ( is_wp_error( $validation ) ) {
+			wp_send_json_error( array( 'message' => $validation->get_error_message() ) );
+		}
+
+		$upload = $this->upload_image( $_FILES['image'] );
+		if ( is_wp_error( $upload ) ) {
+			wp_send_json_error( array( 'message' => $upload->get_error_message() ) );
+		}
+
+		$product_data = $this->get_basic_product_data( $product_id, $variation_id );
+
+		$check_result = $this->api->check_user_image( $upload, $product_data );
+		if ( is_wp_error( $check_result ) ) {
+			wp_send_json_error( array( 'message' => $check_result->get_error_message() ) );
+		}
+
+		wp_send_json_success( $check_result );
+	}
+
+	/**
 	 * Check if Preview AI is enabled for a product.
 	 *
 	 * @param int $product_id Product ID.
@@ -113,6 +153,30 @@ class PREVIEW_AI_Ajax {
 			'base64'    => base64_encode( $image_data ),
 			'mime_type' => $file['type'],
 		);
+	}
+
+	/**
+	 * Validate user upload file (type/size/readability).
+	 *
+	 * @param array $file $_FILES element.
+	 * @return true|WP_Error
+	 */
+	private function validate_upload_file( $file ) {
+		$allowed = array( 'image/jpeg', 'image/png', 'image/webp' );
+		if ( empty( $file['type'] ) || ! in_array( $file['type'], $allowed, true ) ) {
+			return new WP_Error( 'invalid_type', __( 'Invalid image type. Use JPG, PNG or WebP.', 'preview-ai' ) );
+		}
+
+		$max_size = 5 * 1024 * 1024; // 5MB.
+		if ( ! empty( $file['size'] ) && $file['size'] > $max_size ) {
+			return new WP_Error( 'file_too_large', __( 'Image too large. Max 5MB.', 'preview-ai' ) );
+		}
+
+		if ( empty( $file['tmp_name'] ) || ! file_exists( $file['tmp_name'] ) ) {
+			return new WP_Error( 'read_error', __( 'Could not read image file.', 'preview-ai' ) );
+		}
+
+		return true;
 	}
 
 	/**
@@ -172,6 +236,27 @@ class PREVIEW_AI_Ajax {
 			'type'     => $type,
 			'subtype'  => $subtype ? $subtype : 'mixed',
 			'images'   => $images,
+		);
+	}
+
+	private function get_basic_product_data( $product_id, $variation_id = 0 ) {
+		$product = $variation_id ? wc_get_product( $variation_id ) : wc_get_product( $product_id );
+
+		// Fallback to parent if variation not found.
+		if ( ! $product ) {
+			$product = wc_get_product( $product_id );
+		}
+
+		$type = 'clothing';
+
+		$subtype = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
+
+		return array(
+			'id'       => $variation_id ? $variation_id : $product_id,
+			'parentId' => $product_id,
+			'name'     => $product->get_name(),
+			'type'     => $type,
+			'subtype'  => $subtype ? $subtype : 'mixed',
 		);
 	}
 

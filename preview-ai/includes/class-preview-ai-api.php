@@ -32,9 +32,11 @@ class PREVIEW_AI_Api {
 
 	/**
 	 * Initialize API client.
+	 *
+	 * @param string|null $api_key Optional API key. If null, uses saved option.
 	 */
-	public function __construct() {
-		$this->api_key = get_option( 'preview_ai_api_key', '' );
+	public function __construct( $api_key = null ) {
+		$this->api_key = $api_key ?? get_option( 'preview_ai_api_key', '' );
 	}
 
 	/**
@@ -84,23 +86,25 @@ class PREVIEW_AI_Api {
 
 		// Handle error codes.
 		if ( 429 === $code ) {
-			// Credits exhausted.
+			// Tokens exhausted.
 			self::update_account_status( array(
-				'credits_remaining' => 0,
-				'active'            => true,
+				'tokens_remaining' => 0,
+				'active'           => true,
 			) );
 		}
 
 		if ( 403 === $code ) {
 			// Account deactivated.
 			self::update_account_status( array(
-				'credits_remaining' => 0,
-				'active'            => false,
+				'tokens_remaining' => 0,
+				'active'           => false,
 			) );
 		}
 
 		if ( $code >= 400 ) {
-			$message = isset( $result['error'] ) ? $result['error'] : __( 'API request failed', 'preview-ai' );
+			$message = isset( $result['detail'] )
+				? $result['detail']
+				: ( isset( $result['error'] ) ? $result['error'] : __( 'API request failed', 'preview-ai' ) );
 			PREVIEW_AI_Logger::error( 'API request failed with HTTP error', array(
 				'path'          => $path,
 				'status_code'   => $code,
@@ -114,7 +118,7 @@ class PREVIEW_AI_Api {
 
 	/**
 	 * Check if widget can be displayed.
-	 * Returns false if no API key, deactivated, or no credits.
+	 * Returns false if no API key, deactivated, or no tokens.
 	 *
 	 * @return bool
 	 */
@@ -134,8 +138,8 @@ class PREVIEW_AI_Api {
 			return true;
 		}
 
-		// No credits left.
-		if ( isset( $status['credits_remaining'] ) && $status['credits_remaining'] <= 0 ) {
+		// No tokens left.
+		if ( isset( $status['tokens_remaining'] ) && $status['tokens_remaining'] <= 0 ) {
 			return false;
 		}
 
@@ -207,6 +211,26 @@ class PREVIEW_AI_Api {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Pre-check user image quality via backend.
+	 *
+	 * @param array $user_image User image data (base64 + mime_type).
+	 * @return array|WP_Error
+	 */
+	public function check_user_image( $user_image, $product_data ) {
+		PREVIEW_AI_Logger::debug( 'Starting user image pre-check', array(
+			'product_data' => $product_data
+		) );
+		return $this->request(
+			'generate/check',
+			array(
+				'user_image' => $user_image,
+				'product_data' => $product_data,
+			),
+			10
+		);
 	}
 
 	/**

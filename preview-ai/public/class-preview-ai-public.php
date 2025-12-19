@@ -95,7 +95,7 @@ class PREVIEW_AI_Public {
 	 * @since 1.0.0
 	 */
 	public function render_widget() {
-		// Check if widget is available (API key + credits).
+		// Check if widget is available (API key + tokens).
 		if ( ! PREVIEW_AI_Api::is_widget_available() ) {
 			return;
 		}
@@ -133,7 +133,7 @@ class PREVIEW_AI_Public {
 	 * @return string HTML output.
 	 */
 	public static function render_widget_output( $product_id, $overrides = array() ) {
-		// Check if widget is available (API key + credits).
+		// Check if widget is available (API key + tokens).
 		if ( ! PREVIEW_AI_Api::is_widget_available() ) {
 			return '';
 		}
@@ -155,11 +155,52 @@ class PREVIEW_AI_Public {
 				'nonce'       => wp_create_nonce( 'preview_ai_ajax' ),
 				'productId'   => $product_id,
 				'variationId' => '',
-			'i18n'        => array(
-				'error'       => __( 'Something went wrong. Please try again later.', 'preview-ai' ),
-				'openCamera'  => __( 'Open camera', 'preview-ai' ),
-				'uploadPhoto' => __( 'Upload photo', 'preview-ai' ),
-			),
+				'i18n'      => array(
+					'error'         => __( 'Something went wrong. Please try again later.', 'preview-ai' ),
+					'openCamera'    => __( 'Open camera', 'preview-ai' ),
+					'uploadPhoto'   => __( 'Upload photo', 'preview-ai' ),
+					'checkingPhoto' => __( 'Checking photo…', 'preview-ai' ),
+					'photoOk'       => __( 'Photo looks good.', 'preview-ai' ),
+					'photoWarning'  => __( 'Photo is valid, but could be improved.', 'preview-ai' ),
+					'photoBad'      => __( 'Photo is not valid. Please try another one.', 'preview-ai' ),
+					'warningCodes'  => array(
+						// Generic / heuristic checks (backend/src/api/routes/generate.py).
+						'LOW_RESOLUTION' => __( 'The photo has low resolution; the result may look blurry.', 'preview-ai' ),
+						'LANDSCAPE'      => __( 'The photo looks landscape; it usually works better in portrait (front-facing body).', 'preview-ai' ),
+						'LOW_LIGHT'      => __( 'The photo is a bit dark; try more front-facing light.', 'preview-ai' ),
+						'OVEREXPOSED'    => __( 'The photo is overexposed; avoid strong backlight or very direct light.', 'preview-ai' ),
+
+						// Pose checks (backend/src/services/pose_check.py).
+						'NO_POSE'                => __( 'No person is clearly detected.', 'preview-ai' ),
+						'MULTI_PERSON'           => __( 'The photo seems to contain more than one person.', 'preview-ai' ),
+						'TIP_LIGHT'              => __( 'Try a front-facing photo with good lighting.', 'preview-ai' ),
+						'TIP_CROP'               => __( 'Avoid heavy crops and occlusions.', 'preview-ai' ),
+						'TIP_SINGLE'             => __( 'Use a front-facing photo with a single person.', 'preview-ai' ),
+						'TIP_BG'                 => __( 'Avoid people in the background, mirrors, or posters with people.', 'preview-ai' ),
+						'LOW_TORSO_CONF'          => __( 'Torso is not detected clearly; try a front-facing photo with the torso visible.', 'preview-ai' ),
+						'LOW_ARMS_CONF'           => __( 'Arms are not detected clearly. Try to include shoulders and arms.', 'preview-ai' ),
+						'ARMS_RAISED'            => __( 'Arms look raised. Please keep arms relaxed down.', 'preview-ai' ),
+						'ARMS_BENT'              => __( 'Arms look bent. Relax your arms if possible.', 'preview-ai' ),
+						'ARMS_CROSSED'           => __( 'Arms look crossed. Keep arms separated and relaxed.', 'preview-ai' ),
+						'NO_TORSO_DETECTED'      => __( 'Upper torso is not detected. The photo may be cropped from the waist, which can still work for pants.', 'preview-ai' ),
+						'LEGS_BENT'              => __( 'Legs look quite bent. Stand with straighter legs if possible.', 'preview-ai' ),
+						'ANKLES_CROPPED'         => __( 'Feet/ankles look cropped. Please include them fully.', 'preview-ai' ),
+						'NO_KNEES_DETECTED'      => __( 'Knees are not detected. It can still work, but for best results include from knees down to the full feet.', 'preview-ai' ),
+						'HEAD_CROPPED'           => __( 'Head looks cropped. We need the full body in frame.', 'preview-ai' ),
+						'FEET_CROPPED'           => __( 'Feet are cropped. We need the full body from head to toe.', 'preview-ai' ),
+						'POSE_CROUCHED'          => __( 'Pose looks crouched or seated. Stand upright if possible.', 'preview-ai' ),
+						'POSE_SIDEWAYS'          => __( 'Photo looks sideways. A front-facing photo works best.', 'preview-ai' ),
+						'LEGS_TOO_BENT'          => __( 'Legs are too bent (seated/crouching). Stand with straighter legs.', 'preview-ai' ),
+						'MISSING_LEFT_SHOULDER'  => __( 'Left shoulder is not detected clearly.', 'preview-ai' ),
+						'MISSING_RIGHT_SHOULDER' => __( 'Right shoulder is not detected clearly.', 'preview-ai' ),
+						'MISSING_LEFT_HIP'       => __( 'Left hip is not detected clearly.', 'preview-ai' ),
+						'MISSING_RIGHT_HIP'      => __( 'Right hip is not detected clearly.', 'preview-ai' ),
+						'MISSING_LEFT_KNEE'      => __( 'Left knee is not detected clearly.', 'preview-ai' ),
+						'MISSING_RIGHT_KNEE'     => __( 'Right knee is not detected clearly.', 'preview-ai' ),
+						'MISSING_LEFT_ANKLE'     => __( 'Left ankle/foot is not detected clearly.', 'preview-ai' ),
+						'MISSING_RIGHT_ANKLE'    => __( 'Right ankle/foot is not detected clearly.', 'preview-ai' ),
+					),
+				),
 			)
 		);
 

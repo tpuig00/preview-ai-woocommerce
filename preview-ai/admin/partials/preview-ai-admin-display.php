@@ -83,9 +83,6 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 									<?php endif; ?>
 								<?php endforeach; ?>
 							</select>
-							<p class="description">
-								<?php esc_html_e( 'Select your store\'s main product type. This helps the AI generate better previews.', 'preview-ai' ); ?>
-							</p>
 						</td>
 					</tr>
 
@@ -128,7 +125,13 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							<button type="button" id="preview_ai_verify_btn" class="button" style="margin-left: 8px;">
 								<?php esc_html_e( 'Verify', 'preview-ai' ); ?>
 							</button>
-							<span id="preview_ai_verify_status" style="margin-left: 8px;"></span>
+							<a href="https://billing.stripe.com/p/login/test_cNi4gyfXV4u2bnb8QHgIo00" 
+							   target="_blank" 
+							   class="button" 
+							   style="margin-left: 8px;">
+								<?php esc_html_e( 'Manage Subscription', 'preview-ai' ); ?>
+							</a>
+							<div id="preview_ai_verify_status"></div>
 							<p class="description">
 								<?php esc_html_e( 'Your API key for authentication.', 'preview-ai' ); ?>
 							</p>

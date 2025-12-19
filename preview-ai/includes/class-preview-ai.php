@@ -202,6 +202,7 @@ class Preview_Ai {
 		// Admin AJAX handlers.
 		$this->loader->add_action( 'wp_ajax_preview_ai_learn_catalog', $plugin_admin, 'handle_learn_catalog' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_verify_api_key', $plugin_admin, 'handle_verify_api_key' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_dismiss_notice', $plugin_admin, 'handle_dismiss_notice' );
 
 		// Admin notices for API status.
 		$this->loader->add_action( 'admin_notices', $plugin_admin, 'display_admin_notices' );
@@ -227,6 +228,8 @@ class Preview_Ai {
 		$ajax_handler = new PREVIEW_AI_Ajax();
 		$this->loader->add_action( 'wp_ajax_preview_ai_upload', $ajax_handler, 'handle_upload' );
 		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_upload', $ajax_handler, 'handle_upload' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_check', $ajax_handler, 'handle_check' );
+		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_check', $ajax_handler, 'handle_check' );
 
 		// Conversion tracking.
 		$this->loader->add_action( 'woocommerce_checkout_order_processed', 'PREVIEW_AI_Tracking', 'save_to_order' );

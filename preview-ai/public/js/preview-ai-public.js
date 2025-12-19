@@ -14,6 +14,7 @@
 		var $imgAfter      = $( '#preview-ai-img-after' );
 		var $actions       = $( '#preview-ai-actions' );
 		var $generate      = $( '#preview-ai-generate' );
+		var $checkStatus   = $( '#preview-ai-check-status' );
 		var $resultActions = $( '#preview-ai-result-actions' );
 		var $download      = $( '#preview-ai-download' );
 		var $newPhotoBtn   = $( '#preview-ai-new-photo' );
@@ -24,6 +25,8 @@
 
 		var selectedFile      = null;
 		var generatedImageUrl = null;
+		var checkXhr          = null;
+		var checkToken        = 0;
 
 		// Detect mobile
 		var isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent );
@@ -91,10 +94,15 @@
 
 		// Reset to initial state
 		function resetToInstructions() {
+			if ( checkXhr && checkXhr.abort ) {
+				checkXhr.abort();
+			}
 			$camera.val( '' );
 			$gallery.val( '' );
 			selectedFile = null;
 			generatedImageUrl = null;
+			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty();
+			$generate.prop( 'disabled', true );
 			$imgBefore.attr( 'src', '' );
 			$imgAfter.attr( 'src', '' );
 			$stage.removeClass( 'is-visible is-loading is-result' );
@@ -104,6 +112,139 @@
 			$resultActions.removeClass( 'is-visible' );
 			$disclaimer.removeClass( 'is-visible' );
 			$instructions.removeClass( 'is-hidden' );
+		}
+
+		function renderCheckStatus( status, message, warnings ) {
+			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty();
+
+			if ( ! message && ( ! warnings || ! warnings.length ) ) {
+				return;
+			}
+
+			if ( status === 'ok' ) {
+				$checkStatus.addClass( 'is-ok' );
+			} else if ( status === 'warning' ) {
+				$checkStatus.addClass( 'is-warning' );
+			} else if ( status === 'error' ) {
+				$checkStatus.addClass( 'is-error' );
+			}
+
+			if ( message ) {
+				$( '<div />' ).text( message ).appendTo( $checkStatus );
+			}
+
+			if ( warnings && warnings.length ) {
+				var $ul = $( '<ul />' );
+				warnings.forEach( function( w ) {
+					var raw = String( w || '' );
+					var code = null;
+					var backendText = raw;
+
+					// Parse stable format "CODE: message".
+					var idx = raw.indexOf( ':' );
+					if ( idx > 0 ) {
+						code = raw.slice( 0, idx ).trim();
+						backendText = raw.slice( idx + 1 ).trim();
+					}
+
+					var translated = null;
+					if ( code && previewAiData.i18n && previewAiData.i18n.warningCodes ) {
+						translated = previewAiData.i18n.warningCodes[ code ] || null;
+					}
+
+					var finalText = raw;
+					if ( code && translated ) {
+						finalText = code + ': ' + translated;
+					} else if ( code && backendText ) {
+						finalText = code + ': ' + backendText;
+					}
+
+					$( '<li />' ).text( finalText ).appendTo( $ul );
+				} );
+				$ul.appendTo( $checkStatus );
+			}
+		}
+
+		function startPrecheck( file ) {
+			checkToken++;
+			var token = checkToken;
+
+			if ( checkXhr && checkXhr.abort ) {
+				checkXhr.abort();
+			}
+
+			$generate.prop( 'disabled', true );
+
+			renderCheckStatus(
+				null,
+				( previewAiData.i18n && previewAiData.i18n.checkingPhoto ) || 'Comprobando foto...',
+				[]
+			);
+
+			var formData = new FormData();
+			formData.append( 'action', 'preview_ai_check' );
+			formData.append( 'nonce', previewAiData.nonce );
+			formData.append( 'product_id', previewAiData.productId );
+
+			var $var = $( 'input.variation_id' );
+			if ( $var.length && $var.val() ) {
+				formData.append( 'variation_id', $var.val() );
+			}
+
+			formData.append( 'image', file );
+
+			checkXhr = $.ajax( {
+				url: previewAiData.ajaxUrl,
+				type: 'POST',
+				data: formData,
+				contentType: false,
+				processData: false,
+				success: function( res ) {
+					if ( token !== checkToken ) {
+						return;
+					}
+
+					if ( res && res.success && res.data ) {
+						var status = res.data.status;
+						var warnings = res.data.warnings || [];
+
+						if ( status === 'ok' ) {
+							renderCheckStatus( 'ok', ( previewAiData.i18n && previewAiData.i18n.photoOk ) || 'Photo looks good.', [] );
+							$generate.prop( 'disabled', false );
+							return;
+						}
+
+						if ( status === 'warning' ) {
+							renderCheckStatus( 'warning', ( previewAiData.i18n && previewAiData.i18n.photoWarning ) || 'Photo is valid, but could be improved.', warnings );
+							$generate.prop( 'disabled', false );
+							return;
+						}
+
+						renderCheckStatus( 'error', ( previewAiData.i18n && previewAiData.i18n.photoBad ) || 'Photo is not valid. Please try another one.', warnings );
+						$generate.prop( 'disabled', true );
+						return;
+					}
+
+					renderCheckStatus(
+						'error',
+						( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.',
+						[]
+					);
+				},
+				error: function( xhr, statusText ) {
+					if ( token !== checkToken ) {
+						return;
+					}
+					if ( statusText === 'abort' ) {
+						return;
+					}
+					renderCheckStatus(
+						'error',
+						( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.',
+						[]
+					);
+				}
+			} );
 		}
 
 		$close.on( 'click', function() {
@@ -140,8 +281,10 @@
 					$stage.addClass( 'is-visible' ).removeClass( 'is-result' );
 					$actions.addClass( 'is-visible' );
 					$generate.removeClass( 'is-hidden' );
+					$generate.prop( 'disabled', true );
 					$resultActions.removeClass( 'is-visible' );
 					$disclaimer.removeClass( 'is-visible' );
+					startPrecheck( selectedFile );
 				};
 				reader.readAsDataURL( selectedFile );
 			}
@@ -183,6 +326,9 @@
 
 		// Generate preview
 		$generate.on( 'click', function() {
+			if ( $generate.prop( 'disabled' ) ) {
+				return;
+			}
 			if ( ! selectedFile ) {
 				return;
 			}
