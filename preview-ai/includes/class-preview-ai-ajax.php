@@ -230,12 +230,13 @@ class PREVIEW_AI_Ajax {
 		}
 
 		return array(
-			'id'       => $variation_id ? $variation_id : $product_id,
-			'parentId' => $product_id,
-			'name'     => $product->get_name(),
-			'type'     => $type,
-			'subtype'  => $subtype ? $subtype : 'mixed',
-			'images'   => $images,
+			'id'          => $variation_id ? $variation_id : $product_id,
+			'parentId'    => $product_id,
+			'variation_id' => $variation_id ? $variation_id : null,
+			'name'        => $product->get_name(),
+			'type'        => $type,
+			'subtype'     => $subtype ? $subtype : 'mixed',
+			'images'      => $images,
 		);
 	}
 
@@ -252,11 +253,12 @@ class PREVIEW_AI_Ajax {
 		$subtype = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
 
 		return array(
-			'id'       => $variation_id ? $variation_id : $product_id,
-			'parentId' => $product_id,
-			'name'     => $product->get_name(),
-			'type'     => $type,
-			'subtype'  => $subtype ? $subtype : 'mixed',
+			'id'          => $variation_id ? $variation_id : $product_id,
+			'parentId'    => $product_id,
+			'variation_id' => $variation_id ? $variation_id : null,
+			'name'        => $product->get_name(),
+			'type'        => $type,
+			'subtype'     => $subtype ? $subtype : 'mixed',
 		);
 	}
 

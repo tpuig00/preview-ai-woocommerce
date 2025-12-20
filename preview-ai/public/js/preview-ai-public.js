@@ -101,7 +101,7 @@
 			$gallery.val( '' );
 			selectedFile = null;
 			generatedImageUrl = null;
-			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty();
+			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().show();
 			$generate.prop( 'disabled', true );
 			$imgBefore.attr( 'src', '' );
 			$imgAfter.attr( 'src', '' );
@@ -348,6 +348,7 @@
 			$stage.addClass( 'is-loading' );
 			$generate.addClass( 'is-hidden' );
 			$changeBtn.addClass( 'is-hidden' );
+			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().hide();
 
 			$.ajax( {
 				url: previewAiData.ajaxUrl,

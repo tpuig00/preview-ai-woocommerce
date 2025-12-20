@@ -193,13 +193,14 @@ class PREVIEW_AI_Api {
 	 */
 	public function generate_preview( $user_image, $product_data ) {
 		PREVIEW_AI_Logger::debug( 'Starting preview generation', array(
-			'product_id' => $product_data['id'],
+			'product_id'   => $product_data['parentId'],
+			'variation_id' => $product_data['variation_id'],
 		) );
 
 		$result = $this->request( 'generate/', array(
 			'user_image'      => $user_image,
-			'product_id'      => $product_data['id'],
-			'parent_id'       => $product_data['parentId'],
+			'product_id'      => $product_data['parentId'],
+			'variation_id'    => $product_data['variation_id'],
 			'name'            => $product_data['name'],
 			'product_images'  => $product_data['images'],
 			'product_type'    => $product_data['type'],
