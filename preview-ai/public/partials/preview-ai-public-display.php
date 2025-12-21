@@ -121,7 +121,12 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 				<div class="preview-ai-loading-shimmer"></div>
 				<div class="preview-ai-loading-content">
 					<div class="preview-ai-loading-spinner"></div>
-					<span><?php esc_html_e( 'Creating your preview...', 'preview-ai' ); ?></span>
+				<div class="preview-ai-loading-steps">
+					<span class="preview-ai-step is-active"><?php esc_html_e( 'Analyzing your photo...', 'preview-ai' ); ?></span>
+					<span class="preview-ai-step"><?php esc_html_e( 'Preparing garment...', 'preview-ai' ); ?></span>
+					<span class="preview-ai-step"><?php esc_html_e( 'Fitting to your body...', 'preview-ai' ); ?></span>
+					<span class="preview-ai-step"><?php esc_html_e( 'Adding final touches...', 'preview-ai' ); ?></span>
+				</div>
 				</div>
 			</div>
 		</div>

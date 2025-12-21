@@ -59,6 +59,15 @@ register_activation_hook( __FILE__, 'activate_Preview_Ai' );
 register_deactivation_hook( __FILE__, 'deactivate_Preview_Ai' );
 
 /**
+ * Check if tracking table needs update on plugins_loaded.
+ */
+add_action( 'plugins_loaded', function() {
+	if ( class_exists( 'PREVIEW_AI_Tracking' ) ) {
+		PREVIEW_AI_Tracking::maybe_create_table();
+	}
+} );
+
+/**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */

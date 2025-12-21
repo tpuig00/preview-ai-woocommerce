@@ -257,7 +257,7 @@ class PREVIEW_AI_Api {
 		) );
 
 		# Solo enviar 3 productos para testing
-		$products_data = array_slice( $products_data, 0, 3 );
+		#$products_data = array_slice( $products_data, 0, 3 );
 
 		PREVIEW_AI_Logger::debug( 'Products data', array( 'products_data' => $products_data ) );
 

@@ -26,12 +26,17 @@ class PREVIEW_AI_Activator {
 	 * Run on plugin activation.
 	 *
 	 * Sets up the initial state for the plugin:
+	 * - Creates tracking database table
 	 * - Marks that onboarding is needed (if no API key exists)
 	 * - Sets default options
 	 *
 	 * @since    1.0.0
 	 */
 	public static function activate() {
+		// Create tracking table.
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-tracking.php';
+		PREVIEW_AI_Tracking::create_table();
+
 		// Check if this is a fresh install (no API key configured).
 		$existing_api_key = get_option( 'preview_ai_api_key', '' );
 

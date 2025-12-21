@@ -235,7 +235,9 @@ class Preview_Ai {
 
 		// Conversion tracking.
 		$this->loader->add_action( 'woocommerce_checkout_order_processed', 'PREVIEW_AI_Tracking', 'save_to_order' );
+		$this->loader->add_action( 'woocommerce_payment_complete', 'PREVIEW_AI_Tracking', 'track_completed' );
 		$this->loader->add_action( 'woocommerce_order_status_completed', 'PREVIEW_AI_Tracking', 'track_completed' );
+		$this->loader->add_action( 'woocommerce_order_status_processing', 'PREVIEW_AI_Tracking', 'track_completed' );
 		$this->loader->add_action( 'woocommerce_order_status_refunded', 'PREVIEW_AI_Tracking', 'track_refunded' );
 
 	}

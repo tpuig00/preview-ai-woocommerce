@@ -334,8 +334,8 @@ class PREVIEW_AI_Admin {
 			var $result = $('#onboarding-result');
 			var $progress = $('#onboarding-progress');
 			
-			setTimeout(function() { $bar.css('width', '20%'); }, 100);
-			setTimeout(function() { $bar.css('width', '40%'); }, 500);
+			setTimeout(function() { $bar.css('width', '20%'); }, 200);
+			setTimeout(function() { $bar.css('width', '40%'); }, 600);
 			
 			$.ajax({
 				url: ajaxUrl,
@@ -357,12 +357,22 @@ class PREVIEW_AI_Admin {
 						if (response.success) {
 							var configured = response.data.configured || 0;
 							var total = response.data.total || 0;
+							var isLimited = response.data.is_limited || false;
+							var totalReceived = response.data.total_received || 0;
+							
+							var limitedNotice = '';
+							if (isLimited) {
+								limitedNotice = '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin-top:12px;">' +
+									'<p style="color:#92400e;margin:0;font-size:13px;">⚡ <?php echo esc_js( __( 'Free trial: Only 3 random products were analyzed.', 'preview-ai' ) ); ?> ' +
+									'</div>';
+							}
 							
 							$result.html(
 								'<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;">' +
 								'<p style="color:#166534;font-weight:600;margin:0;font-size:16px;">✓ ' + 
 								'<?php echo esc_js( __( 'Catalog configured!', 'preview-ai' ) ); ?></p>' +
 								'<p style="color:#15803d;margin:8px 0 0;font-size:14px;">' + configured + ' <?php echo esc_js( __( 'products ready for preview', 'preview-ai' ) ); ?></p>' +
+								limitedNotice +
 								'</div>' +
 								'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">' +
 								'<a href="edit.php?post_type=product" class="button button-primary" style="height:auto;padding:12px 24px;font-size:14px;">' +
@@ -746,12 +756,20 @@ class PREVIEW_AI_Admin {
 		// Process results and save as product meta.
 		$stats = $this->save_catalog_classifications( $result );
 
+		// Check if free tier limitation was applied.
+		$is_limited      = isset( $result['is_limited'] ) && $result['is_limited'];
+		$total_received  = isset( $result['total_received'] ) ? intval( $result['total_received'] ) : 0;
+		$total_analyzed  = isset( $result['total_analyzed'] ) ? intval( $result['total_analyzed'] ) : 0;
+
 		wp_send_json_success(
 			array(
 				'total'           => $stats['total'],
 				'configured'      => $stats['configured'],
 				'needs_review'    => $stats['needs_review'],
 				'images_analyzed' => $stats['images_analyzed'],
+				'is_limited'      => $is_limited,
+				'total_received'  => $total_received,
+				'total_analyzed'  => $total_analyzed,
 				'message'         => sprintf(
 					/* translators: 1: configured products, 2: products that couldn't be enabled, 3: images analyzed */
 					__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),

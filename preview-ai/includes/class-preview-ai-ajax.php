@@ -65,7 +65,7 @@ class PREVIEW_AI_Ajax {
 		}
 
 		// Track preview for conversion.
-		PREVIEW_AI_Tracking::track_preview( $product_id );
+		PREVIEW_AI_Tracking::track_preview( $product_id, $variation_id ? $variation_id : null );
 
 		wp_send_json_success( $result );
 	}

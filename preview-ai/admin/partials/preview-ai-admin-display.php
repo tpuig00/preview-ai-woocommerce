@@ -29,9 +29,151 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		   class="nav-tab <?php echo 'widget' === $active_tab ? 'nav-tab-active' : ''; ?>">
 			<?php esc_html_e( 'Widget', 'preview-ai' ); ?>
 		</a>
+		<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats' ) ); ?>" 
+		   class="nav-tab <?php echo 'stats' === $active_tab ? 'nav-tab-active' : ''; ?>">
+			<?php esc_html_e( 'Statistics', 'preview-ai' ); ?>
+		</a>
 	</nav>
 
-	<?php if ( 'general' === $active_tab ) : ?>
+	<?php if ( 'stats' === $active_tab ) : ?>
+		<!-- Statistics Tab -->
+		<?php
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$period = isset( $_GET['period'] ) ? sanitize_key( $_GET['period'] ) : '30days';
+		$stats  = PREVIEW_AI_Tracking::get_detailed_stats( $period );
+		?>
+		
+		<div class="preview-ai-stats-header" style="margin: 20px 0; display: flex; align-items: center; gap: 16px;">
+			<label for="preview_ai_period" style="font-weight: 500;"><?php esc_html_e( 'Period:', 'preview-ai' ); ?></label>
+			<select id="preview_ai_period" onchange="window.location.href=this.value;">
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=today' ) ); ?>" <?php selected( $period, 'today' ); ?>>
+					<?php esc_html_e( 'Today', 'preview-ai' ); ?>
+				</option>
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=7days' ) ); ?>" <?php selected( $period, '7days' ); ?>>
+					<?php esc_html_e( 'Last 7 days', 'preview-ai' ); ?>
+				</option>
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=30days' ) ); ?>" <?php selected( $period, '30days' ); ?>>
+					<?php esc_html_e( 'Last 30 days', 'preview-ai' ); ?>
+				</option>
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=all' ) ); ?>" <?php selected( $period, 'all' ); ?>>
+					<?php esc_html_e( 'All time', 'preview-ai' ); ?>
+				</option>
+			</select>
+		</div>
+
+		<!-- Primary Stats Cards -->
+		<div class="preview-ai-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px;">
+			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
+				<div style="font-size: 32px; font-weight: 600; color: #2271b1;"><?php echo esc_html( number_format_i18n( $stats['users_tried'] ) ); ?></div>
+				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'Customers Used Preview AI', 'preview-ai' ); ?></div>
+			</div>
+			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
+				<div style="font-size: 32px; font-weight: 600; color: #00a32a;"><?php echo esc_html( number_format_i18n( $stats['orders_influenced'] ) ); ?></div>
+				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'Orders Influenced', 'preview-ai' ); ?></div>
+			</div>
+			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
+				<div style="font-size: 32px; font-weight: 600; color: #dba617;"><?php echo esc_html( $stats['user_conversion_rate'] ); ?>%</div>
+				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'User Conversion Rate', 'preview-ai' ); ?></div>
+			</div>
+			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
+				<div style="font-size: 32px; font-weight: 600; color: #135e96;"><?php echo wp_kses_post( wc_price( $stats['influenced_revenue'] ) ); ?></div>
+				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'Revenue Influenced', 'preview-ai' ); ?></div>
+			</div>
+		</div>
+
+		<!-- Secondary Stats -->
+		<?php if ( $stats['avg_order_value'] > 0 || $stats['orders_refunded'] > 0 ) : ?>
+		<div class="preview-ai-stats-secondary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 30px;">
+			<?php if ( $stats['avg_order_value'] > 0 ) : ?>
+			<div style="background: #f6f7f7; padding: 16px; border-radius: 4px; text-align: center;">
+				<div style="font-size: 24px; font-weight: 500;"><?php echo wp_kses_post( wc_price( $stats['avg_order_value'] ) ); ?></div>
+				<div style="color: #787c82; font-size: 13px;"><?php esc_html_e( 'Avg. Order Value', 'preview-ai' ); ?></div>
+			</div>
+			<?php endif; ?>
+			<?php if ( $stats['orders_refunded'] > 0 ) : ?>
+			<div style="background: #f6f7f7; padding: 16px; border-radius: 4px; text-align: center;">
+				<div style="font-size: 24px; font-weight: 500; color: #d63638;"><?php echo esc_html( number_format_i18n( $stats['orders_refunded'] ) ); ?></div>
+				<div style="color: #787c82; font-size: 13px;"><?php esc_html_e( 'Orders Refunded', 'preview-ai' ); ?></div>
+			</div>
+			<?php endif; ?>
+		</div>
+		<?php endif; ?>
+
+		<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+			<!-- Top Products -->
+			<div class="preview-ai-top-products" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
+				<h3 style="margin: 0 0 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e( 'Top Converting Products', 'preview-ai' ); ?></h3>
+				<?php
+				$top_products = PREVIEW_AI_Tracking::get_top_products( 5 );
+				if ( empty( $top_products ) ) :
+					?>
+					<p style="color: #787c82; font-style: italic;"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
+				<?php else : ?>
+					<table class="widefat" style="border: none;">
+						<thead>
+							<tr>
+								<th style="padding: 8px 0;"><?php esc_html_e( 'Product', 'preview-ai' ); ?></th>
+								<th style="padding: 8px 0; text-align: center;"><?php esc_html_e( 'Previews', 'preview-ai' ); ?></th>
+								<th style="padding: 8px 0; text-align: center;"><?php esc_html_e( 'Conv.', 'preview-ai' ); ?></th>
+								<th style="padding: 8px 0; text-align: center;"><?php esc_html_e( 'Rate', 'preview-ai' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $top_products as $product ) : ?>
+								<tr>
+									<td style="padding: 8px 0;">
+										<a href="<?php echo esc_url( get_edit_post_link( $product['product_id'] ) ); ?>">
+											<?php echo esc_html( $product['product_name'] ); ?>
+										</a>
+									</td>
+									<td style="padding: 8px 0; text-align: center;"><?php echo esc_html( $product['previews'] ); ?></td>
+									<td style="padding: 8px 0; text-align: center;"><?php echo esc_html( $product['conversions'] ); ?></td>
+									<td style="padding: 8px 0; text-align: center;"><?php echo esc_html( $product['conversion_rate'] ); ?>%</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+
+			<!-- Recent Conversions -->
+			<div class="preview-ai-recent-conversions" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
+				<h3 style="margin: 0 0 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e( 'Recent Conversions', 'preview-ai' ); ?></h3>
+				<?php
+				$recent = PREVIEW_AI_Tracking::get_recent_conversions( 5 );
+				if ( empty( $recent ) ) :
+					?>
+					<p style="color: #787c82; font-style: italic;"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
+				<?php else : ?>
+					<table class="widefat" style="border: none;">
+						<thead>
+							<tr>
+								<th style="padding: 8px 0;"><?php esc_html_e( 'Customer', 'preview-ai' ); ?></th>
+								<th style="padding: 8px 0;"><?php esc_html_e( 'Product', 'preview-ai' ); ?></th>
+								<th style="padding: 8px 0; text-align: right;"><?php esc_html_e( 'Amount', 'preview-ai' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $recent as $conv ) : ?>
+								<tr>
+									<td style="padding: 8px 0;">
+										<?php echo esc_html( $conv['customer_name'] ); ?>
+									</td>
+									<td style="padding: 8px 0;">
+										<?php echo esc_html( $conv['product_name'] ); ?>
+									</td>
+									<td style="padding: 8px 0; text-align: right;">
+										<?php echo wp_kses_post( wc_price( $conv['order_total'] ) ); ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
+
+	<?php elseif ( 'general' === $active_tab ) : ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'preview_ai_general_settings' ); ?>
 			<!-- General Tab -->
@@ -179,7 +321,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			</div>
 		</form>
 
-	<?php else : ?>
+	<?php elseif ( 'widget' === $active_tab ) : ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'preview_ai_widget_settings' ); ?>
 			<!-- Widget Tab -->

@@ -27,9 +27,49 @@
 		var generatedImageUrl = null;
 		var checkXhr          = null;
 		var checkToken        = 0;
+		var loadingInterval   = null;
 
 		// Detect mobile
 		var isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent );
+
+		// Loading steps animation
+		function startLoadingSteps() {
+			var $steps = $( '.preview-ai-step' );
+			var current = 0;
+			var total = $steps.length;
+
+			if ( total === 0 ) {
+				return;
+			}
+
+			// Reset to first step
+			$steps.removeClass( 'is-active is-exiting' );
+			$steps.eq( 0 ).addClass( 'is-active' );
+
+			loadingInterval = setInterval( function() {
+				var $current = $steps.eq( current );
+				var next = ( current + 1 ) % total;
+				var $next = $steps.eq( next );
+
+				$current.addClass( 'is-exiting' ).removeClass( 'is-active' );
+
+				setTimeout( function() {
+					$current.removeClass( 'is-exiting' );
+					$next.addClass( 'is-active' );
+				}, 200 );
+
+				current = next;
+			}, 3100 );
+		}
+
+		function stopLoadingSteps() {
+			if ( loadingInterval ) {
+				clearInterval( loadingInterval );
+				loadingInterval = null;
+			}
+			$( '.preview-ai-step' ).removeClass( 'is-active is-exiting' );
+			$( '.preview-ai-step' ).first().addClass( 'is-active' );
+		}
 
 		// Adapt UI for device
 		function adaptUIForDevice() {
@@ -97,6 +137,7 @@
 			if ( checkXhr && checkXhr.abort ) {
 				checkXhr.abort();
 			}
+			stopLoadingSteps();
 			$camera.val( '' );
 			$gallery.val( '' );
 			selectedFile = null;
@@ -305,6 +346,7 @@
 		// Show error message
 		function showError( message ) {
 			$stage.removeClass( 'is-loading' );
+			stopLoadingSteps();
 			$generate.removeClass( 'is-hidden' );
 			$changeBtn.removeClass( 'is-hidden' );
 
@@ -349,6 +391,7 @@
 			$generate.addClass( 'is-hidden' );
 			$changeBtn.addClass( 'is-hidden' );
 			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().hide();
+			startLoadingSteps();
 
 			$.ajax( {
 				url: previewAiData.ajaxUrl,
@@ -358,6 +401,7 @@
 				processData: false,
 				success: function( res ) {
 					$stage.removeClass( 'is-loading' );
+					stopLoadingSteps();
 
 					if ( res && res.success && res.data && res.data.generated_image_url ) {
 						var img = new Image();
