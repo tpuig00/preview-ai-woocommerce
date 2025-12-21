@@ -27,7 +27,33 @@
 				if ( res.data.renew_date ) {
 					html += '<div style="color:#64748b; font-size:12px; margin-top:4px;">Renews on ' + res.data.renew_date + '</div>';
 				}
+				// Show upgrade link if free trial
+				if ( res.data.subscription_status === 'free_trial' ) {
+					html += '<div style="margin-top:8px;">';
+					html += '<a href="https://previewai.app/pricing" target="_blank" style="color:#2271b1; text-decoration:none; font-size:13px; font-weight:500;">';
+					html += '↑ Upgrade your subscription →</a>';
+					html += '</div>';
+				}
 				html += '</div>';
+				
+				// Show/hide "Manage Subscription" button based on subscription status.
+				var $manageBtn = $( '#preview_ai_manage_subscription_btn' );
+				var subscriptionStatus = res.data.subscription_status || '';
+				var isPaidPlan = ( subscriptionStatus !== 'free_trial' && subscriptionStatus !== '' );
+				
+				if ( isPaidPlan ) {
+					// Show button if hidden.
+					if ( ! $manageBtn.length ) {
+						$( '#preview_ai_verify_btn' ).after(
+							'<a href="https://billing.stripe.com/p/login/test_cNi4gyfXV4u2bnb8QHgIo00" ' +
+							'target="_blank" class="button" style="margin-left: 8px;" ' +
+							'id="preview_ai_manage_subscription_btn">Manage Subscription</a>'
+						);
+					}
+				} else {
+					// Hide button if shown.
+					$manageBtn.remove();
+				}
 			} else {
 				html = '<div style="margin-top:12px; padding:12px 16px; background:#fef2f2; border-left:4px solid #ef4444; border-radius:4px;">';
 				html += '<div style="color:#dc2626; font-weight:600;">✗ ' + ( res.data.message || 'Verification failed' ) + '</div>';
@@ -151,6 +177,65 @@
 				} );
 			}
 		} );
+
+		// Onboarding: Free trial registration form.
+		var $registerForm = $( '#preview-ai-register-form' );
+		
+		if ( $registerForm.length && typeof previewAiAdmin !== 'undefined' ) {
+			$registerForm.on( 'submit', function( e ) {
+				e.preventDefault();
+				
+				var $form = $( this );
+				var $btn = $form.find( 'button[type="submit"]' );
+				var $btnText = $form.find( '.preview-ai-onboarding__btn-text' );
+				var $btnLoading = $form.find( '.preview-ai-onboarding__btn-loading' );
+				var $notice = $( '#preview-ai-onboarding' );
+				var $content = $notice.find( '.preview-ai-onboarding__content' );
+				var $success = $notice.find( '.preview-ai-onboarding__success' );
+				var email = $form.find( '#preview-ai-register-email' ).val();
+				
+				// Disable and show loading.
+				$btn.prop( 'disabled', true );
+				$btnText.hide();
+				$btnLoading.show();
+				
+				$.ajax( {
+					url: previewAiAdmin.ajaxUrl,
+					type: 'POST',
+					data: {
+						action: 'preview_ai_register_site',
+						nonce: previewAiAdmin.registerNonce,
+						email: email
+					},
+					success: function( res ) {
+						if ( res.success ) {
+							// Show success message.
+							$content.hide();
+							$success.find( '.preview-ai-onboarding__success-text' ).text( res.data.message );
+							$success.show();
+							$notice.css( 'border-left-color', '#00a32a' );
+							
+							// Redirect to settings page with onboarding flag.
+							setTimeout( function() {
+								window.location.href = 'edit.php?post_type=product&page=preview-ai&onboarding=complete';
+							}, 4000 );
+						} else {
+							// Show error inline.
+							$btn.prop( 'disabled', false );
+							$btnText.show();
+							$btnLoading.hide();
+							alert( res.data.message || previewAiAdmin.i18n.error );
+						}
+					},
+					error: function() {
+						$btn.prop( 'disabled', false );
+						$btnText.show();
+						$btnLoading.hide();
+						alert( previewAiAdmin.i18n.error );
+					}
+				} );
+			} );
+		}
 
 	});
 

@@ -229,14 +229,24 @@ class PREVIEW_AI_Ajax {
 			}
 		}
 
+		// Get image analysis metadata (prioritize variation, fallback to parent).
+		$image_analysis = null;
+		if ( $variation_id ) {
+			$image_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
+		}
+		if ( empty( $image_analysis ) ) {
+			$image_analysis = get_post_meta( $product_id, '_preview_ai_image_analysis', true );
+		}
+
 		return array(
-			'id'          => $variation_id ? $variation_id : $product_id,
-			'parentId'    => $product_id,
-			'variation_id' => $variation_id ? $variation_id : null,
-			'name'        => $product->get_name(),
-			'type'        => $type,
-			'subtype'     => $subtype ? $subtype : 'mixed',
-			'images'      => $images,
+			'id'             => $variation_id ? $variation_id : $product_id,
+			'parentId'       => $product_id,
+			'variation_id'   => $variation_id ? $variation_id : null,
+			'name'           => $product->get_name(),
+			'type'           => $type,
+			'subtype'        => $subtype ? $subtype : 'mixed',
+			'images'         => $images,
+			'image_analysis' => $image_analysis ? $image_analysis : null,
 		);
 	}
 

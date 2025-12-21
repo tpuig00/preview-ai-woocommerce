@@ -203,8 +203,10 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_preview_ai_learn_catalog', $plugin_admin, 'handle_learn_catalog' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_verify_api_key', $plugin_admin, 'handle_verify_api_key' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_dismiss_notice', $plugin_admin, 'handle_dismiss_notice' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_register_site', $plugin_admin, 'handle_register_site' );
 
-		// Admin notices for API status.
+		// Admin notices for API status and onboarding.
+		$this->loader->add_action( 'admin_notices', $plugin_admin, 'display_onboarding_notice' );
 		$this->loader->add_action( 'admin_notices', $plugin_admin, 'display_admin_notices' );
 
 	}

@@ -125,12 +125,21 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							<button type="button" id="preview_ai_verify_btn" class="button" style="margin-left: 8px;">
 								<?php esc_html_e( 'Verify', 'preview-ai' ); ?>
 							</button>
-							<a href="https://billing.stripe.com/p/login/test_cNi4gyfXV4u2bnb8QHgIo00" 
-							   target="_blank" 
-							   class="button" 
-							   style="margin-left: 8px;">
-								<?php esc_html_e( 'Manage Subscription', 'preview-ai' ); ?>
-							</a>
+							<?php
+							// Only show "Manage Subscription" for paid plans (not free_tier).
+							$status = PREVIEW_AI_Api::get_account_status();
+							$subscription_status = isset( $status['subscription_status'] ) ? $status['subscription_status'] : null;
+							$is_paid_plan = ( 'free_trial' !== $subscription_status && ! empty( $subscription_status ) );
+							?>
+							<?php if ( $is_paid_plan ) : ?>
+								<a href="https://billing.stripe.com/p/login/test_cNi4gyfXV4u2bnb8QHgIo00" 
+								   target="_blank" 
+								   class="button" 
+								   style="margin-left: 8px;"
+								   id="preview_ai_manage_subscription_btn">
+									<?php esc_html_e( 'Manage Subscription', 'preview-ai' ); ?>
+								</a>
+							<?php endif; ?>
 							<div id="preview_ai_verify_status"></div>
 							<p class="description">
 								<?php esc_html_e( 'Your API key for authentication.', 'preview-ai' ); ?>

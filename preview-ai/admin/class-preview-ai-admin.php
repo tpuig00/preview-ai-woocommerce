@@ -279,7 +279,136 @@ class PREVIEW_AI_Admin {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			return;
 		}
+
+		// Check if coming from onboarding (just registered).
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$is_onboarding = isset( $_GET['onboarding'] ) && 'complete' === $_GET['onboarding'];
+
+		if ( $is_onboarding ) {
+			// Add script to auto-trigger catalog analysis.
+			add_action( 'admin_footer', array( $this, 'render_onboarding_wizard' ) );
+		}
+
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-admin-display.php';
+	}
+
+	/**
+	 * Render onboarding wizard that auto-analyzes catalog.
+	 *
+	 * This is shown after user completes registration and is redirected
+	 * to the settings page. It automatically triggers catalog analysis
+	 * and shows progress/results.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_onboarding_wizard() {
+		?>
+		<div id="preview-ai-onboarding-wizard" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100000;display:flex;align-items:center;justify-content:center;">
+			<div style="background:#fff;border-radius:16px;padding:48px;max-width:520px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+				<div style="width:72px;height:72px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(34,197,94,0.3);">
+					<svg width="36" height="36" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+				</div>
+				<h2 style="margin:0 0 8px;font-size:26px;color:#1e293b;font-weight:700;">🎉 <?php esc_html_e( 'Preview AI Activated!', 'preview-ai' ); ?></h2>
+				<p style="color:#64748b;margin:0 0 32px;font-size:15px;"><?php esc_html_e( 'Setting up your store...', 'preview-ai' ); ?></p>
+				
+				<div id="onboarding-progress" style="margin-bottom:32px;">
+					<div style="height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;">
+						<div id="onboarding-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width 0.5s ease;"></div>
+					</div>
+					<p id="onboarding-status" style="margin:16px 0 0;color:#64748b;font-size:14px;"><?php esc_html_e( 'Analyzing your product catalog...', 'preview-ai' ); ?></p>
+				</div>
+				
+				<div id="onboarding-result" style="display:none;"></div>
+			</div>
+		</div>
+
+		<script>
+		(function($) {
+			'use strict';
+			
+			var ajaxUrl = '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>';
+			var nonce = '<?php echo esc_js( wp_create_nonce( 'preview_ai_learn_catalog' ) ); ?>';
+			
+			var $bar = $('#onboarding-bar');
+			var $status = $('#onboarding-status');
+			var $result = $('#onboarding-result');
+			var $progress = $('#onboarding-progress');
+			
+			setTimeout(function() { $bar.css('width', '20%'); }, 100);
+			setTimeout(function() { $bar.css('width', '40%'); }, 500);
+			
+			$.ajax({
+				url: ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'preview_ai_learn_catalog',
+					nonce: nonce
+				},
+				beforeSend: function() {
+					$bar.css('width', '60%');
+					$status.text('<?php echo esc_js( __( 'Configuring products...', 'preview-ai' ) ); ?>');
+				},
+				success: function(response) {
+					$bar.css('width', '100%');
+					
+					setTimeout(function() {
+						$progress.slideUp(300);
+						
+						if (response.success) {
+							var configured = response.data.configured || 0;
+							var total = response.data.total || 0;
+							
+							$result.html(
+								'<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;">' +
+								'<p style="color:#166534;font-weight:600;margin:0;font-size:16px;">✓ ' + 
+								'<?php echo esc_js( __( 'Catalog configured!', 'preview-ai' ) ); ?></p>' +
+								'<p style="color:#15803d;margin:8px 0 0;font-size:14px;">' + configured + ' <?php echo esc_js( __( 'products ready for preview', 'preview-ai' ) ); ?></p>' +
+								'</div>' +
+								'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">' +
+								'<a href="edit.php?post_type=product" class="button button-primary" style="height:auto;padding:12px 24px;font-size:14px;">' +
+								'<?php echo esc_js( __( 'View Products', 'preview-ai' ) ); ?> →</a>' +
+								'<button type="button" class="button" style="height:auto;padding:12px 24px;font-size:14px;" onclick="jQuery(\'#preview-ai-onboarding-wizard\').fadeOut(300)">' +
+								'<?php echo esc_js( __( 'Explore Settings', 'preview-ai' ) ); ?></button>' +
+								'</div>'
+							).slideDown(300);
+						} else {
+							$result.html(
+								'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;margin-bottom:24px;">' +
+								'<p style="color:#dc2626;font-weight:600;margin:0;">' + (response.data.message || '<?php echo esc_js( __( 'Could not analyze catalog', 'preview-ai' ) ); ?>') + '</p>' +
+								'<p style="color:#b91c1c;margin:8px 0 0;font-size:14px;"><?php echo esc_js( __( 'You can configure products manually.', 'preview-ai' ) ); ?></p>' +
+								'</div>' +
+								'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="jQuery(\'#preview-ai-onboarding-wizard\').fadeOut(300)">' +
+								'<?php echo esc_js( __( 'Continue to Settings', 'preview-ai' ) ); ?></button>'
+							).slideDown(300);
+						}
+					}, 500);
+				},
+				error: function() {
+					$bar.css('width', '100%');
+					$progress.slideUp(300);
+					
+					$result.html(
+						'<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:20px;margin-bottom:24px;">' +
+						'<p style="color:#92400e;font-weight:600;margin:0;"><?php echo esc_js( __( 'Could not connect to server', 'preview-ai' ) ); ?></p>' +
+						'<p style="color:#a16207;margin:8px 0 0;font-size:14px;"><?php echo esc_js( __( 'You can analyze your catalog later from settings.', 'preview-ai' ) ); ?></p>' +
+						'</div>' +
+						'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="jQuery(\'#preview-ai-onboarding-wizard\').fadeOut(300)">' +
+						'<?php echo esc_js( __( 'Continue', 'preview-ai' ) ); ?></button>'
+					).slideDown(300);
+				}
+			});
+			
+			// Clean URL (remove onboarding param).
+			if (history.replaceState) {
+				var cleanUrl = window.location.href
+					.replace(/[?&]onboarding=complete/, '')
+					.replace(/\?$/, '');
+				history.replaceState(null, '', cleanUrl);
+			}
+			
+		})(jQuery);
+		</script>
+		<?php
 	}
 
 	/**
@@ -320,22 +449,24 @@ class PREVIEW_AI_Admin {
 		$is_settings_page = ( 'product_page_preview-ai' === $hook || ( isset( $_GET['page'] ) && 'preview-ai' === $_GET['page'] ) );
 		$is_product_page  = ( 'post.php' === $hook || 'post-new.php' === $hook );
 
-		if ( $is_settings_page || $is_product_page ) {
-			wp_localize_script(
-				$this->plugin_name,
-				'previewAiAdmin',
-				array(
-					'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
-					'nonce'        => wp_create_nonce( 'preview_ai_learn_catalog' ),
-					'verifyNonce'  => wp_create_nonce( 'preview_ai_verify_api_key' ),
-					'dismissNonce' => wp_create_nonce( 'preview_ai_dismiss_notice' ),
-					'i18n'         => array(
-						'error'      => __( 'An error occurred.', 'preview-ai' ),
-						'apiPending' => __( '(API integration pending)', 'preview-ai' ),
-					),
-				)
-			);
-		}
+		// Always localize for onboarding notice.
+		wp_localize_script(
+			$this->plugin_name,
+			'previewAiAdmin',
+			array(
+				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+				'nonce'         => wp_create_nonce( 'preview_ai_learn_catalog' ),
+				'verifyNonce'   => wp_create_nonce( 'preview_ai_verify_api_key' ),
+				'dismissNonce'  => wp_create_nonce( 'preview_ai_dismiss_notice' ),
+				'registerNonce' => wp_create_nonce( 'preview_ai_register_site' ),
+				'i18n'          => array(
+					'error'        => __( 'An error occurred.', 'preview-ai' ),
+					'apiPending'   => __( '(API integration pending)', 'preview-ai' ),
+					'activating'   => __( 'Activating...', 'preview-ai' ),
+					'activated'    => __( 'Preview AI activated! Redirecting...', 'preview-ai' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -604,8 +735,6 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => __( 'No products found to analyze.', 'preview-ai' ) ) );
 		}
 
-		PREVIEW_AI_Logger::debug( 'Products data', array( 'products_data' => $products_data ) );
-
 		// Send to API for classification.
 		$api    = new PREVIEW_AI_Api();
 		$result = $api->analyze_catalog( $products_data );
@@ -619,31 +748,70 @@ class PREVIEW_AI_Admin {
 
 		wp_send_json_success(
 			array(
-				'total'        => $stats['total'],
-				'configured'   => $stats['configured'],
-				'needs_review' => $stats['needs_review'],
-				'message'      => sprintf(
-					/* translators: 1: configured products, 2: products that couldn't be enabled */
-					__( '%1$d products configured and enabled for preview. %2$d products could not be enabled automatically.', 'preview-ai' ),
+				'total'           => $stats['total'],
+				'configured'      => $stats['configured'],
+				'needs_review'    => $stats['needs_review'],
+				'images_analyzed' => $stats['images_analyzed'],
+				'message'         => sprintf(
+					/* translators: 1: configured products, 2: products that couldn't be enabled, 3: images analyzed */
+					__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
 					$stats['configured'],
-					$stats['needs_review']
+					$stats['needs_review'],
+					$stats['images_analyzed']
 				),
 			)
 		);
 	}
 
 	/**
-	 * Get catalog products data for AI analysis.
+	 * Convert attachment to base64 data.
 	 *
 	 * @since    1.0.0
-	 * @return   array    Array of products with id, title, categories, tags.
+	 * @param    int $attachment_id Attachment ID.
+	 * @return   array|null         Array with base64 and mime_type, or null on failure.
+	 */
+	private function get_attachment_base64( $attachment_id ) {
+		if ( ! $attachment_id ) {
+			return null;
+		}
+
+		$file_path = get_attached_file( $attachment_id );
+		if ( ! $file_path || ! file_exists( $file_path ) ) {
+			return null;
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$image_data = file_get_contents( $file_path );
+		if ( false === $image_data ) {
+			return null;
+		}
+
+		$mime_type = get_post_mime_type( $attachment_id );
+		if ( ! $mime_type ) {
+			return null;
+		}
+
+		return array(
+			'base64'    => base64_encode( $image_data ),
+			'mime_type' => $mime_type,
+		);
+	}
+
+	/**
+	 * Get catalog products data for AI analysis.
+	 *
+	 * Includes parent products and variations with their own images.
+	 * Each entry contains thumbnail as base64 for image analysis.
+	 *
+	 * @since    1.0.0
+	 * @return   array    Array of products with id, title, categories, tags, thumbnail, variation_id.
 	 */
 	private function get_catalog_products_data() {
 		$products = wc_get_products(
 			array(
 				'status' => 'publish',
 				'limit'  => -1,
-				'type'   => array( 'simple', 'variable' ), // Parents only.
+				'type'   => array( 'simple', 'variable' ),
 			)
 		);
 
@@ -660,12 +828,47 @@ class PREVIEW_AI_Admin {
 			$tags     = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
 			$tags_str = is_array( $tags ) ? implode( ', ', $tags ) : '';
 
+			// Get parent product thumbnail as base64.
+			$thumbnail_id = $product->get_image_id();
+			$thumbnail    = $this->get_attachment_base64( $thumbnail_id );
+
+			// Add parent product data.
 			$products_data[] = array(
-				'id'         => $product_id,
-				'title'      => $product->get_name(),
-				'categories' => $categories_str,
-				'tags'       => $tags_str,
+				'id'           => $product_id,
+				'title'        => $product->get_name(),
+				'categories'   => $categories_str,
+				'tags'         => $tags_str,
+				'thumbnail'    => $thumbnail,
+				'variation_id' => null,
 			);
+
+			// If variable product, include variations with their own images.
+			if ( $product->is_type( 'variable' ) ) {
+				$variation_ids = $product->get_children();
+
+				foreach ( $variation_ids as $variation_id ) {
+					$variation = wc_get_product( $variation_id );
+					if ( ! $variation ) {
+						continue;
+					}
+
+					$var_image_id = $variation->get_image_id();
+
+					// Only include if variation has a different image than parent.
+					if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
+						$var_thumbnail = $this->get_attachment_base64( $var_image_id );
+
+						$products_data[] = array(
+							'id'           => $product_id,
+							'title'        => $product->get_name(),
+							'categories'   => $categories_str,
+							'tags'         => $tags_str,
+							'thumbnail'    => $var_thumbnail,
+							'variation_id' => $variation_id,
+						);
+					}
+				}
+			}
 		}
 
 		return $products_data;
@@ -674,38 +877,75 @@ class PREVIEW_AI_Admin {
 	/**
 	 * Save AI classifications as product meta.
 	 *
+	 * Saves subtype on parent product and image_analysis on variation or parent.
+	 *
 	 * @since    1.0.0
 	 * @param    array $result    API response with classifications.
-	 * @return   array            Statistics array with total, configured, needs_review.
+	 * @return   array            Statistics array with total, configured, needs_review, images_analyzed.
 	 */
 	private function save_catalog_classifications( $result ) {
 		$stats = array(
-			'total'        => 0,
-			'configured'   => 0,
-			'needs_review' => 0,
+			'total'           => 0,
+			'configured'      => 0,
+			'needs_review'    => 0,
+			'images_analyzed' => 0,
 		);
 
 		if ( empty( $result['classifications'] ) || ! is_array( $result['classifications'] ) ) {
 			return $stats;
 		}
 
-		$valid_subtypes = array_keys( self::get_clothing_subtypes() );
+		$valid_subtypes   = array_keys( self::get_clothing_subtypes() );
+		$processed_parents = array(); // Track which parents we've already processed for subtype.
 
 		foreach ( $result['classifications'] as $classification ) {
 			if ( empty( $classification['id'] ) ) {
 				continue;
 			}
 
-			$stats['total']++;
-			$product_id = absint( $classification['id'] );
-			$subtype    = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
+			$product_id   = absint( $classification['id'] );
+			$variation_id = isset( $classification['variation_id'] ) ? absint( $classification['variation_id'] ) : null;
+			$subtype      = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
 
-			if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
-				update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
-				$stats['configured']++;
-			} else {
-				update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
-				$stats['needs_review']++;
+			// Only count and save subtype for parent products (once per parent).
+			if ( ! in_array( $product_id, $processed_parents, true ) ) {
+				$stats['total']++;
+				$processed_parents[] = $product_id;
+
+				if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
+					update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
+					$stats['configured']++;
+				} else {
+					update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
+					$stats['needs_review']++;
+				}
+			}
+
+			// Save image_analysis on variation or parent.
+			if ( ! empty( $classification['image_analysis'] ) ) {
+				$analysis = $classification['image_analysis'];
+
+				// Sanitize detected_objects array
+				$detected_objects = array();
+				if ( ! empty( $analysis['detected_objects'] ) && is_array( $analysis['detected_objects'] ) ) {
+					$detected_objects = array_map( 'sanitize_text_field', $analysis['detected_objects'] );
+				}
+
+				$image_analysis = array(
+					'has_model'        => ! empty( $analysis['has_model'] ),
+					'shot_type'        => sanitize_key( $analysis['shot_type'] ?? 'unknown' ),
+					'framing'          => sanitize_key( $analysis['framing'] ?? 'unknown' ),
+					'multiple_garments' => ! empty( $analysis['multiple_garments'] ),
+					'detected_objects'  => $detected_objects,
+					'confidence'        => floatval( $analysis['confidence'] ?? 0.0 ),
+					'image_id'          => absint( $analysis['image_id'] ?? 0 ),
+					'updated_at'        => sanitize_text_field( $analysis['updated_at'] ?? current_time( 'Y-m-d' ) ),
+				);
+
+				// Save to variation if exists, otherwise to parent.
+				$meta_target = $variation_id ? $variation_id : $product_id;
+				update_post_meta( $meta_target, '_preview_ai_image_analysis', $image_analysis );
+				$stats['images_analyzed']++;
 			}
 		}
 
@@ -737,13 +977,15 @@ class PREVIEW_AI_Admin {
 			update_option( 'preview_ai_api_key', $api_key );
 		}
 
-		$tokens     = isset( $result['tokens_remaining'] ) ? intval( $result['tokens_remaining'] ) : 0;
-		$period_end = isset( $result['current_period_end'] ) ? $result['current_period_end'] : null;
-		$renew_date = $period_end ? date_i18n( 'F j, Y', strtotime( $period_end ) ) : '';
+		$tokens             = isset( $result['tokens_remaining'] ) ? intval( $result['tokens_remaining'] ) : 0;
+		$period_end         = isset( $result['current_period_end'] ) ? $result['current_period_end'] : null;
+		$renew_date         = $period_end ? date_i18n( 'F j, Y', strtotime( $period_end ) ) : '';
+		$subscription_status = isset( $result['subscription_status'] ) ? sanitize_text_field( $result['subscription_status'] ) : null;
 
 		wp_send_json_success( array(
-			'tokens'     => $tokens,
-			'renew_date' => $renew_date,
+			'tokens'             => $tokens,
+			'renew_date'         => $renew_date,
+			'subscription_status' => $subscription_status,
 		) );
 	}
 
@@ -866,5 +1108,169 @@ class PREVIEW_AI_Admin {
 		}
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * Handle AJAX request to register site for free trial.
+	 *
+	 * This is called when the user submits their email during
+	 * the onboarding process. Creates a free-tier API key automatically.
+	 *
+	 * @since 1.0.0
+	 */
+	public function handle_register_site() {
+		check_ajax_referer( 'preview_ai_register_site', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
+		}
+
+		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+
+		if ( empty( $email ) || ! is_email( $email ) ) {
+			wp_send_json_error( array( 'message' => __( 'Please enter a valid email address.', 'preview-ai' ) ) );
+		}
+
+		// Call the registration API.
+		$result = PREVIEW_AI_Api::register_site( $email );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		// Save the API key.
+		if ( isset( $result['api_key'] ) ) {
+			update_option( 'preview_ai_api_key', sanitize_text_field( $result['api_key'] ) );
+			delete_option( 'preview_ai_needs_onboarding' );
+
+			// Update account status.
+			PREVIEW_AI_Api::update_account_status( array(
+				'tokens_remaining' => $result['tokens_limit'] ?? 0,
+				'tokens_limit'     => $result['tokens_limit'] ?? 0,
+				'active'           => true,
+			) );
+		}
+
+		wp_send_json_success( array(
+			'message'      => $result['message'] ?? __( 'Your free trial has been activated!', 'preview-ai' ),
+			'tokens_limit' => $result['tokens_limit'] ?? 0,
+		) );
+	}
+
+	/**
+	 * Display onboarding notice for new installations.
+	 *
+	 * Shows an inline form to collect email and activate free trial.
+	 *
+	 * @since 1.0.0
+	 */
+	public function display_onboarding_notice() {
+		// Only show if onboarding is needed and no API key exists.
+		if ( ! get_option( 'preview_ai_needs_onboarding' ) ) {
+			return;
+		}
+
+		$api_key = get_option( 'preview_ai_api_key', '' );
+		if ( ! empty( $api_key ) ) {
+			delete_option( 'preview_ai_needs_onboarding' );
+			return;
+		}
+
+		// Get admin email as default.
+		$admin_email = get_option( 'admin_email', '' );
+		?>
+		<div class="notice notice-info preview-ai-onboarding-notice" id="preview-ai-onboarding">
+			<div class="preview-ai-onboarding__content">
+				<div class="preview-ai-onboarding__icon">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+						<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+					</svg>
+				</div>
+				<div class="preview-ai-onboarding__text">
+					<h3><?php esc_html_e( 'Activate Preview AI', 'preview-ai' ); ?></h3>
+					<p><?php esc_html_e( 'Get 50 free previews to try Preview AI on your store. Enter your email to activate:', 'preview-ai' ); ?></p>
+				</div>
+				<form class="preview-ai-onboarding__form" id="preview-ai-register-form">
+					<input type="email" 
+						   name="email" 
+						   id="preview-ai-register-email"
+						   value="<?php echo esc_attr( $admin_email ); ?>" 
+						   placeholder="<?php esc_attr_e( 'Your email address', 'preview-ai' ); ?>"
+						   required />
+					<button type="submit" class="button button-primary">
+						<span class="preview-ai-onboarding__btn-text"><?php esc_html_e( 'Start Free Trial', 'preview-ai' ); ?></span>
+						<span class="preview-ai-onboarding__btn-loading" style="display:none;">
+							<span class="spinner is-active" style="margin:0;float:none;"></span>
+						</span>
+					</button>
+				</form>
+			</div>
+			<div class="preview-ai-onboarding__success" style="display:none;">
+				<span class="dashicons dashicons-yes-alt"></span>
+				<span class="preview-ai-onboarding__success-text"></span>
+			</div>
+		</div>
+		<style>
+			.preview-ai-onboarding-notice {
+				padding: 16px 20px;
+				border-left-color: #6366f1;
+			}
+			.preview-ai-onboarding__content {
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				flex-wrap: wrap;
+			}
+			.preview-ai-onboarding__icon {
+				flex-shrink: 0;
+				width: 48px;
+				height: 48px;
+				background: linear-gradient(135deg, #6366f1, #8b5cf6);
+				border-radius: 12px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.preview-ai-onboarding__icon svg {
+				width: 24px;
+				height: 24px;
+				stroke: white;
+			}
+			.preview-ai-onboarding__text {
+				flex: 1;
+				min-width: 200px;
+			}
+			.preview-ai-onboarding__text h3 {
+				margin: 0 0 4px;
+				font-size: 15px;
+			}
+			.preview-ai-onboarding__text p {
+				margin: 0;
+				color: #646970;
+			}
+			.preview-ai-onboarding__form {
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+			.preview-ai-onboarding__form input[type="email"] {
+				width: 280px;
+				max-width: 100%;
+			}
+			.preview-ai-onboarding__success {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				color: #00a32a;
+				font-weight: 500;
+			}
+			.preview-ai-onboarding__success .dashicons {
+				color: #00a32a;
+				font-size: 24px;
+				width: 24px;
+				height: 24px;
+			}
+		</style>
+		<?php
 	}
 }

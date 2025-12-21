@@ -86,6 +86,14 @@ class PREVIEW_AI_Api {
 
 		// Handle error codes.
 		if ( 429 === $code ) {
+			// Rate limit exceeded.
+			self::update_account_status( array(
+				'tokens_remaining' => 0,
+				'active'           => true,
+			) );
+		}
+
+		if ( 402 === $code ) {
 			// Tokens exhausted.
 			self::update_account_status( array(
 				'tokens_remaining' => 0,
@@ -205,6 +213,7 @@ class PREVIEW_AI_Api {
 			'product_images'  => $product_data['images'],
 			'product_type'    => $product_data['type'],
 			'product_subtype' => $product_data['subtype'],
+			'image_analysis'  => $product_data['image_analysis'],
 		), 120 );
 
 		if ( ! is_wp_error( $result ) ) {
@@ -235,19 +244,29 @@ class PREVIEW_AI_Api {
 	}
 
 	/**
-	 * Send catalog data to AI backend for product classification.
+	 * Send catalog data to AI backend for product classification and image analysis.
 	 *
-	 * @param array $products_data Array of products with id, title, categories, tags.
-	 * @return array|WP_Error      Response data with classifications or error.
+	 * @param array $products_data  Array of products with id, title, categories, tags, thumbnail_url, variation_id.
+	 * @param bool  $analyze_images Whether to analyze product images (default true).
+	 * @return array|WP_Error       Response data with classifications and image_analysis or error.
 	 */
-	public function analyze_catalog( $products_data ) {
+	public function analyze_catalog( $products_data, $analyze_images = true ) {
 		PREVIEW_AI_Logger::debug( 'Starting catalog analysis', array(
-			'product_count' => count( $products_data ),
+			'product_count'  => count( $products_data ),
+			'analyze_images' => $analyze_images,
 		) );
 
+		# Solo enviar 3 productos para testing
+		$products_data = array_slice( $products_data, 0, 3 );
+
+		PREVIEW_AI_Logger::debug( 'Products data', array( 'products_data' => $products_data ) );
+
 		$result = $this->request( 'catalog/analyze', array(
-			'products' => $products_data,
+			'products'       => $products_data,
+			'analyze_images' => $analyze_images,
 		), 300 );
+
+		PREVIEW_AI_Logger::debug( 'Catalog analysis response', array( 'result' => $result ) );
 
 		if ( ! is_wp_error( $result ) ) {
 			PREVIEW_AI_Logger::info( 'Catalog analysis completed successfully' );
@@ -267,6 +286,78 @@ class PREVIEW_AI_Api {
 		if ( ! is_wp_error( $result ) && is_array( $result ) ) {
 			self::update_account_status( $result );
 		}
+
+		return $result;
+	}
+
+	/**
+	 * Register site for free trial (auto-provisioning).
+	 *
+	 * This creates a free-tier API key automatically when user
+	 * provides their email during plugin activation.
+	 *
+	 * @param string $email User email address.
+	 * @return array|WP_Error API key data or error.
+	 */
+	public static function register_site( $email ) {
+
+		// Get site info for registration.
+		$site_url = home_url();
+		$domain   = wp_parse_url( $site_url, PHP_URL_HOST );
+
+		global $wp_version;
+
+		$endpoint = 'http://backend_app:8000/api/';
+
+		$response = wp_remote_post(
+			trailingslashit( $endpoint ) . 'register/',
+			array(
+				'timeout' => 30,
+				'headers' => array(
+					'Content-Type' => 'application/json',
+				),
+				'body'    => wp_json_encode( array(
+					'email'          => $email,
+					'domain'         => $domain,
+					'site_url'       => $site_url,
+					'wp_version'     => $wp_version,
+					'plugin_version' => PREVIEW_AI_VERSION,
+				) ),
+			)
+		);
+
+		PREVIEW_AI_Logger::debug( 'Site registration response', array(
+			'endpoint' => $endpoint . 'register/',
+			'email' => $email,
+			'domain' => $domain,
+			'site_url' => $site_url,
+			'wp_version' => $wp_version,
+			'plugin_version' => PREVIEW_AI_VERSION,
+			'response' => $response,
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			PREVIEW_AI_Logger::error( 'Site registration failed', array(
+				'error' => $response->get_error_message(),
+			) );
+			return $response;
+		}
+
+		$code   = wp_remote_retrieve_response_code( $response );
+		$body   = wp_remote_retrieve_body( $response );
+		$result = json_decode( $body, true );
+
+		if ( $code >= 400 ) {
+			$message = isset( $result['detail'] )
+				? $result['detail']
+				: __( 'Registration failed. Please try again.', 'preview-ai' );
+			return new WP_Error( 'registration_failed', $message );
+		}
+
+		PREVIEW_AI_Logger::info( 'Site registered successfully', array(
+			'domain' => $domain,
+			'tokens' => $result['tokens_limit'] ?? 0,
+		) );
 
 		return $result;
 	}
