@@ -46,6 +46,28 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 	<div class="preview-ai-modal-content">
 		<button type="button" id="preview-ai-close" class="preview-ai-close" aria-label="<?php esc_attr_e( 'Close', 'preview-ai' ); ?>">×</button>
 
+		<!-- Saved Photo Section -->
+		<div id="preview-ai-saved-photo" class="preview-ai-saved-photo">
+			<div class="preview-ai-saved-photo-header">
+				<h3><?php esc_html_e( 'Welcome back!', 'preview-ai' ); ?></h3>
+				<p><?php esc_html_e( 'Use your saved photo to try on this product instantly', 'preview-ai' ); ?></p>
+			</div>
+			<div class="preview-ai-saved-photo-preview">
+				<img id="preview-ai-saved-thumb" src="" alt="<?php esc_attr_e( 'Your saved photo', 'preview-ai' ); ?>" />
+			</div>
+			<button type="button" id="preview-ai-use-saved" class="preview-ai-use-saved-btn">
+				<?php esc_html_e( 'Use this photo', 'preview-ai' ); ?>
+			</button>
+			<a href="#" id="preview-ai-new-photo-link" class="preview-ai-new-photo-link">
+				<?php esc_html_e( 'or upload a different photo', 'preview-ai' ); ?>
+			</a>
+			<div class="preview-ai-saved-photo-privacy">
+				<span class="preview-ai-privacy-icon">🔒</span>
+				<p><?php esc_html_e( 'Your photo is stored only on this device. We never upload or save it on our servers.', 'preview-ai' ); ?></p>
+				<a href="#" id="preview-ai-forget-photo" class="preview-ai-forget-link"><?php esc_html_e( 'Delete my photo', 'preview-ai' ); ?></a>
+			</div>
+		</div>
+
 		<!-- Instructions -->
 		<div id="preview-ai-instructions" class="preview-ai-instructions">
 			<div class="preview-ai-instructions-header">
@@ -98,18 +120,14 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 				<p class="preview-ai-tips-pro"><strong><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></strong></p>
 			</div>
 
-			<!-- Camera button (mobile) / Upload button (desktop) -->
-			<label for="preview_ai_camera" class="preview-ai-camera-btn">
-				<span class="preview-ai-camera-icon">📸</span>
-				<span class="preview-ai-camera-text"><?php esc_html_e( 'Open camera', 'preview-ai' ); ?></span>
+			<!-- Upload button -->
+			<label for="preview_ai_upload" class="preview-ai-upload-btn">
+				<span class="preview-ai-upload-icon">📷</span>
+				<span class="preview-ai-upload-text"><?php esc_html_e( 'Add your photo', 'preview-ai' ); ?></span>
 			</label>
 
-			<!-- Gallery link (mobile only) -->
-			<label for="preview_ai_gallery" class="preview-ai-gallery-link"><?php esc_html_e( 'or upload from gallery', 'preview-ai' ); ?></label>
-
-			<!-- Hidden file inputs -->
-			<input type="file" id="preview_ai_camera" accept="image/*" class="preview-ai-file-input" />
-			<input type="file" id="preview_ai_gallery" accept="image/*" class="preview-ai-file-input" />
+			<!-- Hidden file input -->
+			<input type="file" id="preview_ai_upload" accept="image/*" class="preview-ai-file-input" />
 		</div>
 
 		<!-- Image Stage -->

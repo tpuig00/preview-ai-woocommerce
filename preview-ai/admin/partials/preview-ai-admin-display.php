@@ -294,6 +294,11 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			<?php submit_button(); ?>
 
 			<!-- Learn My Catalog Section -->
+			<?php
+			$catalog_status = PREVIEW_AI_Admin::get_catalog_analysis_status();
+			$is_processing  = 'processing' === $catalog_status['status'];
+			$progress       = $catalog_status['progress'];
+			?>
 			<div class="preview-ai-learn-catalog" style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
 				<h2 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #1d2327;">
 					🧠 <?php esc_html_e( 'Learn My Catalog (AI)', 'preview-ai' ); ?>
@@ -307,18 +312,35 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 					<?php esc_html_e( 'Nothing will be modified in your store. Only recommendations will be assigned.', 'preview-ai' ); ?>
 				</p>
 				
-				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" style="display: inline-flex; align-items: center; gap: 8px;" <?php echo $is_processing ? 'disabled' : ''; ?>>
 					<span class="dashicons dashicons-welcome-learn-more" style="font-size: 18px; width: 18px; height: 18px;"></span>
 					<?php esc_html_e( 'Analyze My Catalog', 'preview-ai' ); ?>
 				</button>
 
-				<div id="preview_ai_learn_catalog_loading" style="display: none; margin-top: 16px;">
+				<div id="preview_ai_learn_catalog_loading" style="<?php echo $is_processing ? '' : 'display: none;'; ?> margin-top: 16px;">
 					<span class="spinner" style="float: none; visibility: visible; margin: 0 8px 0 0;"></span>
-					<span style="color: #50575e;"><?php esc_html_e( 'Analyzing your catalog...', 'preview-ai' ); ?></span>
+					<span id="preview_ai_learn_catalog_progress" style="color: #50575e;">
+						<?php
+						if ( $is_processing && ! empty( $progress ) ) {
+							printf(
+								/* translators: 1: processed count, 2: total count */
+								esc_html__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
+								$progress['processed'],
+								$progress['total']
+							);
+						} else {
+							esc_html_e( 'Analyzing your catalog...', 'preview-ai' );
+						}
+						?>
+					</span>
 				</div>
 
 				<div id="preview_ai_learn_catalog_result" style="display: none; margin-top: 16px; padding: 12px 16px; border-radius: 4px;"></div>
 			</div>
+			<script>
+				// Pass initial status to JS.
+				window.previewAiCatalogStatus = <?php echo wp_json_encode( $catalog_status['status'] ); ?>;
+			</script>
 		</form>
 
 	<?php elseif ( 'widget' === $active_tab ) : ?>

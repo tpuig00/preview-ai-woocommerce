@@ -6,9 +6,12 @@
 		var $modal         = $( '#preview-ai-modal' );
 		var $close         = $( '#preview-ai-close' );
 		var $instructions  = $( '#preview-ai-instructions' );
-		var $camera        = $( '#preview_ai_camera' );
-		var $gallery       = $( '#preview_ai_gallery' );
-		var $galleryLink   = $( '.preview-ai-gallery-link' );
+		var $savedPhoto    = $( '#preview-ai-saved-photo' );
+		var $savedThumb    = $( '#preview-ai-saved-thumb' );
+		var $useSavedBtn   = $( '#preview-ai-use-saved' );
+		var $newPhotoLink  = $( '#preview-ai-new-photo-link' );
+		var $forgetPhoto   = $( '#preview-ai-forget-photo' );
+		var $upload        = $( '#preview_ai_upload' );
 		var $stage         = $( '#preview-ai-stage' );
 		var $imgBefore     = $( '#preview-ai-img-before' );
 		var $imgAfter      = $( '#preview-ai-img-after' );
@@ -29,8 +32,81 @@
 		var checkToken        = 0;
 		var loadingInterval   = null;
 
-		// Detect mobile
-		var isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent );
+		// localStorage key for saved photo
+		var STORAGE_KEY = 'previewAiUserPhoto';
+
+		// Check if we have a saved photo
+		function getSavedPhoto() {
+			try {
+				return localStorage.getItem( STORAGE_KEY );
+			} catch ( e ) {
+				return null;
+			}
+		}
+
+		// Save photo to localStorage
+		function savePhoto( base64Data ) {
+			try {
+				localStorage.setItem( STORAGE_KEY, base64Data );
+			} catch ( e ) {
+				// Storage full or not available, silently ignore
+			}
+		}
+
+		// Remove saved photo
+		function forgetSavedPhoto() {
+			try {
+				localStorage.removeItem( STORAGE_KEY );
+			} catch ( e ) {
+				// Ignore
+			}
+		}
+
+		// Convert base64 to File object
+		function base64ToFile( base64, filename ) {
+			var arr = base64.split( ',' );
+			var mime = arr[0].match( /:(.*?);/ )[1];
+			var bstr = atob( arr[1] );
+			var n = bstr.length;
+			var u8arr = new Uint8Array( n );
+			while ( n-- ) {
+				u8arr[n] = bstr.charCodeAt( n );
+			}
+			return new File( [u8arr], filename, { type: mime } );
+		}
+
+		// Show saved photo section
+		function showSavedPhotoSection() {
+			var savedData = getSavedPhoto();
+			if ( savedData ) {
+				$savedThumb.attr( 'src', savedData );
+				$savedPhoto.addClass( 'is-visible' );
+				$instructions.addClass( 'has-saved-photo' );
+			} else {
+				$savedPhoto.removeClass( 'is-visible' );
+				$instructions.removeClass( 'has-saved-photo' );
+			}
+		}
+
+		// Use the saved photo
+		function useSavedPhoto() {
+			var savedData = getSavedPhoto();
+			if ( ! savedData ) {
+				return;
+			}
+
+			selectedFile = base64ToFile( savedData, 'saved-photo.jpg' );
+			$imgBefore.attr( 'src', savedData );
+			$savedPhoto.removeClass( 'is-visible' );
+			$instructions.addClass( 'is-hidden' );
+			$stage.addClass( 'is-visible' ).removeClass( 'is-result' );
+			$actions.addClass( 'is-visible' );
+			$generate.removeClass( 'is-hidden' );
+			$generate.prop( 'disabled', true );
+			$resultActions.removeClass( 'is-visible' );
+			$disclaimer.removeClass( 'is-visible' );
+			startPrecheck( selectedFile );
+		}
 
 		// Loading steps animation
 		function startLoadingSteps() {
@@ -71,28 +147,6 @@
 			$( '.preview-ai-step' ).first().addClass( 'is-active' );
 		}
 
-		// Adapt UI for device
-		function adaptUIForDevice() {
-			var $icon = $( '.preview-ai-camera-icon' );
-			var $text = $( '.preview-ai-camera-text' );
-
-			if ( isMobile ) {
-				// Mobile: Camera button + gallery link
-				$icon.text( '📸' );
-				$text.text( previewAiData.i18n.openCamera || 'Open camera' );
-				$camera.attr( 'capture', 'environment' );
-				$galleryLink.show();
-			} else {
-				// Desktop: Just upload button, no gallery link
-				$icon.text( '📁' );
-				$text.text( previewAiData.i18n.uploadPhoto || 'Upload photo' );
-				$camera.removeAttr( 'capture' );
-				$galleryLink.hide();
-			}
-		}
-
-		adaptUIForDevice();
-
 		// Download image
 		function downloadImage( url, filename ) {
 			fetch( url )
@@ -121,6 +175,29 @@
 				$modal.addClass( 'is-visible' );
 			}, 10 );
 			$( 'body' ).css( 'overflow', 'hidden' );
+
+			// Check for saved photo
+			showSavedPhotoSection();
+		} );
+
+		// Use saved photo button
+		$useSavedBtn.on( 'click', function() {
+			useSavedPhoto();
+		} );
+
+		// "Upload new photo" link in saved photo section
+		$newPhotoLink.on( 'click', function( e ) {
+			e.preventDefault();
+			$savedPhoto.removeClass( 'is-visible' );
+			$upload.trigger( 'click' );
+		} );
+
+		// Forget saved photo
+		$forgetPhoto.on( 'click', function( e ) {
+			e.preventDefault();
+			forgetSavedPhoto();
+			$savedPhoto.removeClass( 'is-visible' );
+			$instructions.removeClass( 'has-saved-photo' );
 		} );
 
 		// Close modal
@@ -138,8 +215,7 @@
 				checkXhr.abort();
 			}
 			stopLoadingSteps();
-			$camera.val( '' );
-			$gallery.val( '' );
+			$upload.val( '' );
 			selectedFile = null;
 			generatedImageUrl = null;
 			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().show();
@@ -153,6 +229,9 @@
 			$resultActions.removeClass( 'is-visible' );
 			$disclaimer.removeClass( 'is-visible' );
 			$instructions.removeClass( 'is-hidden' );
+
+			// Check for saved photo again
+			showSavedPhotoSection();
 		}
 
 		function renderCheckStatus( status, message, warnings ) {
@@ -317,7 +396,13 @@
 				selectedFile = input.files[0];
 				var reader = new FileReader();
 				reader.onload = function( e ) {
-					$imgBefore.attr( 'src', e.target.result );
+					var base64Data = e.target.result;
+					$imgBefore.attr( 'src', base64Data );
+
+					// Save photo to localStorage for future use
+					savePhoto( base64Data );
+
+					$savedPhoto.removeClass( 'is-visible' );
 					$instructions.addClass( 'is-hidden' );
 					$stage.addClass( 'is-visible' ).removeClass( 'is-result' );
 					$actions.addClass( 'is-visible' );
@@ -331,11 +416,7 @@
 			}
 		}
 
-		$camera.on( 'change', function() {
-			handleFileSelect( this );
-		} );
-
-		$gallery.on( 'change', function() {
+		$upload.on( 'change', function() {
 			handleFileSelect( this );
 		} );
 

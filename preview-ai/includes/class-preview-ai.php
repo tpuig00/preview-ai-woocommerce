@@ -203,7 +203,12 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_preview_ai_learn_catalog', $plugin_admin, 'handle_learn_catalog' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_verify_api_key', $plugin_admin, 'handle_verify_api_key' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_dismiss_notice', $plugin_admin, 'handle_dismiss_notice' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_dismiss_try_notice', $plugin_admin, 'handle_dismiss_try_notice' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_register_site', $plugin_admin, 'handle_register_site' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_catalog_status', $plugin_admin, 'handle_catalog_status' );
+
+		// Action Scheduler hook for background catalog processing.
+		$this->loader->add_action( 'preview_ai_process_catalog_batch', $plugin_admin, 'process_catalog_batch' );
 
 		// Admin notices for API status and onboarding.
 		$this->loader->add_action( 'admin_notices', $plugin_admin, 'display_onboarding_notice' );

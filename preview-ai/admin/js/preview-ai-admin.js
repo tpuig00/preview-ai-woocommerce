@@ -116,16 +116,88 @@
 			} );
 		} );
 
-		// Learn My Catalog functional
+		// Learn My Catalog functional with background processing support.
 		var learnBtn = document.getElementById( 'preview_ai_learn_catalog_btn' );
 		var loadingEl = document.getElementById( 'preview_ai_learn_catalog_loading' );
+		var progressEl = document.getElementById( 'preview_ai_learn_catalog_progress' );
 		var resultEl = document.getElementById( 'preview_ai_learn_catalog_result' );
+		var pollInterval = null;
+
+		// Show completed result.
+		function showCompletedResult( data ) {
+			learnBtn.disabled = false;
+			loadingEl.style.display = 'none';
+			resultEl.style.display = 'block';
+			resultEl.style.background = '#edfaef';
+			resultEl.style.borderLeft = '4px solid #00a32a';
+			resultEl.innerHTML = '<strong style="color:#00a32a;">✓</strong> ' + data.message;
+			if ( data.warning ) {
+				resultEl.innerHTML += '<br><small style="color:#d63638;">⚠️ ' + data.warning + '</small>';
+			}
+		}
+
+		// Show error result.
+		function showErrorResult( message ) {
+			learnBtn.disabled = false;
+			loadingEl.style.display = 'none';
+			resultEl.style.display = 'block';
+			resultEl.style.background = '#fcf0f1';
+			resultEl.style.borderLeft = '4px solid #d63638';
+			resultEl.innerHTML = '<strong style="color:#d63638;">✗</strong> ' + message;
+		}
+
+		// Poll for status updates.
+		function pollCatalogStatus() {
+			$.ajax({
+				url: previewAiAdmin.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'preview_ai_catalog_status',
+					nonce: previewAiAdmin.nonce
+				},
+				success: function( response ) {
+					if ( ! response.success ) {
+						return;
+					}
+
+					var data = response.data;
+
+					if ( 'processing' === data.status ) {
+						// Update progress text.
+						if ( progressEl && data.message ) {
+							progressEl.textContent = data.message;
+						}
+					} else if ( 'completed' === data.status ) {
+						// Stop polling and show result.
+						if ( pollInterval ) {
+							clearInterval( pollInterval );
+							pollInterval = null;
+						}
+						showCompletedResult( data );
+					} else {
+						// Idle or unknown - stop polling.
+						if ( pollInterval ) {
+							clearInterval( pollInterval );
+							pollInterval = null;
+						}
+					}
+				}
+			});
+		}
+
+		// Start polling if already processing.
+		if ( typeof window.previewAiCatalogStatus !== 'undefined' && 'processing' === window.previewAiCatalogStatus ) {
+			pollInterval = setInterval( pollCatalogStatus, 3000 );
+		}
 
 		if ( learnBtn && typeof previewAiAdmin !== 'undefined' ) {
 			learnBtn.addEventListener( 'click', function() {
 				learnBtn.disabled = true;
 				loadingEl.style.display = 'block';
 				resultEl.style.display = 'none';
+				if ( progressEl ) {
+					progressEl.textContent = previewAiAdmin.i18n.analyzing || 'Analyzing your catalog...';
+				}
 
 				$.ajax({
 					url: previewAiAdmin.ajaxUrl,
@@ -135,30 +207,29 @@
 						nonce: previewAiAdmin.nonce
 					},
 					success: function( response ) {
-						learnBtn.disabled = false;
-						loadingEl.style.display = 'none';
-						resultEl.style.display = 'block';
+						if ( ! response.success ) {
+							showErrorResult( response.data.message || previewAiAdmin.i18n.error );
+							return;
+						}
 
-						if ( response.success ) {
-							resultEl.style.background = '#edfaef';
-							resultEl.style.borderLeft = '4px solid #00a32a';
-							resultEl.innerHTML = '<strong style="color:#00a32a;">✓</strong> ' + response.data.message;
-							if ( response.data.pending ) {
-								resultEl.innerHTML += '<br><small style="color:#787c82;">' + previewAiAdmin.i18n.apiPending + '</small>';
+						var data = response.data;
+
+						if ( 'scheduled' === data.status ) {
+							// Background processing started - poll for updates.
+							if ( progressEl ) {
+								progressEl.textContent = data.message;
 							}
+							pollInterval = setInterval( pollCatalogStatus, 3000 );
+						} else if ( 'completed' === data.status ) {
+							// Small catalog - completed immediately.
+							showCompletedResult( data );
 						} else {
-							resultEl.style.background = '#fcf0f1';
-							resultEl.style.borderLeft = '4px solid #d63638';
-							resultEl.innerHTML = '<strong style="color:#d63638;">✗</strong> ' + ( response.data.message || previewAiAdmin.i18n.error );
+							// Fallback.
+							showCompletedResult( data );
 						}
 					},
 					error: function() {
-						learnBtn.disabled = false;
-						loadingEl.style.display = 'none';
-						resultEl.style.display = 'block';
-						resultEl.style.background = '#fcf0f1';
-						resultEl.style.borderLeft = '4px solid #d63638';
-						resultEl.innerHTML = '<strong style="color:#d63638;">✗</strong> ' + previewAiAdmin.i18n.error;
+						showErrorResult( previewAiAdmin.i18n.error );
 					}
 				});
 			});

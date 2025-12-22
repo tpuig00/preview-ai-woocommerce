@@ -13,6 +13,19 @@
 class PREVIEW_AI_Admin {
 
 	/**
+	 * Option keys for background catalog analysis.
+	 */
+	const ANALYSIS_STATUS_OPTION   = 'preview_ai_catalog_analysis_status';
+	const ANALYSIS_PROGRESS_OPTION = 'preview_ai_catalog_analysis_progress';
+	const ANALYSIS_PENDING_OPTION  = 'preview_ai_catalog_pending_products';
+	const ANALYSIS_RESULTS_OPTION  = 'preview_ai_catalog_analysis_results';
+
+	/**
+	 * Batch size for background processing.
+	 */
+	const CATALOG_BATCH_SIZE = 50;
+
+	/**
 	 * The ID of this plugin.
 	 *
 	 * @since    1.0.0
@@ -169,7 +182,7 @@ class PREVIEW_AI_Admin {
 		return array(
 			'mixed' => array(
 				'label'    => __( 'Mixed / All types', 'preview-ai' ),
-				'examples' => __( 'Set the correct subtype per product for precise results', 'preview-ai' ),
+				'examples' => __( 'All types of clothing', 'preview-ai' ),
 				'tips'     => array(
 					__( 'One person only', 'preview-ai' ),
 					__( 'Front-facing, good lighting', 'preview-ai' ),
@@ -302,6 +315,8 @@ class PREVIEW_AI_Admin {
 	 * @since 1.0.0
 	 */
 	public function render_onboarding_wizard() {
+		// Mark that user needs to try the widget (only during initial onboarding).
+		update_option( 'preview_ai_needs_first_try', true );
 		?>
 		<div id="preview-ai-onboarding-wizard" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100000;display:flex;align-items:center;justify-content:center;">
 			<div style="background:#fff;border-radius:16px;padding:48px;max-width:520px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.3);">
@@ -355,16 +370,57 @@ class PREVIEW_AI_Admin {
 						$progress.slideUp(300);
 						
 						if (response.success) {
+							var status = response.data.status || 'completed';
+							
+							// Handle background processing (large catalogs)
+							if (status === 'scheduled') {
+								var totalProducts = response.data.total || 0;
+								$result.html(
+									'<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:20px;margin-bottom:24px;">' +
+									'<p style="color:#1d4ed8;font-weight:600;margin:0;font-size:16px;">⏳ ' + 
+									'<?php echo esc_js( __( 'Analyzing in background', 'preview-ai' ) ); ?></p>' +
+									'<p style="color:#1e40af;margin:8px 0 0;font-size:14px;">' + totalProducts + ' <?php echo esc_js( __( 'products are being analyzed. This may take a few minutes.', 'preview-ai' ) ); ?></p>' +
+									'<p style="color:#3b82f6;margin:12px 0 0;font-size:13px;"><?php echo esc_js( __( 'You can close this window and check progress in Preview AI settings.', 'preview-ai' ) ); ?></p>' +
+									'</div>' +
+									'<div style="text-align:center;">' +
+									'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;font-size:14px;" onclick="location.reload()">' +
+									'<?php echo esc_js( __( 'Close & Continue', 'preview-ai' ) ); ?></button>' +
+									'</div>'
+								).slideDown(300);
+								return;
+							}
+							
 							var configured = response.data.configured || 0;
 							var total = response.data.total || 0;
 							var isLimited = response.data.is_limited || false;
-							var totalReceived = response.data.total_received || 0;
+							var tryProductUrl = response.data.try_product_url || '';
+							var warning = response.data.warning || '';
 							
 							var limitedNotice = '';
 							if (isLimited) {
 								limitedNotice = '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin-top:12px;">' +
-									'<p style="color:#92400e;margin:0;font-size:13px;">⚡ <?php echo esc_js( __( 'Free trial: Only 3 random products were analyzed.', 'preview-ai' ) ); ?> ' +
+									'<p style="color:#92400e;margin:0;font-size:13px;">⚡ <?php echo esc_js( __( 'Free trial: Only 3 random products were analyzed.', 'preview-ai' ) ); ?></p>' +
 									'</div>';
+							}
+							
+							var warningNotice = '';
+							if (warning) {
+								warningNotice = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-top:12px;">' +
+									'<p style="color:#dc2626;margin:0;font-size:13px;">⚠️ ' + warning + '</p>' +
+									'</div>';
+							}
+							
+							// If we have a product to try, show the "Try it" flow
+							var actionButtons = '';
+							if (tryProductUrl && configured > 0) {
+								actionButtons = '<div style="margin-bottom:16px;">' +
+									'<a href="' + tryProductUrl + '" target="_blank" class="button button-primary" style="height:auto;padding:14px 32px;font-size:15px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;box-shadow:0 4px 14px rgba(99,102,241,0.4);">' +
+									'✨ <?php echo esc_js( __( 'Try Preview AI Now', 'preview-ai' ) ); ?></a>' +
+									'</div>' +
+									'<p style="color:#64748b;font-size:13px;margin:0;"><?php echo esc_js( __( 'See how your customers will experience the magic!', 'preview-ai' ) ); ?></p>';
+							} else {
+								actionButtons = '<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;font-size:14px;" onclick="location.reload()">' +
+									'<?php echo esc_js( __( 'Close & Configure Products', 'preview-ai' ) ); ?></button>';
 							}
 							
 							$result.html(
@@ -373,12 +429,10 @@ class PREVIEW_AI_Admin {
 								'<?php echo esc_js( __( 'Catalog configured!', 'preview-ai' ) ); ?></p>' +
 								'<p style="color:#15803d;margin:8px 0 0;font-size:14px;">' + configured + ' <?php echo esc_js( __( 'products ready for preview', 'preview-ai' ) ); ?></p>' +
 								limitedNotice +
+								warningNotice +
 								'</div>' +
-								'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">' +
-								'<a href="edit.php?post_type=product" class="button button-primary" style="height:auto;padding:12px 24px;font-size:14px;">' +
-								'<?php echo esc_js( __( 'View Products', 'preview-ai' ) ); ?> →</a>' +
-								'<button type="button" class="button" style="height:auto;padding:12px 24px;font-size:14px;" onclick="jQuery(\'#preview-ai-onboarding-wizard\').fadeOut(300)">' +
-								'<?php echo esc_js( __( 'Explore Settings', 'preview-ai' ) ); ?></button>' +
+								'<div style="text-align:center;">' +
+								actionButtons +
 								'</div>'
 							).slideDown(300);
 						} else {
@@ -387,7 +441,7 @@ class PREVIEW_AI_Admin {
 								'<p style="color:#dc2626;font-weight:600;margin:0;">' + (response.data.message || '<?php echo esc_js( __( 'Could not analyze catalog', 'preview-ai' ) ); ?>') + '</p>' +
 								'<p style="color:#b91c1c;margin:8px 0 0;font-size:14px;"><?php echo esc_js( __( 'You can configure products manually.', 'preview-ai' ) ); ?></p>' +
 								'</div>' +
-								'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="jQuery(\'#preview-ai-onboarding-wizard\').fadeOut(300)">' +
+								'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="location.reload()">' +
 								'<?php echo esc_js( __( 'Continue to Settings', 'preview-ai' ) ); ?></button>'
 							).slideDown(300);
 						}
@@ -402,7 +456,7 @@ class PREVIEW_AI_Admin {
 						'<p style="color:#92400e;font-weight:600;margin:0;"><?php echo esc_js( __( 'Could not connect to server', 'preview-ai' ) ); ?></p>' +
 						'<p style="color:#a16207;margin:8px 0 0;font-size:14px;"><?php echo esc_js( __( 'You can analyze your catalog later from settings.', 'preview-ai' ) ); ?></p>' +
 						'</div>' +
-						'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="jQuery(\'#preview-ai-onboarding-wizard\').fadeOut(300)">' +
+						'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="location.reload()">' +
 						'<?php echo esc_js( __( 'Continue', 'preview-ai' ) ); ?></button>'
 					).slideDown(300);
 				}
@@ -474,6 +528,7 @@ class PREVIEW_AI_Admin {
 					'apiPending'   => __( '(API integration pending)', 'preview-ai' ),
 					'activating'   => __( 'Activating...', 'preview-ai' ),
 					'activated'    => __( 'Preview AI activated! Redirecting...', 'preview-ai' ),
+					'analyzing'    => __( 'Analyzing your catalog...', 'preview-ai' ),
 				),
 			)
 		);
@@ -523,27 +578,15 @@ class PREVIEW_AI_Admin {
 			$is_enabled = false;
 		}
 
-		// Determine status for display.
-		$status_class = 'preview-ai-col--disabled';
-		$status_text  = __( 'Disabled', 'preview-ai' );
-		$status_icon  = '—';
-
-		if ( ! $has_image ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'No image', 'preview-ai' );
-			$status_icon  = '⚠️';
-		} elseif ( 'no' === $enabled ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'Disabled', 'preview-ai' );
-			$status_icon  = '—';
-		} elseif ( $is_enabled && ! empty( $subtype ) ) {
+		// Determine status for display: Active if has subtype (analyzed), otherwise Disabled.
+		if ( $has_image && ! empty( $subtype ) ) {
 			$status_class = 'preview-ai-col--active';
 			$status_text  = __( 'Active', 'preview-ai' );
 			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
 		} else {
-			$status_class = 'preview-ai-col--configure';
-			$status_text  = __( 'Configure', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-admin-generic"></span>';
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'Disabled', 'preview-ai' );
+			$status_icon  = '—';
 		}
 
 		?>
@@ -688,46 +731,22 @@ class PREVIEW_AI_Admin {
 			return;
 		}
 
-		$enabled        = get_post_meta( $post_id, '_preview_ai_enabled', true );
-		$subtype        = get_post_meta( $post_id, '_preview_ai_recommended_subtype', true );
-		$global_enabled = get_option( 'preview_ai_enabled', 0 );
+		$subtype = get_post_meta( $post_id, '_preview_ai_recommended_subtype', true );
 
-		// Determine if enabled.
-		$is_enabled = false;
-		if ( 'yes' === $enabled ) {
-			$is_enabled = true;
-		} elseif ( 'no' === $enabled ) {
-			$is_enabled = false;
-		} else {
-			$is_enabled = (bool) $global_enabled;
-		}
-
-		// State A: Disabled / Not applicable.
-		if ( 'no' === $enabled ) {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
-			return;
-		}
-
-		// State B: Active (enabled + has subtype).
-		if ( $is_enabled && ! empty( $subtype ) ) {
-			$subtypes      = self::get_clothing_subtypes();
-			$subtype_label = isset( $subtypes[ $subtype ] ) ? $subtypes[ $subtype ]['label'] : '';
+		// Active if has subtype (analyzed), otherwise Disabled.
+		if ( ! empty( $subtype ) ) {
 			echo '<span class="preview-ai-col preview-ai-col--active" title="' . esc_attr__( 'Preview AI active on this product', 'preview-ai' ) . '">';
 			echo '<span class="dashicons dashicons-visibility"></span> ';
 			echo esc_html__( 'Active', 'preview-ai' );
 			echo '</span>';
-			return;
+		} else {
+			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
 		}
-
-		// State C: Needs configuration.
-		echo '<span class="preview-ai-col preview-ai-col--configure" title="' . esc_attr__( 'Configure Preview AI for this product', 'preview-ai' ) . '">';
-		echo '<span class="dashicons dashicons-admin-generic"></span> ';
-		echo esc_html__( 'Configure', 'preview-ai' );
-		echo '</span>';
 	}
 
 	/**
 	 * Handle AJAX request for Learn My Catalog feature.
+	 * Uses Action Scheduler for large catalogs (>50 products).
 	 *
 	 * @since    1.0.0
 	 */
@@ -738,14 +757,43 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'preview-ai' ) ) );
 		}
 
-		// Get all published products (parents only, no variations).
+		// Get all published products.
 		$products_data = $this->get_catalog_products_data();
 
 		if ( empty( $products_data ) ) {
 			wp_send_json_error( array( 'message' => __( 'No products found to analyze.', 'preview-ai' ) ) );
 		}
 
-		// Send to API for classification.
+		$total_products = count( $products_data );
+
+		// For small catalogs, process immediately.
+		if ( $total_products <= self::CATALOG_BATCH_SIZE ) {
+			$this->process_catalog_sync( $products_data );
+			return;
+		}
+
+		// For large catalogs, use Action Scheduler.
+		$this->schedule_catalog_analysis( $products_data );
+
+		wp_send_json_success(
+			array(
+				'status'  => 'scheduled',
+				'total'   => $total_products,
+				'message' => sprintf(
+					/* translators: %d: number of products */
+					__( 'Analysis scheduled for %d products. Processing in background...', 'preview-ai' ),
+					$total_products
+				),
+			)
+		);
+	}
+
+	/**
+	 * Process catalog synchronously (for small catalogs).
+	 *
+	 * @param array $products_data Products to analyze.
+	 */
+	private function process_catalog_sync( $products_data ) {
 		$api    = new PREVIEW_AI_Api();
 		$result = $api->analyze_catalog( $products_data );
 
@@ -753,25 +801,33 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		// Process results and save as product meta.
 		$stats = $this->save_catalog_classifications( $result );
 
-		// Check if free tier limitation was applied.
 		$is_limited      = isset( $result['is_limited'] ) && $result['is_limited'];
-		$total_received  = isset( $result['total_received'] ) ? intval( $result['total_received'] ) : 0;
-		$total_analyzed  = isset( $result['total_analyzed'] ) ? intval( $result['total_analyzed'] ) : 0;
+		$analysis_errors = isset( $result['analysis_errors'] ) ? intval( $result['analysis_errors'] ) : 0;
+
+		$try_product_url = '';
+		if ( ! empty( $stats['configured_ids'] ) ) {
+			$try_product_url = get_permalink( $stats['configured_ids'][0] );
+		}
+
+		$warning = '';
+		if ( $analysis_errors >= 3 ) {
+			$warning = __( 'Some product images could not be analyzed. If this persists, please contact support.', 'preview-ai' );
+		}
 
 		wp_send_json_success(
 			array(
+				'status'          => 'completed',
 				'total'           => $stats['total'],
 				'configured'      => $stats['configured'],
 				'needs_review'    => $stats['needs_review'],
 				'images_analyzed' => $stats['images_analyzed'],
 				'is_limited'      => $is_limited,
-				'total_received'  => $total_received,
-				'total_analyzed'  => $total_analyzed,
+				'analysis_errors' => $analysis_errors,
+				'try_product_url' => $try_product_url,
+				'warning'         => $warning,
 				'message'         => sprintf(
-					/* translators: 1: configured products, 2: products that couldn't be enabled, 3: images analyzed */
 					__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
 					$stats['configured'],
 					$stats['needs_review'],
@@ -782,36 +838,160 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
-	 * Convert attachment to base64 data.
+	 * Schedule catalog analysis with Action Scheduler.
 	 *
-	 * @since    1.0.0
-	 * @param    int $attachment_id Attachment ID.
-	 * @return   array|null         Array with base64 and mime_type, or null on failure.
+	 * @param array $products_data Products to analyze.
 	 */
-	private function get_attachment_base64( $attachment_id ) {
-		if ( ! $attachment_id ) {
-			return null;
+	private function schedule_catalog_analysis( $products_data ) {
+		// Clear any previous analysis.
+		delete_option( self::ANALYSIS_RESULTS_OPTION );
+
+		// Save products to process.
+		update_option( self::ANALYSIS_PENDING_OPTION, $products_data, false );
+
+		// Initialize progress.
+		update_option(
+			self::ANALYSIS_PROGRESS_OPTION,
+			array(
+				'total'           => count( $products_data ),
+				'processed'       => 0,
+				'configured'      => 0,
+				'needs_review'    => 0,
+				'images_analyzed' => 0,
+				'analysis_errors' => 0,
+				'configured_ids'  => array(),
+			),
+			false
+		);
+
+		// Set status to processing.
+		update_option( self::ANALYSIS_STATUS_OPTION, 'processing', false );
+
+		// Schedule first batch (Action Scheduler from WooCommerce).
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action( time(), 'preview_ai_process_catalog_batch' );
+		} else {
+			// Fallback: process synchronously if Action Scheduler not available.
+			update_option( self::ANALYSIS_STATUS_OPTION, 'idle', false );
+			$this->process_catalog_sync( $products_data );
+		}
+	}
+
+	/**
+	 * Process a batch of products (called by Action Scheduler).
+	 */
+	public function process_catalog_batch() {
+		$products = get_option( self::ANALYSIS_PENDING_OPTION, array() );
+		$progress = get_option( self::ANALYSIS_PROGRESS_OPTION, array() );
+
+		if ( empty( $products ) ) {
+			// All done.
+			update_option( self::ANALYSIS_STATUS_OPTION, 'completed', false );
+			delete_option( self::ANALYSIS_PENDING_OPTION );
+			return;
 		}
 
-		$file_path = get_attached_file( $attachment_id );
-		if ( ! $file_path || ! file_exists( $file_path ) ) {
-			return null;
+		// Take a batch.
+		$batch = array_splice( $products, 0, self::CATALOG_BATCH_SIZE );
+		update_option( self::ANALYSIS_PENDING_OPTION, $products, false );
+
+		// Process batch.
+		$api    = new PREVIEW_AI_Api();
+		$result = $api->analyze_catalog( $batch );
+
+		if ( ! is_wp_error( $result ) ) {
+			$stats = $this->save_catalog_classifications( $result );
+
+			// Update progress.
+			$progress['processed']       += count( $batch );
+			$progress['configured']      += $stats['configured'];
+			$progress['needs_review']    += $stats['needs_review'];
+			$progress['images_analyzed'] += $stats['images_analyzed'];
+			$progress['analysis_errors'] += isset( $result['analysis_errors'] ) ? intval( $result['analysis_errors'] ) : 0;
+			$progress['configured_ids']   = array_merge( $progress['configured_ids'], $stats['configured_ids'] );
+
+			update_option( self::ANALYSIS_PROGRESS_OPTION, $progress, false );
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$image_data = file_get_contents( $file_path );
-		if ( false === $image_data ) {
-			return null;
+		// Schedule next batch if there are more products.
+		if ( ! empty( $products ) && function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action( time() + 2, 'preview_ai_process_catalog_batch' );
+		} else {
+			// All done.
+			update_option( self::ANALYSIS_STATUS_OPTION, 'completed', false );
+			delete_option( self::ANALYSIS_PENDING_OPTION );
+		}
+	}
+
+	/**
+	 * AJAX handler to get catalog analysis status.
+	 */
+	public function handle_catalog_status() {
+		check_ajax_referer( 'preview_ai_learn_catalog', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'preview-ai' ) ) );
 		}
 
-		$mime_type = get_post_mime_type( $attachment_id );
-		if ( ! $mime_type ) {
-			return null;
+		$status   = get_option( self::ANALYSIS_STATUS_OPTION, 'idle' );
+		$progress = get_option( self::ANALYSIS_PROGRESS_OPTION, array() );
+
+		$response = array(
+			'status' => $status,
+		);
+
+		if ( 'processing' === $status && ! empty( $progress ) ) {
+			$response['total']     = $progress['total'];
+			$response['processed'] = $progress['processed'];
+			$response['message']   = sprintf(
+				/* translators: 1: processed count, 2: total count */
+				__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
+				$progress['processed'],
+				$progress['total']
+			);
+		} elseif ( 'completed' === $status && ! empty( $progress ) ) {
+			$try_product_url = '';
+			if ( ! empty( $progress['configured_ids'] ) ) {
+				$try_product_url = get_permalink( $progress['configured_ids'][0] );
+			}
+
+			$warning = '';
+			if ( isset( $progress['analysis_errors'] ) && $progress['analysis_errors'] >= 3 ) {
+				$warning = __( 'Some product images could not be analyzed. If this persists, please contact support.', 'preview-ai' );
+			}
+
+			$response['configured']      = $progress['configured'];
+			$response['needs_review']    = $progress['needs_review'];
+			$response['images_analyzed'] = $progress['images_analyzed'];
+			$response['analysis_errors'] = $progress['analysis_errors'];
+			$response['try_product_url'] = $try_product_url;
+			$response['warning']         = $warning;
+			$response['message']         = sprintf(
+				__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
+				$progress['configured'],
+				$progress['needs_review'],
+				$progress['images_analyzed']
+			);
+
+			// Reset status after reading completion.
+			update_option( self::ANALYSIS_STATUS_OPTION, 'idle', false );
 		}
+
+		wp_send_json_success( $response );
+	}
+
+	/**
+	 * Get current catalog analysis status.
+	 *
+	 * @return array Status data.
+	 */
+	public static function get_catalog_analysis_status() {
+		$status   = get_option( self::ANALYSIS_STATUS_OPTION, 'idle' );
+		$progress = get_option( self::ANALYSIS_PROGRESS_OPTION, array() );
 
 		return array(
-			'base64'    => base64_encode( $image_data ),
-			'mime_type' => $mime_type,
+			'status'    => $status,
+			'progress'  => $progress,
 		);
 	}
 
@@ -819,10 +999,10 @@ class PREVIEW_AI_Admin {
 	 * Get catalog products data for AI analysis.
 	 *
 	 * Includes parent products and variations with their own images.
-	 * Each entry contains thumbnail as base64 for image analysis.
+	 * Sends thumbnail URLs for backend to download and process.
 	 *
 	 * @since    1.0.0
-	 * @return   array    Array of products with id, title, categories, tags, thumbnail, variation_id.
+	 * @return   array    Array of products with id, title, categories, tags, thumbnail_url, variation_id.
 	 */
 	private function get_catalog_products_data() {
 		$products = wc_get_products(
@@ -846,18 +1026,18 @@ class PREVIEW_AI_Admin {
 			$tags     = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
 			$tags_str = is_array( $tags ) ? implode( ', ', $tags ) : '';
 
-			// Get parent product thumbnail as base64.
-			$thumbnail_id = $product->get_image_id();
-			$thumbnail    = $this->get_attachment_base64( $thumbnail_id );
+			// Get parent product thumbnail URL.
+			$thumbnail_id  = $product->get_image_id();
+			$thumbnail_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
 
 			// Add parent product data.
 			$products_data[] = array(
-				'id'           => $product_id,
-				'title'        => $product->get_name(),
-				'categories'   => $categories_str,
-				'tags'         => $tags_str,
-				'thumbnail'    => $thumbnail,
-				'variation_id' => null,
+				'id'            => $product_id,
+				'title'         => $product->get_name(),
+				'categories'    => $categories_str,
+				'tags'          => $tags_str,
+				'thumbnail_url' => $thumbnail_url,
+				'variation_id'  => null,
 			);
 
 			// If variable product, include variations with their own images.
@@ -874,15 +1054,15 @@ class PREVIEW_AI_Admin {
 
 					// Only include if variation has a different image than parent.
 					if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
-						$var_thumbnail = $this->get_attachment_base64( $var_image_id );
+						$var_thumbnail_url = wp_get_attachment_url( $var_image_id );
 
 						$products_data[] = array(
-							'id'           => $product_id,
-							'title'        => $product->get_name(),
-							'categories'   => $categories_str,
-							'tags'         => $tags_str,
-							'thumbnail'    => $var_thumbnail,
-							'variation_id' => $variation_id,
+							'id'            => $product_id,
+							'title'         => $product->get_name(),
+							'categories'    => $categories_str,
+							'tags'          => $tags_str,
+							'thumbnail_url' => $var_thumbnail_url,
+							'variation_id'  => $variation_id,
 						);
 					}
 				}
@@ -899,7 +1079,7 @@ class PREVIEW_AI_Admin {
 	 *
 	 * @since    1.0.0
 	 * @param    array $result    API response with classifications.
-	 * @return   array            Statistics array with total, configured, needs_review, images_analyzed.
+	 * @return   array            Statistics array with total, configured, needs_review, images_analyzed, configured_ids.
 	 */
 	private function save_catalog_classifications( $result ) {
 		$stats = array(
@@ -907,6 +1087,7 @@ class PREVIEW_AI_Admin {
 			'configured'      => 0,
 			'needs_review'    => 0,
 			'images_analyzed' => 0,
+			'configured_ids'  => array(),
 		);
 
 		if ( empty( $result['classifications'] ) || ! is_array( $result['classifications'] ) ) {
@@ -933,6 +1114,7 @@ class PREVIEW_AI_Admin {
 				if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
 					update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
 					$stats['configured']++;
+					$stats['configured_ids'][] = $product_id;
 				} else {
 					update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
 					$stats['needs_review']++;
@@ -1008,6 +1190,36 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
+	 * Get URL of first configured product for onboarding.
+	 *
+	 * @since 1.0.0
+	 * @return string|false Product URL or false if none found.
+	 */
+	private function get_first_configured_product_url() {
+		$products = get_posts(
+			array(
+				'post_type'      => 'product',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'meta_query'     => array(
+					array(
+						'key'     => '_preview_ai_recommended_subtype',
+						'value'   => '',
+						'compare' => '!=',
+					),
+				),
+				'fields'         => 'ids',
+			)
+		);
+
+		if ( empty( $products ) ) {
+			return false;
+		}
+
+		return get_permalink( $products[0] );
+	}
+
+	/**
 	 * Display admin notices for API issues.
 	 *
 	 * @since 1.0.0
@@ -1040,6 +1252,36 @@ class PREVIEW_AI_Admin {
 			</div>
 			<?php
 			return;
+		}
+
+		// Onboarding: User hasn't tried the widget yet.
+		if ( get_option( 'preview_ai_needs_first_try' ) ) {
+			$try_product_url = $this->get_first_configured_product_url();
+			if ( $try_product_url ) {
+				?>
+				<div class="notice notice-info preview-ai-try-notice" style="border-left-color:#6366f1;padding:16px 20px;">
+					<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+						<div style="flex-shrink:0;width:44px;height:44px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+							<span style="font-size:22px;">✨</span>
+						</div>
+						<div style="flex:1;min-width:200px;">
+							<p style="margin:0 0 4px;font-weight:600;color:#1e293b;">
+								<?php esc_html_e( 'One last step: Try Preview AI!', 'preview-ai' ); ?>
+							</p>
+							<p style="margin:0;color:#64748b;font-size:13px;">
+								<?php esc_html_e( 'See how your customers will experience the virtual try-on.', 'preview-ai' ); ?>
+							</p>
+						</div>
+						<a href="<?php echo esc_url( $try_product_url ); ?>" target="_blank" class="button button-primary" style="height:auto;padding:10px 20px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;">
+							<?php esc_html_e( 'Try It Now →', 'preview-ai' ); ?>
+						</a>
+						<button type="button" class="button" style="height:auto;padding:10px 16px;" onclick="jQuery.post(ajaxurl, {action:'preview_ai_dismiss_try_notice',nonce:'<?php echo esc_js( wp_create_nonce( 'preview_ai_dismiss_notice' ) ); ?>'}, function(){jQuery('.preview-ai-try-notice').slideUp();});">
+							<?php esc_html_e( 'I already tried it', 'preview-ai' ); ?>
+						</button>
+					</div>
+				</div>
+				<?php
+			}
 		}
 
 		// Check account status.
@@ -1124,6 +1366,19 @@ class PREVIEW_AI_Admin {
 		if ( 'preview_ai_low_tokens' === $notice ) {
 			update_user_meta( get_current_user_id(), 'preview_ai_dismissed_low_tokens', true );
 		}
+
+		wp_send_json_success();
+	}
+
+	/**
+	 * Handle AJAX request to dismiss the "try it" onboarding notice.
+	 *
+	 * @since 1.0.0
+	 */
+	public function handle_dismiss_try_notice() {
+		check_ajax_referer( 'preview_ai_dismiss_notice', 'nonce' );
+
+		delete_option( 'preview_ai_needs_first_try' );
 
 		wp_send_json_success();
 	}
