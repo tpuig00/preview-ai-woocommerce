@@ -52,7 +52,7 @@ class PREVIEW_AI_Activator {
 		}
 
 		if ( false === get_option( 'preview_ai_api_endpoint' ) ) {
-			update_option( 'preview_ai_api_endpoint', 'https://api.previewai.app' );
+			update_option( 'preview_ai_api_endpoint', 'https://api.previewai.app/api/' );
 		}
 
 		// Clear any cached API status.

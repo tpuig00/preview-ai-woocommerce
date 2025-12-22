@@ -16,7 +16,7 @@ class PREVIEW_AI_Api {
 	 *
 	 * @var string
 	 */
-	private $endpoint = 'http://backend_app:8000/api/';
+	private $endpoint;
 
 	/**
 	 * API key for authentication.
@@ -31,12 +31,20 @@ class PREVIEW_AI_Api {
 	const STATUS_OPTION = 'preview_ai_account_status';
 
 	/**
+	 * Default production API endpoint.
+	 *
+	 * @var string
+	 */
+	const DEFAULT_ENDPOINT = 'https://api.previewai.app/api/';
+
+	/**
 	 * Initialize API client.
 	 *
 	 * @param string|null $api_key Optional API key. If null, uses saved option.
 	 */
 	public function __construct( $api_key = null ) {
-		$this->api_key = $api_key ?? get_option( 'preview_ai_api_key', '' );
+		$this->api_key  = $api_key ?? get_option( 'preview_ai_api_key', '' );
+		$this->endpoint = get_option( 'preview_ai_api_endpoint', self::DEFAULT_ENDPOINT );
 	}
 
 	/**
@@ -55,8 +63,10 @@ class PREVIEW_AI_Api {
 			return new WP_Error( 'not_configured', __( 'API not configured', 'preview-ai' ) );
 		}
 
+		$endpoint = $this->endpoint . ltrim( $path, '/' );
+
 		$response = wp_remote_post(
-			trailingslashit( $this->endpoint ) . ltrim( $path, '/' ),
+			trailingslashit( $endpoint ),
 			array(
 				'timeout' => $timeout,
 				'headers' => array(
@@ -69,7 +79,7 @@ class PREVIEW_AI_Api {
 
 		if ( is_wp_error( $response ) ) {
 			PREVIEW_AI_Logger::error( 'API request failed', array(
-				'path'  => $path,
+				'path'  => $endpoint,
 				'error' => $response->get_error_message(),
 			) );
 			return $response;
@@ -307,7 +317,7 @@ class PREVIEW_AI_Api {
 
 		global $wp_version;
 
-		$endpoint = 'http://backend_app:8000/api/';
+		$endpoint = get_option( 'preview_ai_api_endpoint', self::DEFAULT_ENDPOINT );
 
 		$response = wp_remote_post(
 			trailingslashit( $endpoint ) . 'register/',
