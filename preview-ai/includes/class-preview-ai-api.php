@@ -63,10 +63,10 @@ class PREVIEW_AI_Api {
 			return new WP_Error( 'not_configured', __( 'API not configured', 'preview-ai' ) );
 		}
 
-		$endpoint = $this->endpoint . ltrim( $path, '/' );
+		$endpoint = rtrim( $this->endpoint, '/' ) . '/' . ltrim( $path, '/' );
 
 		$response = wp_remote_post(
-			trailingslashit( $endpoint ),
+			$endpoint,
 			array(
 				'timeout' => $timeout,
 				'headers' => array(
@@ -76,6 +76,11 @@ class PREVIEW_AI_Api {
 				'body'    => wp_json_encode( $data ),
 			)
 		);
+
+		PREVIEW_AI_Logger::debug( 'API request response', array(
+			'endpoint' => $endpoint,
+			'response' => $response,
+		) );
 
 		if ( is_wp_error( $response ) ) {
 			PREVIEW_AI_Logger::error( 'API request failed', array(

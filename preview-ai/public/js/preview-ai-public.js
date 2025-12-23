@@ -188,8 +188,9 @@
 		// "Upload new photo" link in saved photo section
 		$newPhotoLink.on( 'click', function( e ) {
 			e.preventDefault();
+			forgetSavedPhoto();
 			$savedPhoto.removeClass( 'is-visible' );
-			$upload.trigger( 'click' );
+			$instructions.removeClass( 'has-saved-photo' );
 		} );
 
 		// Forget saved photo
@@ -253,36 +254,33 @@
 				$( '<div />' ).text( message ).appendTo( $checkStatus );
 			}
 
-			if ( warnings && warnings.length ) {
-				var $ul = $( '<ul />' );
-				warnings.forEach( function( w ) {
-					var raw = String( w || '' );
-					var code = null;
-					var backendText = raw;
+		if ( warnings && warnings.length ) {
+			var $ul = $( '<ul class="preview-ai-warnings-list" />' );
+			warnings.forEach( function( w ) {
+				var raw = String( w || '' );
+				var code = null;
+				var backendText = raw;
 
-					// Parse stable format "CODE: message".
-					var idx = raw.indexOf( ':' );
-					if ( idx > 0 ) {
-						code = raw.slice( 0, idx ).trim();
-						backendText = raw.slice( idx + 1 ).trim();
-					}
+				// Parse stable format "CODE: message".
+				var idx = raw.indexOf( ':' );
+				if ( idx > 0 ) {
+					code = raw.slice( 0, idx ).trim();
+					backendText = raw.slice( idx + 1 ).trim();
+				}
 
-					var translated = null;
-					if ( code && previewAiData.i18n && previewAiData.i18n.warningCodes ) {
-						translated = previewAiData.i18n.warningCodes[ code ] || null;
-					}
+				// Check for translated text
+				var translated = null;
+				if ( code && previewAiData.i18n && previewAiData.i18n.warningCodes ) {
+					translated = previewAiData.i18n.warningCodes[ code ] || null;
+				}
 
-					var finalText = raw;
-					if ( code && translated ) {
-						finalText = code + ': ' + translated;
-					} else if ( code && backendText ) {
-						finalText = code + ': ' + backendText;
-					}
+				// Show only text, no code
+				var finalText = translated || backendText || raw;
 
-					$( '<li />' ).text( finalText ).appendTo( $ul );
-				} );
-				$ul.appendTo( $checkStatus );
-			}
+				$( '<li />' ).text( finalText ).appendTo( $ul );
+			} );
+			$ul.appendTo( $checkStatus );
+		}
 		}
 
 		function startPrecheck( file ) {
@@ -422,7 +420,10 @@
 
 		// Change photo / New photo
 		$changeBtn.on( 'click', resetToInstructions );
-		$newPhotoBtn.on( 'click', resetToInstructions );
+		$newPhotoBtn.on( 'click', function() {
+			forgetSavedPhoto();
+			resetToInstructions();
+		} );
 
 		// Show error message
 		function showError( message ) {

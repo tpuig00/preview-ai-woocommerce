@@ -143,6 +143,7 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 					<span class="preview-ai-step is-active"><?php esc_html_e( 'Analyzing your photo...', 'preview-ai' ); ?></span>
 					<span class="preview-ai-step"><?php esc_html_e( 'Preparing garment...', 'preview-ai' ); ?></span>
 					<span class="preview-ai-step"><?php esc_html_e( 'Fitting to your body...', 'preview-ai' ); ?></span>
+					<span class="preview-ai-step"><?php esc_html_e( 'Applying garment...', 'preview-ai' ); ?></span>
 					<span class="preview-ai-step"><?php esc_html_e( 'Adding final touches...', 'preview-ai' ); ?></span>
 				</div>
 				</div>
@@ -179,7 +180,7 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 			<!-- AI Disclaimer -->
 			<div id="preview-ai-disclaimer" class="preview-ai-disclaimer">
 				<span class="preview-ai-disclaimer-icon">✨</span>
-				<p><?php esc_html_e( 'This is an AI-generated preview for reference only. Actual fit and appearance may vary — please check the size guide before ordering.', 'preview-ai' ); ?></p>
+				<p><?php echo wp_kses( __( 'This is an AI-generated preview for reference only. <strong>Actual fit and appearance may vary</strong> — please check the size guide before ordering.', 'preview-ai' ), array( 'strong' => array() ) ); ?></p>
 			</div>
 		</div>
 	</div>
