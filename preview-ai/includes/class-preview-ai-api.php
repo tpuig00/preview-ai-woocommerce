@@ -52,7 +52,7 @@ class PREVIEW_AI_Api {
 	 *
 	 * Updates account status cache from every response.
 	 *
-	 * @param string $path    API endpoint path (e.g., 'generate/', 'catalog/analyze').
+	 * @param string $path    API endpoint path (e.g., 'generate', 'catalog/analyze').
 	 * @param array  $data    Request data to send.
 	 * @param int    $timeout Request timeout in seconds (default 120).
 	 * @return array|WP_Error Response data or error.
@@ -220,7 +220,7 @@ class PREVIEW_AI_Api {
 			'variation_id' => $product_data['variation_id'],
 		) );
 
-		$result = $this->request( 'generate/', array(
+		$result = $this->request( 'generate', array(
 			'user_image'      => $user_image,
 			'product_id'      => $product_data['parentId'],
 			'variation_id'    => $product_data['variation_id'],
@@ -325,7 +325,7 @@ class PREVIEW_AI_Api {
 		$endpoint = get_option( 'preview_ai_api_endpoint', self::DEFAULT_ENDPOINT );
 
 		$response = wp_remote_post(
-			trailingslashit( $endpoint ) . 'register/',
+			trailingslashit( $endpoint ) . 'register',
 			array(
 				'timeout' => 30,
 				'headers' => array(
@@ -342,7 +342,7 @@ class PREVIEW_AI_Api {
 		);
 
 		PREVIEW_AI_Logger::debug( 'Site registration response', array(
-			'endpoint' => $endpoint . 'register/',
+			'endpoint' => trailingslashit( $endpoint ) . 'register',
 			'email' => $email,
 			'domain' => $domain,
 			'site_url' => $site_url,

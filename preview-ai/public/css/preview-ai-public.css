@@ -232,6 +232,13 @@
 	object-fit: cover;
 }
 
+.preview-ai-stage img,
+.preview-ai-saved-photo-preview img,
+.preview-ai-lightbox img {
+  image-orientation: from-image;
+}
+
+
 .preview-ai-use-saved-btn {
 	display: inline-flex;
 	align-items: center;

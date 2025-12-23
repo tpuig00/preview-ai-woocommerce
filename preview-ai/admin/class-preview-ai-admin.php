@@ -745,8 +745,21 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
+	 * Check if current account is on free trial (no Stripe subscription).
+	 *
+	 * @since    1.0.0
+	 * @return   bool True if free trial, false otherwise.
+	 */
+	private function is_free_tier() {
+		$status = PREVIEW_AI_Api::get_account_status();
+		$subscription_status = isset( $status['subscription_status'] ) ? $status['subscription_status'] : 'free_trial';
+		return 'free_trial' === $subscription_status;
+	}
+
+	/**
 	 * Handle AJAX request for Learn My Catalog feature.
-	 * Uses Action Scheduler for large catalogs (>50 products).
+	 * Uses Action Scheduler for large catalogs (>50 products) on paid plans.
+	 * Free trial users always process synchronously (backend limits to 3 products).
 	 *
 	 * @since    1.0.0
 	 */
@@ -766,13 +779,21 @@ class PREVIEW_AI_Admin {
 
 		$total_products = count( $products_data );
 
-		// For small catalogs, process immediately.
+		// Free tier: always process synchronously.
+		// Backend limits to 3 random products, so sending all at once
+		// ensures a representative sample from the entire catalog.
+		if ( $this->is_free_tier() ) {
+			$this->process_catalog_sync( $products_data );
+			return;
+		}
+
+		// Paid plans: for small catalogs, process immediately.
 		if ( $total_products <= self::CATALOG_BATCH_SIZE ) {
 			$this->process_catalog_sync( $products_data );
 			return;
 		}
 
-		// For large catalogs, use Action Scheduler.
+		// Paid plans: for large catalogs, use Action Scheduler.
 		$this->schedule_catalog_analysis( $products_data );
 
 		wp_send_json_success(
