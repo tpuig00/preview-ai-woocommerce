@@ -26,14 +26,90 @@
 		var $lightbox      = $( '#preview-ai-lightbox' );
 		var $lbImg         = $( '#preview-ai-lightbox-img' );
 
-		var selectedFile      = null;
-		var generatedImageUrl = null;
-		var checkXhr          = null;
-		var checkToken        = 0;
-		var loadingInterval   = null;
+	var selectedFile      = null;
+	var generatedImageUrl = null;
+	var checkXhr          = null;
+	var checkToken        = 0;
+	var loadingInterval   = null;
 
-		// localStorage key for saved photo
-		var STORAGE_KEY = 'previewAiUserPhoto';
+	// localStorage key for saved photo
+	var STORAGE_KEY = 'previewAiUserPhoto';
+
+	// Image resize settings
+	var MAX_IMAGE_SIZE = 1536; // Max width/height in pixels
+	var IMAGE_QUALITY  = 0.85; // JPEG quality (0-1)
+
+	/**
+	 * Resize image using Canvas API.
+	 * Reduces large images (e.g., 4200x5700 from iOS) to reasonable dimensions.
+	 *
+	 * @param {File} file Original image file.
+	 * @param {function} callback Callback with resized File and base64 data URL.
+	 */
+	function resizeImage( file, callback ) {
+		var reader = new FileReader();
+		reader.onload = function( e ) {
+			var img = new Image();
+			img.onload = function() {
+				var width  = img.width;
+				var height = img.height;
+
+				// Check if resize is needed
+				if ( width <= MAX_IMAGE_SIZE && height <= MAX_IMAGE_SIZE ) {
+					// No resize needed, return original
+					callback( file, e.target.result );
+					return;
+				}
+
+				// Calculate new dimensions maintaining aspect ratio
+				var ratio = Math.min( MAX_IMAGE_SIZE / width, MAX_IMAGE_SIZE / height );
+				var newWidth  = Math.round( width * ratio );
+				var newHeight = Math.round( height * ratio );
+
+				// Create canvas and resize
+				var canvas = document.createElement( 'canvas' );
+				canvas.width  = newWidth;
+				canvas.height = newHeight;
+
+				var ctx = canvas.getContext( '2d' );
+				ctx.imageSmoothingEnabled = true;
+				ctx.imageSmoothingQuality = 'high';
+				ctx.drawImage( img, 0, 0, newWidth, newHeight );
+
+				// Export as JPEG
+				canvas.toBlob( function( blob ) {
+					if ( ! blob ) {
+						// Fallback to original if blob creation fails
+						callback( file, e.target.result );
+						return;
+					}
+
+					var resizedFile = new File(
+						[ blob ],
+						file.name.replace( /\.[^.]+$/, '.jpg' ),
+						{ type: 'image/jpeg' }
+					);
+					var dataUrl = canvas.toDataURL( 'image/jpeg', IMAGE_QUALITY );
+
+					callback( resizedFile, dataUrl );
+				}, 'image/jpeg', IMAGE_QUALITY );
+			};
+
+			img.onerror = function() {
+				// Fallback to original if image load fails
+				callback( file, e.target.result );
+			};
+
+			img.src = e.target.result;
+		};
+
+		reader.onerror = function() {
+			// Fallback: return original file without base64
+			callback( file, null );
+		};
+
+		reader.readAsDataURL( file );
+	}
 
 		// Check if we have a saved photo
 		function getSavedPhoto() {
@@ -210,30 +286,37 @@
 			$( 'body' ).css( 'overflow', '' );
 		}
 
-		// Reset to initial state
-		function resetToInstructions() {
-			if ( checkXhr && checkXhr.abort ) {
-				checkXhr.abort();
-			}
-			stopLoadingSteps();
-			$upload.val( '' );
-			selectedFile = null;
-			generatedImageUrl = null;
-			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().show();
-			$generate.prop( 'disabled', true );
-			$imgBefore.attr( 'src', '' );
-			$imgAfter.attr( 'src', '' );
-			$stage.removeClass( 'is-visible is-loading is-result' );
-			$actions.removeClass( 'is-visible' );
-			$generate.removeClass( 'is-hidden' );
-			$changeBtn.removeClass( 'is-hidden' );
-			$resultActions.removeClass( 'is-visible' );
-			$disclaimer.removeClass( 'is-visible' );
-			$instructions.removeClass( 'is-hidden' );
-
-			// Check for saved photo again
-			showSavedPhotoSection();
+	// Reset to initial state
+	// @param {boolean} showSaved - Whether to show saved photo section (default: true)
+	function resetToInstructions( showSaved ) {
+		if ( checkXhr && checkXhr.abort ) {
+			checkXhr.abort();
 		}
+		stopLoadingSteps();
+		$upload.val( '' );
+		selectedFile = null;
+		generatedImageUrl = null;
+		$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().show();
+		$generate.prop( 'disabled', true );
+		$imgBefore.attr( 'src', '' );
+		$imgAfter.attr( 'src', '' );
+		$stage.removeClass( 'is-visible is-loading is-result' );
+		$actions.removeClass( 'is-visible' );
+		$generate.removeClass( 'is-hidden' );
+		$changeBtn.removeClass( 'is-hidden' );
+		$resultActions.removeClass( 'is-visible' );
+		$disclaimer.removeClass( 'is-visible' );
+		$instructions.removeClass( 'is-hidden' );
+
+		// Check for saved photo again (unless explicitly disabled)
+		if ( showSaved !== false ) {
+			showSavedPhotoSection();
+		} else {
+			// Hide saved photo section and go directly to upload
+			$savedPhoto.removeClass( 'is-visible' );
+			$instructions.removeClass( 'has-saved-photo' );
+		}
+	}
 
 		function renderCheckStatus( status, message, warnings ) {
 			$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty();
@@ -388,38 +471,40 @@
 			}
 		} );
 
-		// Handle file selection
-		function handleFileSelect( input ) {
-			if ( input.files && input.files[0] ) {
-				selectedFile = input.files[0];
-				var reader = new FileReader();
-				reader.onload = function( e ) {
-					var base64Data = e.target.result;
-					$imgBefore.attr( 'src', base64Data );
+	// Handle file selection
+	function handleFileSelect( input ) {
+		if ( input.files && input.files[0] ) {
+			var originalFile = input.files[0];
 
-					// Save photo to localStorage for future use
-					savePhoto( base64Data );
+			// Resize image before processing (reduces iOS 4200x5700 images)
+			resizeImage( originalFile, function( resizedFile, base64Data ) {
+				selectedFile = resizedFile;
+				$imgBefore.attr( 'src', base64Data );
 
-					$savedPhoto.removeClass( 'is-visible' );
-					$instructions.addClass( 'is-hidden' );
-					$stage.addClass( 'is-visible' ).removeClass( 'is-result' );
-					$actions.addClass( 'is-visible' );
-					$generate.removeClass( 'is-hidden' );
-					$generate.prop( 'disabled', true );
-					$resultActions.removeClass( 'is-visible' );
-					$disclaimer.removeClass( 'is-visible' );
-					startPrecheck( selectedFile );
-				};
-				reader.readAsDataURL( selectedFile );
-			}
+				// Save resized photo to localStorage for future use
+				savePhoto( base64Data );
+
+				$savedPhoto.removeClass( 'is-visible' );
+				$instructions.addClass( 'is-hidden' );
+				$stage.addClass( 'is-visible' ).removeClass( 'is-result' );
+				$actions.addClass( 'is-visible' );
+				$generate.removeClass( 'is-hidden' );
+				$generate.prop( 'disabled', true );
+				$resultActions.removeClass( 'is-visible' );
+				$disclaimer.removeClass( 'is-visible' );
+				startPrecheck( selectedFile );
+			} );
 		}
+	}
 
 		$upload.on( 'change', function() {
 			handleFileSelect( this );
 		} );
 
-		// Change photo / New photo
-		$changeBtn.on( 'click', resetToInstructions );
+	// Change photo - go directly to upload (skip saved photo section)
+	$changeBtn.on( 'click', function() {
+		resetToInstructions( false );
+	} );
 		$newPhotoBtn.on( 'click', function() {
 			forgetSavedPhoto();
 			resetToInstructions();

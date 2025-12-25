@@ -319,7 +319,10 @@ class PREVIEW_AI_Admin {
 		update_option( 'preview_ai_needs_first_try', true );
 		?>
 		<div id="preview-ai-onboarding-wizard" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100000;display:flex;align-items:center;justify-content:center;">
-			<div style="background:#fff;border-radius:16px;padding:48px;max-width:520px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+			<div style="background:#fff;border-radius:16px;padding:48px;max-width:520px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.3);position:relative;">
+				<button type="button" id="preview-ai-onboarding-close" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;padding:8px;border-radius:50%;transition:background 0.2s;" title="<?php esc_attr_e( 'Close', 'preview-ai' ); ?>">
+					<svg width="20" height="20" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+				</button>
 				<div style="width:72px;height:72px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(34,197,94,0.3);">
 					<svg width="36" height="36" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
 				</div>
@@ -469,6 +472,17 @@ class PREVIEW_AI_Admin {
 					.replace(/\?$/, '');
 				history.replaceState(null, '', cleanUrl);
 			}
+			
+			// Close button handler.
+			$('#preview-ai-onboarding-close').on('click', function() {
+				$('#preview-ai-onboarding-wizard').fadeOut(300, function() {
+					$(this).remove();
+				});
+			}).on('mouseenter', function() {
+				$(this).css('background', '#f1f5f9');
+			}).on('mouseleave', function() {
+				$(this).css('background', 'none');
+			});
 			
 		})(jQuery);
 		</script>
