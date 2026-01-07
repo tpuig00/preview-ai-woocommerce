@@ -46,11 +46,17 @@ $options = array(
 	'preview_ai_button_position',
 	'preview_ai_accent_color',
 	'preview_ai_needs_onboarding',
+	'preview_ai_needs_first_try',
 	'preview_ai_activation_time',
 	'preview_ai_api_endpoint',
 	'preview_ai_account_status',
 	'preview_ai_stats',
 	'preview_ai_tracking_db_version',
+	// Catalog analysis options (critical - these cause "Processing..." message to persist).
+	'preview_ai_catalog_analysis_status',
+	'preview_ai_catalog_analysis_progress',
+	'preview_ai_catalog_pending_products',
+	'preview_ai_catalog_analysis_results',
 );
 
 foreach ( $options as $option ) {
@@ -64,6 +70,37 @@ foreach ( $options as $option ) {
 delete_transient( 'preview_ai_account_status' );
 
 /**
+ * 2.1. Eliminar acciones de Action Scheduler relacionadas con el plugin.
+ * Esto es crítico para evitar que las acciones pendientes sigan ejecutándose.
+ */
+if ( function_exists( 'as_unschedule_all_actions' ) ) {
+	// Eliminar todas las acciones del hook del plugin.
+	as_unschedule_all_actions( 'preview_ai_process_catalog_batch' );
+} else {
+	// Fallback: eliminar directamente de la base de datos si Action Scheduler no está disponible.
+	$actions_table = $wpdb->prefix . 'actionscheduler_actions';
+	$logs_table    = $wpdb->prefix . 'actionscheduler_logs';
+	
+	// Primero eliminar los logs asociados.
+	$wpdb->query(
+		$wpdb->prepare(
+			"DELETE al FROM {$logs_table} al
+			INNER JOIN {$actions_table} aa ON al.action_id = aa.action_id
+			WHERE aa.hook = %s",
+			'preview_ai_process_catalog_batch'
+		)
+	);
+	
+	// Luego eliminar las acciones.
+	$wpdb->query(
+		$wpdb->prepare(
+			"DELETE FROM {$actions_table} WHERE hook = %s",
+			'preview_ai_process_catalog_batch'
+		)
+	);
+}
+
+/**
  * 3. Eliminar la tabla personalizada de base de datos.
  */
 $table_name = $wpdb->prefix . 'preview_ai_events';
@@ -75,6 +112,7 @@ $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
 $post_meta_keys = array(
 	'_preview_ai_enabled',
 	'_preview_ai_recommended_subtype',
+	'_preview_ai_garment_type',
 	'_preview_ai_image_analysis',
 	'_preview_ai_session_id',
 	'_preview_ai_converted',

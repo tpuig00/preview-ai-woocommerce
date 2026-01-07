@@ -142,6 +142,18 @@ class PREVIEW_AI_Public {
 			return '';
 		}
 
+		// Get product data for looks history.
+		$product           = wc_get_product( $product_id );
+		$product_name      = $product ? $product->get_name() : '';
+		$product_url       = $product ? get_permalink( $product_id ) : '';
+		$product_image_url = '';
+		if ( $product ) {
+			$image_id = $product->get_image_id();
+			if ( $image_id ) {
+				$product_image_url = wp_get_attachment_image_url( $image_id, 'thumbnail' );
+			}
+		}
+
 		// Enqueue assets.
 		wp_enqueue_style( 'preview-ai' );
 		wp_enqueue_script( 'preview-ai' );
@@ -151,10 +163,13 @@ class PREVIEW_AI_Public {
 			'preview-ai',
 			'previewAiData',
 			array(
-				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-				'nonce'       => wp_create_nonce( 'preview_ai_ajax' ),
-				'productId'   => $product_id,
-				'variationId' => '',
+				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+				'nonce'           => wp_create_nonce( 'preview_ai_ajax' ),
+				'productId'       => $product_id,
+				'variationId'     => '',
+				'productName'     => $product_name,
+				'productUrl'      => $product_url,
+				'productImageUrl' => $product_image_url,
 				'i18n'      => array(
 					'error'         => __( 'Something went wrong. Please try again later.', 'preview-ai' ),
 					'openCamera'    => __( 'Open camera', 'preview-ai' ),
@@ -200,6 +215,16 @@ class PREVIEW_AI_Public {
 						'MISSING_LEFT_ANKLE'     => __( 'Left ankle/foot is not detected clearly.', 'preview-ai' ),
 						'MISSING_RIGHT_ANKLE'    => __( 'Right ankle/foot is not detected clearly.', 'preview-ai' ),
 					),
+					// Your Looks section.
+					'today'       => __( 'Today', 'preview-ai' ),
+					'yesterday'   => __( 'Yesterday', 'preview-ai' ),
+					'daysAgo'     => __( '{n} days ago', 'preview-ai' ),
+					'result'      => __( 'result', 'preview-ai' ),
+					'results'     => __( 'results', 'preview-ai' ),
+					'addToCart'   => __( 'Add to Cart', 'preview-ai' ),
+					'download'    => __( 'Download', 'preview-ai' ),
+					'viewProduct' => __( 'View Product', 'preview-ai' ),
+					'delete'      => __( 'Delete', 'preview-ai' ),
 				),
 			)
 		);

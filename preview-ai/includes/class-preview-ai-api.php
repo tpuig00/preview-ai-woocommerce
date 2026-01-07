@@ -228,6 +228,7 @@ class PREVIEW_AI_Api {
 			'product_images'  => $product_data['images'],
 			'product_type'    => $product_data['type'],
 			'product_subtype' => $product_data['subtype'],
+			'garment_type'    => $product_data['garment_type'] ?? null,
 			'image_analysis'  => $product_data['image_analysis'],
 		), 120 );
 

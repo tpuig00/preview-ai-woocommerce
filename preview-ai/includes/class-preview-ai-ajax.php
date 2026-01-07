@@ -197,8 +197,9 @@ class PREVIEW_AI_Ajax {
 		// Currently only clothing is supported.
 		$type = 'clothing';
 
-		// Get recommended subtype from catalog analysis (stored in parent product).
-		$subtype = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
+		// Get recommended subtype and garment_type from catalog analysis (stored in parent product).
+		$subtype      = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
+		$garment_type = get_post_meta( $product_id, '_preview_ai_garment_type', true );
 
 		// Get product image IDs: prioritize variation, fallback to parent.
 		$image_ids = array();
@@ -245,6 +246,7 @@ class PREVIEW_AI_Ajax {
 			'name'           => $product->get_name(),
 			'type'           => $type,
 			'subtype'        => $subtype ? $subtype : 'mixed',
+			'garment_type'   => $garment_type ? $garment_type : null,
 			'images'         => $images,
 			'image_analysis' => $image_analysis ? $image_analysis : null,
 		);
@@ -260,15 +262,17 @@ class PREVIEW_AI_Ajax {
 
 		$type = 'clothing';
 
-		$subtype = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
+		$subtype      = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
+		$garment_type = get_post_meta( $product_id, '_preview_ai_garment_type', true );
 
 		return array(
-			'id'          => $variation_id ? $variation_id : $product_id,
-			'parentId'    => $product_id,
+			'id'           => $variation_id ? $variation_id : $product_id,
+			'parentId'     => $product_id,
 			'variation_id' => $variation_id ? $variation_id : null,
-			'name'        => $product->get_name(),
-			'type'        => $type,
-			'subtype'     => $subtype ? $subtype : 'mixed',
+			'name'         => $product->get_name(),
+			'type'         => $type,
+			'subtype'      => $subtype ? $subtype : 'mixed',
+			'garment_type' => $garment_type ? $garment_type : null,
 		);
 	}
 

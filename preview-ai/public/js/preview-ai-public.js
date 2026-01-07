@@ -26,14 +26,28 @@
 		var $lightbox      = $( '#preview-ai-lightbox' );
 		var $lbImg         = $( '#preview-ai-lightbox-img' );
 
+		// Your Looks section elements.
+		var $viewTryonsBtn  = $( '#preview-ai-view-tryons' );
+		var $tryonsBadge    = $( '#preview-ai-tryons-badge' );
+		var $tryons         = $( '#preview-ai-tryons' );
+		var $tryonsBack     = $( '#preview-ai-tryons-back' );
+		var $tryonsCount    = $( '#preview-ai-tryons-count' );
+		var $tryonsList     = $( '#preview-ai-tryons-list' );
+		var $tryonsEmpty    = $( '#preview-ai-tryons-empty' );
+		var $showTryonsBtn  = $( '#preview-ai-show-tryons' );
+		var $instructionsLooksBtn   = $( '#preview-ai-instructions-looks' );
+		var $instructionsLooksBadge = $( '#preview-ai-instructions-looks-badge' );
+
 	var selectedFile      = null;
 	var generatedImageUrl = null;
 	var checkXhr          = null;
 	var checkToken        = 0;
 	var loadingInterval   = null;
 
-	// localStorage key for saved photo
-	var STORAGE_KEY = 'previewAiUserPhoto';
+	// localStorage keys.
+	var STORAGE_KEY        = 'previewAiUserPhoto';
+	var TRYONS_STORAGE_KEY = 'previewAiTryOns';
+	var MAX_TRYONS         = 10;
 
 	// Image resize settings
 	var MAX_IMAGE_SIZE = 1536; // Max width/height in pixels
@@ -136,6 +150,180 @@
 			} catch ( e ) {
 				// Ignore
 			}
+		}
+
+		// Get looks from localStorage.
+		function getTryOns() {
+			try {
+				var data = localStorage.getItem( TRYONS_STORAGE_KEY );
+				return data ? JSON.parse( data ) : [];
+			} catch ( e ) {
+				return [];
+			}
+		}
+
+		// Save look to localStorage.
+		function saveTryOn( tryOnData ) {
+			try {
+				var tryOns = getTryOns();
+
+				// Add new try-on at the beginning.
+				tryOns.unshift( tryOnData );
+
+				// Keep only the last MAX_TRYONS.
+				if ( tryOns.length > MAX_TRYONS ) {
+					tryOns = tryOns.slice( 0, MAX_TRYONS );
+				}
+
+				localStorage.setItem( TRYONS_STORAGE_KEY, JSON.stringify( tryOns ) );
+			} catch ( e ) {
+				// Storage full or not available.
+			}
+		}
+
+		// Delete a look by id.
+		function deleteTryOn( id ) {
+			try {
+				var tryOns = getTryOns();
+				tryOns = tryOns.filter( function( t ) {
+					return t.id !== id;
+				} );
+				localStorage.setItem( TRYONS_STORAGE_KEY, JSON.stringify( tryOns ) );
+			} catch ( e ) {
+				// Ignore.
+			}
+		}
+
+		// Format date for display.
+		function formatDate( timestamp ) {
+			var date = new Date( timestamp );
+			var now = new Date();
+			var diffDays = Math.floor( ( now - date ) / ( 1000 * 60 * 60 * 24 ) );
+
+			if ( diffDays === 0 ) {
+				return previewAiData.i18n.today || 'Today';
+			} else if ( diffDays === 1 ) {
+				return previewAiData.i18n.yesterday || 'Yesterday';
+			} else if ( diffDays < 7 ) {
+				return ( previewAiData.i18n.daysAgo || '{n} days ago' ).replace( '{n}', diffDays );
+			}
+
+			// Format as "Jan 7"
+			var months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
+			return months[ date.getMonth() ] + ' ' + date.getDate();
+		}
+
+		// Render a single try-on card.
+		function renderTryOnCard( tryOn ) {
+			var $card = $( '<div class="preview-ai-tryon-card" data-id="' + tryOn.id + '"></div>' );
+
+			// Image container.
+			var $imgContainer = $( '<div class="preview-ai-tryon-img-container"></div>' );
+			var $img = $( '<img />' )
+				.attr( 'src', tryOn.generatedImageUrl )
+				.attr( 'alt', tryOn.productName )
+				.attr( 'loading', 'lazy' );
+			$imgContainer.append( $img );
+
+			// Product thumbnail overlay.
+			if ( tryOn.productImageUrl ) {
+				var $thumb = $( '<img class="preview-ai-tryon-product-thumb" />' )
+					.attr( 'src', tryOn.productImageUrl )
+					.attr( 'alt', '' );
+				$imgContainer.append( $thumb );
+			}
+
+			$card.append( $imgContainer );
+
+			// Info row.
+			var $info = $( '<div class="preview-ai-tryon-info"></div>' );
+			var $name = $( '<span class="preview-ai-tryon-name"></span>' ).text( tryOn.productName );
+			var $date = $( '<span class="preview-ai-tryon-date"></span>' ).text( formatDate( tryOn.createdAt ) );
+			$info.append( $name ).append( $date );
+			$card.append( $info );
+
+			// Action buttons.
+			var $btns = $( '<div class="preview-ai-tryon-btns"></div>' );
+
+			// Add to Cart button.
+			var addToCartUrl = tryOn.productUrl + ( tryOn.productUrl.indexOf( '?' ) > -1 ? '&' : '?' ) + 'add-to-cart=' + tryOn.productId;
+			if ( tryOn.variationId ) {
+				addToCartUrl += '&variation_id=' + tryOn.variationId;
+			}
+			var $addToCart = $( '<a class="preview-ai-tryon-btn preview-ai-tryon-btn--primary" href="' + addToCartUrl + '"></a>' )
+				.html( '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' + ( previewAiData.i18n.addToCart || 'Add to Cart' ) );
+			$btns.append( $addToCart );
+
+			// Download button.
+			var $download = $( '<button type="button" class="preview-ai-tryon-btn preview-ai-tryon-btn--secondary" data-url="' + tryOn.generatedImageUrl + '"></button>' )
+				.html( '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' + ( previewAiData.i18n.download || 'Download' ) );
+			$btns.append( $download );
+
+			// View Product button.
+			var $viewProduct = $( '<a class="preview-ai-tryon-btn preview-ai-tryon-btn--secondary" href="' + tryOn.productUrl + '" target="_blank"></a>' )
+				.html( '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' + ( previewAiData.i18n.viewProduct || 'View Product' ) );
+			$btns.append( $viewProduct );
+
+			$card.append( $btns );
+
+			// Delete button.
+			var $delete = $( '<button type="button" class="preview-ai-tryon-delete" data-id="' + tryOn.id + '" aria-label="' + ( previewAiData.i18n.delete || 'Delete' ) + '">×</button>' );
+			$card.append( $delete );
+
+			return $card;
+		}
+
+		// Render looks list.
+		function renderTryOnsList() {
+			var tryOns = getTryOns();
+			$tryonsList.empty();
+
+			if ( tryOns.length === 0 ) {
+				$tryonsEmpty.addClass( 'is-visible' );
+				$tryonsCount.text( '' );
+				return;
+			}
+
+			$tryonsEmpty.removeClass( 'is-visible' );
+			var countText = tryOns.length + ' ' + ( tryOns.length === 1 ? ( previewAiData.i18n.result || 'result' ) : ( previewAiData.i18n.results || 'results' ) );
+			$tryonsCount.text( countText );
+
+			tryOns.forEach( function( tryOn ) {
+				$tryonsList.append( renderTryOnCard( tryOn ) );
+			} );
+		}
+
+		// Update looks badge count.
+		function updateTryOnsBadge() {
+			var tryOns = getTryOns();
+			if ( tryOns.length > 0 ) {
+				$tryonsBadge.text( tryOns.length ).addClass( 'is-visible' );
+				$viewTryonsBtn.addClass( 'has-tryons' );
+				$instructionsLooksBadge.text( tryOns.length ).addClass( 'is-visible' );
+				$instructionsLooksBtn.addClass( 'has-looks' );
+			} else {
+				$tryonsBadge.text( '' ).removeClass( 'is-visible' );
+				$viewTryonsBtn.removeClass( 'has-tryons' );
+				$instructionsLooksBadge.text( '' ).removeClass( 'is-visible' );
+				$instructionsLooksBtn.removeClass( 'has-looks' );
+			}
+		}
+
+		// Show looks section.
+		function showTryOnsSection() {
+			renderTryOnsList();
+			$savedPhoto.removeClass( 'is-visible' );
+			$instructions.addClass( 'is-hidden' );
+			$stage.removeClass( 'is-visible' );
+			$actions.removeClass( 'is-visible' );
+			$tryons.addClass( 'is-visible' );
+		}
+
+		// Hide looks section and go back.
+		function hideTryOnsSection() {
+			$tryons.removeClass( 'is-visible' );
+			showSavedPhotoSection();
+			$instructions.removeClass( 'is-hidden' );
 		}
 
 		// Convert base64 to File object
@@ -252,8 +440,9 @@
 			}, 10 );
 			$( 'body' ).css( 'overflow', 'hidden' );
 
-			// Check for saved photo
+			// Check for saved photo and update looks badge
 			showSavedPhotoSection();
+			updateTryOnsBadge();
 		} );
 
 		// Use saved photo button
@@ -307,6 +496,7 @@
 		$resultActions.removeClass( 'is-visible' );
 		$disclaimer.removeClass( 'is-visible' );
 		$instructions.removeClass( 'is-hidden' );
+		$tryons.removeClass( 'is-visible' );
 
 		// Check for saved photo again (unless explicitly disabled)
 		if ( showSaved !== false ) {
@@ -578,6 +768,20 @@
 							$stage.addClass( 'is-result' );
 							$resultActions.addClass( 'is-visible' );
 							$disclaimer.addClass( 'is-visible' );
+
+							// Save to looks history.
+							var variationId = $( 'input.variation_id' ).val() || '';
+							saveTryOn( {
+								id: Date.now().toString(),
+								generatedImageUrl: generatedImageUrl,
+								productId: previewAiData.productId,
+								variationId: variationId,
+								productName: previewAiData.productName || '',
+								productUrl: previewAiData.productUrl || '',
+								productImageUrl: previewAiData.productImageUrl || '',
+								createdAt: Date.now()
+							} );
+							updateTryOnsBadge();
 						};
 						img.onerror = function() {
 							showError();
@@ -613,6 +817,58 @@
 		$lightbox.on( 'click', function() {
 			$( this ).removeClass( 'is-open' );
 		} );
+
+		// View looks from Welcome back section.
+		$viewTryonsBtn.on( 'click', function() {
+			showTryOnsSection();
+		} );
+
+		// View looks from result actions.
+		$showTryonsBtn.on( 'click', function() {
+			showTryOnsSection();
+		} );
+
+		// View looks from instructions section.
+		$instructionsLooksBtn.on( 'click', function() {
+			showTryOnsSection();
+		} );
+
+		// Back from looks section.
+		$tryonsBack.on( 'click', function() {
+			hideTryOnsSection();
+		} );
+
+		// Download from try-on card.
+		$tryonsList.on( 'click', '.preview-ai-tryon-btn--secondary[data-url]', function( e ) {
+			e.preventDefault();
+			var url = $( this ).data( 'url' );
+			if ( url ) {
+				downloadImage( url, 'preview-ai-' + Date.now() + '.jpg' );
+			}
+		} );
+
+		// Delete try-on.
+		$tryonsList.on( 'click', '.preview-ai-tryon-delete', function( e ) {
+			e.stopPropagation();
+			var id = $( this ).data( 'id' );
+			if ( id ) {
+				deleteTryOn( String( id ) );
+				renderTryOnsList();
+				updateTryOnsBadge();
+			}
+		} );
+
+		// Open lightbox from look card image.
+		$tryonsList.on( 'click', '.preview-ai-tryon-img-container img:first-child', function() {
+			var src = $( this ).attr( 'src' );
+			if ( src ) {
+				$lbImg.attr( 'src', src );
+				$lightbox.addClass( 'is-open' );
+			}
+		} );
+
+		// Initialize looks badge on load.
+		updateTryOnsBadge();
 	} );
 
 })( jQuery );

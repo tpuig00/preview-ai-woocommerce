@@ -1140,14 +1140,19 @@ class PREVIEW_AI_Admin {
 			$product_id   = absint( $classification['id'] );
 			$variation_id = isset( $classification['variation_id'] ) ? absint( $classification['variation_id'] ) : null;
 			$subtype      = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
+			$garment_type = isset( $classification['garment_type'] ) ? sanitize_key( $classification['garment_type'] ) : '';
 
-			// Only count and save subtype for parent products (once per parent).
+			// Only count and save subtype/garment_type for parent products (once per parent).
 			if ( ! in_array( $product_id, $processed_parents, true ) ) {
 				$stats['total']++;
 				$processed_parents[] = $product_id;
 
 				if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
 					update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
+					// Save garment_type if available (more specific classification).
+					if ( ! empty( $garment_type ) ) {
+						update_post_meta( $product_id, '_preview_ai_garment_type', $garment_type );
+					}
 					$stats['configured']++;
 					$stats['configured_ids'][] = $product_id;
 				} else {

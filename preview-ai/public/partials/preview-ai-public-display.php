@@ -61,10 +61,38 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 			<a href="#" id="preview-ai-new-photo-link" class="preview-ai-new-photo-link">
 				<?php esc_html_e( 'or upload a different photo', 'preview-ai' ); ?>
 			</a>
+			<button type="button" id="preview-ai-view-tryons" class="preview-ai-view-tryons-btn">
+				<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+					<path d="M13 10.551v-.678A4.005 4.005 0 0 0 16 6c0-2.206-1.794-4-4-4S8 3.794 8 6h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2a1 1 0 0 0-1 1v1.551l-8.665 7.702A1.001 1.001 0 0 0 3 20h18a1.001 1.001 0 0 0 .664-1.748L13 10.551zM5.63 18 12 12.338 18.37 18H5.63z"/>
+				</svg>
+				<?php esc_html_e( 'Your Looks', 'preview-ai' ); ?>
+				<span id="preview-ai-tryons-badge" class="preview-ai-tryons-badge"></span>
+			</button>
 			<div class="preview-ai-saved-photo-privacy">
-				<span class="preview-ai-privacy-icon">🔒</span>
 				<p><?php esc_html_e( 'Your photo is stored only on this device. We never upload or save it on our servers.', 'preview-ai' ); ?></p>
 				<a href="#" id="preview-ai-forget-photo" class="preview-ai-forget-link"><?php esc_html_e( 'Delete my photo', 'preview-ai' ); ?></a>
+			</div>
+		</div>
+
+		<!-- Your Looks Section -->
+		<div id="preview-ai-tryons" class="preview-ai-tryons">
+			<div class="preview-ai-tryons-header">
+				<button type="button" id="preview-ai-tryons-back" class="preview-ai-tryons-back" aria-label="<?php esc_attr_e( 'Back', 'preview-ai' ); ?>">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="15 18 9 12 15 6"/>
+					</svg>
+				</button>
+				<div class="preview-ai-tryons-title">
+					<h3><?php esc_html_e( 'Your Looks', 'preview-ai' ); ?></h3>
+					<span id="preview-ai-tryons-count" class="preview-ai-tryons-count"></span>
+				</div>
+			</div>
+			<div id="preview-ai-tryons-list" class="preview-ai-tryons-list">
+				<!-- Cards will be rendered by JS -->
+			</div>
+			<div id="preview-ai-tryons-empty" class="preview-ai-tryons-empty">
+				<span class="preview-ai-tryons-empty-icon">👕</span>
+				<p><?php esc_html_e( 'No looks yet. Generate your first preview!', 'preview-ai' ); ?></p>
 			</div>
 		</div>
 
@@ -89,7 +117,7 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 			}
 
 			$subtype_class = 'pai-subtype-' . sanitize_html_class( $ui_subtype );
-			$label         = 'upper_body' === $ui_subtype ? __( 'Upper body', 'preview-ai' ) : ( 'legs' === $ui_subtype ? __( 'Legs', 'preview-ai' ) : __( 'Full body', 'preview-ai' ) );
+			$label         = __( 'Upload a Full Body Image', 'preview-ai' );
 
 			$img_base = plugin_dir_url( __FILE__ ) . '../images/';
 			$img_good = $img_base . 'example_good.png';
@@ -128,6 +156,15 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 
 			<!-- Hidden file input -->
 			<input type="file" id="preview_ai_upload" accept="image/*" class="preview-ai-file-input" />
+
+			<!-- Your Looks button (visible only if has looks) -->
+			<button type="button" id="preview-ai-instructions-looks" class="preview-ai-instructions-looks-btn">
+				<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+					<path d="M13 10.551v-.678A4.005 4.005 0 0 0 16 6c0-2.206-1.794-4-4-4S8 3.794 8 6h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2a1 1 0 0 0-1 1v1.551l-8.665 7.702A1.001 1.001 0 0 0 3 20h18a1.001 1.001 0 0 0 .664-1.748L13 10.551zM5.63 18 12 12.338 18.37 18H5.63z"/>
+				</svg>
+				<?php esc_html_e( 'Your Looks', 'preview-ai' ); ?>
+				<span id="preview-ai-instructions-looks-badge" class="preview-ai-tryons-badge"></span>
+			</button>
 		</div>
 
 		<!-- Image Stage -->
@@ -174,6 +211,12 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 						<circle cx="12" cy="13" r="4"/>
 					</svg>
 					<?php esc_html_e( 'New photo', 'preview-ai' ); ?>
+				</button>
+				<button type="button" id="preview-ai-show-tryons" class="preview-ai-action-btn preview-ai-action-btn--tertiary">
+					<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+						<path d="M13 10.551v-.678A4.005 4.005 0 0 0 16 6c0-2.206-1.794-4-4-4S8 3.794 8 6h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2a1 1 0 0 0-1 1v1.551l-8.665 7.702A1.001 1.001 0 0 0 3 20h18a1.001 1.001 0 0 0 .664-1.748L13 10.551zM5.63 18 12 12.338 18.37 18H5.63z"/>
+					</svg>
+					<?php esc_html_e( 'Your Looks', 'preview-ai' ); ?>
 				</button>
 			</div>
 

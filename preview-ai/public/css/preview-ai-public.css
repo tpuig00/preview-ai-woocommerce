@@ -208,7 +208,11 @@
 	animation: pai-fade-in 0.3s ease-out;
 }
 
-.preview-ai-saved-photo.is-visible + .preview-ai-instructions {
+.preview-ai-saved-photo.is-visible ~ .preview-ai-instructions {
+	display: none;
+}
+
+.preview-ai-tryons.is-visible ~ .preview-ai-instructions {
 	display: none;
 }
 
@@ -756,7 +760,7 @@
 }
 
 .preview-ai-change-link.is-hidden {
-	display: none;
+	display: none !important;
 }
 
 .preview-ai-generate {
@@ -845,6 +849,7 @@
 
 .preview-ai-result-actions {
 	display: none;
+	flex-wrap: wrap;
 	gap: 0.75rem;
 }
 
@@ -929,6 +934,7 @@
 }
 
 .preview-ai-disclaimer strong {
+	font-size: inherit !important;
 	font-weight: 600;
 	color: #78350f;
 }
@@ -990,6 +996,390 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Your Previews Section
+───────────────────────────────────────────────────────────── */
+/* Your Looks button in instructions section */
+.preview-ai-instructions-looks-btn {
+	display: none;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	height: 44px;
+	margin-top: 0.75rem;
+	padding: 0 1rem;
+	border: 1px solid var(--pai-border);
+	border-radius: var(--pai-radius-full);
+	background: var(--pai-bg);
+	color: var(--pai-text-secondary);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all var(--pai-transition-fast);
+}
+
+.preview-ai-instructions-looks-btn.has-looks {
+	display: inline-flex;
+}
+
+.preview-ai-instructions-looks-btn:hover {
+	background: var(--pai-bg-soft);
+	border-color: var(--pai-text-muted);
+	color: var(--pai-text);
+}
+
+.preview-ai-instructions-looks-btn svg {
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+}
+
+.preview-ai-view-tryons-btn {
+	display: none;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	height: 44px;
+	margin-top: 0.75rem;
+	padding: 0 1rem;
+	border: 1px solid var(--pai-border);
+	border-radius: var(--pai-radius-full);
+	background: var(--pai-bg);
+	color: var(--pai-text-secondary);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all var(--pai-transition-fast);
+}
+
+.preview-ai-view-tryons-btn.has-tryons {
+	display: inline-flex;
+}
+
+.preview-ai-view-tryons-btn:hover {
+	background: var(--pai-bg-soft);
+	border-color: var(--pai-text-muted);
+	color: var(--pai-text);
+}
+
+.preview-ai-view-tryons-btn svg {
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+}
+
+.preview-ai-tryons-badge {
+	display: none;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 10px;
+	background: var(--pai-accent);
+	color: white;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 20px;
+	text-align: center;
+}
+
+.preview-ai-tryons-badge.is-visible {
+	display: inline-block;
+}
+
+.preview-ai-tryons {
+	display: none;
+}
+
+.preview-ai-tryons.is-visible {
+	display: block;
+	animation: pai-fade-in 0.2s ease-out;
+}
+
+.preview-ai-tryons-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--pai-border);
+}
+
+.preview-ai-tryons-back {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: var(--pai-bg-soft);
+	color: var(--pai-text-secondary);
+	cursor: pointer;
+	transition: all var(--pai-transition-fast);
+}
+
+.preview-ai-tryons-back:hover {
+	background: var(--pai-bg);
+	color: var(--pai-text);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.preview-ai-tryons-back svg {
+	width: 20px;
+	height: 20px;
+}
+
+.preview-ai-tryons-title {
+	flex: 1;
+}
+
+.preview-ai-tryons-title h3 {
+	margin: 0 0 0.125rem 0 !important;
+	font-size: 18px !important;
+	font-weight: 600 !important;
+	color: var(--pai-text) !important;
+	line-height: 1.2 !important;
+}
+
+.preview-ai-tryons-count {
+	display: block;
+	font-size: 13px;
+	color: var(--pai-text-muted);
+}
+
+.preview-ai-tryons-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	max-height: calc(80vh - 80px);
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding-right: 0.25rem;
+}
+
+.preview-ai-tryons-list::-webkit-scrollbar {
+	width: 4px;
+}
+
+.preview-ai-tryons-list::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.preview-ai-tryons-list::-webkit-scrollbar-thumb {
+	background: var(--pai-border-strong);
+	border-radius: 2px;
+}
+
+.preview-ai-tryons-empty {
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 1rem;
+	text-align: center;
+}
+
+.preview-ai-tryons-empty.is-visible {
+	display: flex;
+}
+
+.preview-ai-tryons-empty-icon {
+	font-size: 3rem;
+	margin-bottom: 0.75rem;
+	opacity: 0.5;
+}
+
+.preview-ai-tryons-empty p {
+	margin: 0 !important;
+	font-size: 14px !important;
+	color: var(--pai-text-muted) !important;
+}
+
+/* Look Card */
+.preview-ai-tryon-card {
+	display: block !important;
+	position: relative !important;
+	border: 1px solid var(--pai-border) !important;
+	border-radius: var(--pai-radius-lg) !important;
+	background: var(--pai-bg) !important;
+	overflow: visible !important;
+	transition: box-shadow var(--pai-transition-fast) !important;
+}
+
+.preview-ai-tryon-card:hover {
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Card needs overflow hidden for rounded corners on image */
+.preview-ai-tryon-card::after {
+	content: '';
+	display: block;
+	clear: both;
+}
+
+.preview-ai-tryon-img-container {
+	position: relative !important;
+	width: 100% !important;
+	aspect-ratio: 3 / 4 !important;
+	max-height: 280px !important;
+	background: var(--pai-bg-soft) !important;
+	overflow: hidden !important;
+	border-radius: var(--pai-radius-lg) var(--pai-radius-lg) 0 0 !important;
+}
+
+.preview-ai-tryon-img-container > img:first-child {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	cursor: pointer;
+	transition: transform var(--pai-transition);
+}
+
+.preview-ai-tryon-card:hover .preview-ai-tryon-img-container > img:first-child {
+	transform: scale(1.02);
+}
+
+.preview-ai-tryon-product-thumb {
+	position: absolute;
+	bottom: 0.75rem;
+	right: 0.75rem;
+	width: 72px;
+	height: 72px;
+	object-fit: cover;
+	border-radius: var(--pai-radius-sm);
+	background: white;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	border: 2px solid white;
+}
+
+.preview-ai-tryon-info {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	gap: 0.5rem !important;
+	padding: 0.75rem 1rem 0.5rem !important;
+}
+
+.preview-ai-tryon-name {
+	flex: 1 !important;
+	font-size: 14px !important;
+	font-weight: 500 !important;
+	color: var(--pai-text) !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+}
+
+.preview-ai-tryon-date {
+	flex-shrink: 0 !important;
+	font-size: 12px !important;
+	color: var(--pai-text-muted) !important;
+}
+
+.preview-ai-tryon-btns {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 0.5rem !important;
+	padding: 0 1rem 1rem !important;
+}
+
+.preview-ai-tryon-btn {
+	flex: 1 !important;
+	min-width: calc(50% - 0.25rem) !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 0.4rem !important;
+	height: 38px !important;
+	padding: 0 0.75rem !important;
+	border: 1px solid var(--pai-border) !important;
+	border-radius: var(--pai-radius-full) !important;
+	background: var(--pai-bg) !important;
+	color: var(--pai-text-secondary) !important;
+	font-family: inherit !important;
+	font-size: 12px !important;
+	font-weight: 500 !important;
+	text-decoration: none !important;
+	cursor: pointer !important;
+	transition: all var(--pai-transition-fast) !important;
+}
+
+.preview-ai-tryon-btn svg {
+	width: 14px !important;
+	height: 14px !important;
+	flex-shrink: 0 !important;
+}
+
+.preview-ai-tryon-btn:hover {
+	background: var(--pai-bg-soft) !important;
+	border-color: var(--pai-text-muted) !important;
+	color: var(--pai-text) !important;
+}
+
+.preview-ai-tryon-btn--primary {
+	flex: 1 1 100% !important;
+	background: var(--pai-accent) !important;
+	border-color: var(--pai-accent) !important;
+	color: white !important;
+}
+
+.preview-ai-tryon-btn--primary:hover {
+	background: var(--pai-accent-hover) !important;
+	border-color: var(--pai-accent-hover) !important;
+	color: white !important;
+}
+
+.preview-ai-tryon-delete {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.5);
+	color: white;
+	font-size: 18px;
+	font-weight: 400;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0;
+	transition: all var(--pai-transition-fast);
+}
+
+.preview-ai-tryon-card:hover .preview-ai-tryon-delete {
+	opacity: 1;
+}
+
+.preview-ai-tryon-delete:hover {
+	background: rgba(239, 68, 68, 0.9);
+	transform: scale(1.1);
+}
+
+/* Action button tertiary style - full width row below */
+.preview-ai-action-btn--tertiary {
+	flex: 1 1 100% !important;
+	margin-top: 0.5rem !important;
+	border-color: var(--pai-border) !important;
+	color: var(--pai-text-secondary) !important;
+}
+
+.preview-ai-action-btn--tertiary:hover {
+	background: var(--pai-bg-soft) !important;
+	border-color: var(--pai-text-muted) !important;
+	color: var(--pai-text) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
    Animations
 ───────────────────────────────────────────────────────────── */
 @keyframes pai-fade-in {
@@ -1009,10 +1399,14 @@
 	.preview-ai-instructions-header h3 { font-size: 22px !important; }
 	.preview-ai-saved-photo-header h3 { font-size: 22px !important; }
 	.preview-ai-stage { max-height: 380px !important; }
+	.preview-ai-tryons-title h3 { font-size: 20px !important; }
+	.preview-ai-tryon-img-container { max-height: 320px; }
 }
 
 @media (min-width: 768px) {
 	.preview-ai-modal.is-open { padding: 2rem !important; }
 	.preview-ai-modal-content { max-width: 520px !important; }
 	.preview-ai-stage { max-height: 460px !important; }
+	.preview-ai-tryon-product-thumb { width: 80px; height: 80px; }
+	.preview-ai-tryon-img-container { max-height: 360px; }
 }
