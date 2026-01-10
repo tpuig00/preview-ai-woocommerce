@@ -45,7 +45,7 @@
 					// Show button if hidden.
 					if ( ! $manageBtn.length ) {
 						$( '#preview_ai_verify_btn' ).after(
-							'<a href="https://billing.stripe.com/p/login/test_cNi4gyfXV4u2bnb8QHgIo00" ' +
+							'<a href="https://previewai.app/account/" ' +
 							'target="_blank" class="button" style="margin-left: 8px;" ' +
 							'id="preview_ai_manage_subscription_btn">Manage Subscription</a>'
 						);

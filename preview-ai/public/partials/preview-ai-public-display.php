@@ -29,13 +29,21 @@ if ( ! isset( $button_svg ) ) {
 if ( ! isset( $button_position ) ) {
 	$button_position = 'center';
 }
+if ( ! isset( $button_shape ) ) {
+	$button_shape = 'pill';
+}
+if ( ! isset( $button_height ) ) {
+	$button_height = 38;
+}
 
 $position_class = 'preview-ai-position-' . esc_attr( $button_position );
+$shape_class    = 'preview-ai-shape-' . esc_attr( $button_shape );
+$height_style   = ( 38 !== (int) $button_height ) ? 'height:' . absint( $button_height ) . 'px;' : '';
 ?>
 
 <!-- Action Chip Container -->
 <div class="preview-ai-chip-wrapper <?php echo esc_attr( $position_class ); ?>">
-	<button type="button" id="preview-ai-trigger" class="preview-ai-chip">
+	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $shape_class ); ?>" <?php echo $height_style ? 'style="' . esc_attr( $height_style ) . '"' : ''; ?>>
 		<span class="preview-ai-chip-icon"><?php echo $button_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
 		<span class="preview-ai-chip-text"><?php echo esc_html( $button_text ); ?></span>
 	</button>
@@ -145,7 +153,7 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 						<li><?php echo esc_html( $tip ); ?></li>
 					<?php endforeach; ?>
 				</ul>
-				<p class="preview-ai-tips-pro"><strong><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></strong></p>
+				<p class="preview-ai-tips-pro"><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></p>
 			</div>
 
 			<!-- Upload button -->
@@ -233,3 +241,11 @@ $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 <div id="preview-ai-lightbox" class="preview-ai-lightbox">
 	<img id="preview-ai-lightbox-img" src="" alt="" />
 </div>
+
+<?php
+// Load demo tour only when ?demo=yes parameter is present.
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check for demo mode.
+if ( isset( $_GET['demo'] ) && 'yes' === $_GET['demo'] ) {
+	include __DIR__ . '/preview-ai-demo-tour.php';
+}
+?>

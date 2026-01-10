@@ -260,6 +260,30 @@ class PREVIEW_AI_Api {
 	}
 
 	/**
+	 * Analyze a single product for classification and image analysis.
+	 *
+	 * @param array $product_data Product data with id, title, categories, tags, thumbnail_url, variation_id.
+	 * @return array|WP_Error     Response data with classification or error.
+	 */
+	public function analyze_product( $product_data ) {
+		PREVIEW_AI_Logger::debug( 'Starting single product analysis', array(
+			'product_id' => $product_data['id'],
+		) );
+
+		$result = $this->request( 'catalog/analyze-product', $product_data, 30 );
+
+		if ( ! is_wp_error( $result ) ) {
+			PREVIEW_AI_Logger::info( 'Single product analysis completed', array(
+				'product_id' => $product_data['id'],
+				'subtype'    => $result['subtype'] ?? '',
+				'supported'  => $result['supported'] ?? false,
+			) );
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Send catalog data to AI backend for product classification and image analysis.
 	 *
 	 * @param array $products_data  Array of products with id, title, categories, tags, thumbnail_url, variation_id.
@@ -271,9 +295,6 @@ class PREVIEW_AI_Api {
 			'product_count'  => count( $products_data ),
 			'analyze_images' => $analyze_images,
 		) );
-
-		# Solo enviar 3 productos para testing
-		#$products_data = array_slice( $products_data, 0, 3 );
 
 		PREVIEW_AI_Logger::debug( 'Products data', array( 'products_data' => $products_data ) );
 

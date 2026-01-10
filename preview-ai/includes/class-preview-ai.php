@@ -231,6 +231,9 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 		$this->loader->add_action( 'woocommerce_single_product_summary', $plugin_public, 'render_widget', 31 );
 
+		// Set tracking cookie early (before AJAX).
+		$this->loader->add_action( 'wp_loaded', 'PREVIEW_AI_Tracking', 'maybe_set_cookie' );
+
 		// AJAX handlers.
 		$ajax_handler = new PREVIEW_AI_Ajax();
 		$this->loader->add_action( 'wp_ajax_preview_ai_upload', $ajax_handler, 'handle_upload' );
@@ -239,7 +242,11 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_check', $ajax_handler, 'handle_check' );
 
 		// Conversion tracking.
+		// Classic checkout.
 		$this->loader->add_action( 'woocommerce_checkout_order_processed', 'PREVIEW_AI_Tracking', 'save_to_order' );
+		// Block checkout (WooCommerce 8+).
+		$this->loader->add_action( 'woocommerce_store_api_checkout_order_processed', 'PREVIEW_AI_Tracking', 'save_to_order' );
+		// Order completion.
 		$this->loader->add_action( 'woocommerce_payment_complete', 'PREVIEW_AI_Tracking', 'track_completed' );
 		$this->loader->add_action( 'woocommerce_order_status_completed', 'PREVIEW_AI_Tracking', 'track_completed' );
 		$this->loader->add_action( 'woocommerce_order_status_processing', 'PREVIEW_AI_Tracking', 'track_completed' );

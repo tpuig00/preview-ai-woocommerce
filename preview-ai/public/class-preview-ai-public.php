@@ -180,7 +180,7 @@ class PREVIEW_AI_Public {
 					'photoBad'      => __( 'Photo is not valid. Please try another one.', 'preview-ai' ),
 					'warningCodes'  => array(
 						// Generic / heuristic checks (backend/src/api/routes/generate.py).
-						'LOW_RESOLUTION' => __( 'The photo has low resolution; the result may look blurry.', 'preview-ai' ),
+						'LOW_RESOLUTION' => __( 'The photo has low resolution; Try to use a photo with a higher resolution.', 'preview-ai' ),
 						'LANDSCAPE'      => __( 'The photo looks landscape; it usually works better in portrait (front-facing body).', 'preview-ai' ),
 						'LOW_LIGHT'      => __( 'The photo is a bit dark; try more front-facing light.', 'preview-ai' ),
 						'OVEREXPOSED'    => __( 'The photo is overexposed; avoid strong backlight or very direct light.', 'preview-ai' ),
@@ -246,6 +246,12 @@ class PREVIEW_AI_Public {
 		// Button position.
 		$button_position = ! empty( $widget_settings['button_position'] ) ? $widget_settings['button_position'] : 'center';
 
+		// Button shape.
+		$button_shape = ! empty( $widget_settings['button_shape'] ) ? $widget_settings['button_shape'] : 'pill';
+
+		// Button height.
+		$button_height = ! empty( $widget_settings['button_height'] ) ? absint( $widget_settings['button_height'] ) : 38;
+
 		// Get clothing subtype and tips for this product.
 		$clothing_subtype  = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
 		$clothing_subtypes = PREVIEW_AI_Admin::get_clothing_subtypes();
@@ -265,10 +271,19 @@ class PREVIEW_AI_Public {
 	/**
 	 * Check if Preview AI is enabled for this product.
 	 *
+	 * V1: Also checks if product subtype is supported (upper_body, lower_body only).
+	 *
 	 * @param int $product_id Product ID.
 	 * @return bool
 	 */
 	public static function is_enabled_for_product( $product_id ) {
+		// V1: Check if product type is supported (upper_body, lower_body).
+		// Products with footwear, accessories, etc. are not supported yet.
+		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
+		if ( 'no' === $supported ) {
+			return false;
+		}
+
 		$enabled = get_post_meta( $product_id, '_preview_ai_enabled', true );
 
 		if ( '' === $enabled ) {

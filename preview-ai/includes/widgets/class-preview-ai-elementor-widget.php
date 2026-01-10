@@ -139,6 +139,23 @@ class PREVIEW_AI_Elementor_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
+		$this->add_control(
+			'button_height',
+			array(
+				'label'       => __( 'Height', 'preview-ai' ),
+				'type'        => \Elementor\Controls_Manager::SLIDER,
+				'size_units'  => array( 'px' ),
+				'range'       => array(
+					'px' => array(
+						'min'  => 24,
+						'max'  => 80,
+						'step' => 1,
+					),
+				),
+				'description' => __( 'Leave empty to use global settings (38px).', 'preview-ai' ),
+			)
+		);
+
 		$this->end_controls_section();
 	}
 
@@ -175,6 +192,10 @@ class PREVIEW_AI_Elementor_Widget extends \Elementor\Widget_Base {
 
 		if ( ! empty( $settings['button_position'] ) ) {
 			$overrides['button_position'] = sanitize_key( $settings['button_position'] );
+		}
+
+		if ( ! empty( $settings['button_height']['size'] ) ) {
+			$overrides['button_height'] = absint( $settings['button_height']['size'] );
 		}
 
 		// Output is escaped in PREVIEW_AI_Public::render_widget_output().

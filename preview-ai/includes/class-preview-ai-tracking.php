@@ -12,7 +12,6 @@
 
 class PREVIEW_AI_Tracking {
 
-	const OPTION_STATS = 'preview_ai_stats';
 	const DB_VERSION = '1.0';
 	const DB_VERSION_OPTION = 'preview_ai_tracking_db_version';
 
@@ -69,16 +68,29 @@ class PREVIEW_AI_Tracking {
 		}
 	}
 
+	const COOKIE_NAME = 'preview_ai_sid';
+
 	/**
-	 * Get session ID for guest users.
+	 * Set session cookie on page load (call from wp_footer or similar).
+	 * Must run BEFORE any AJAX to ensure cookie exists.
+	 */
+	public static function maybe_set_cookie() {
+		if ( isset( $_COOKIE[ self::COOKIE_NAME ] ) || headers_sent() ) {
+			return;
+		}
+		$sid = md5( uniqid( 'pai_', true ) );
+		setcookie( self::COOKIE_NAME, $sid, time() + ( 30 * DAY_IN_SECONDS ), '/', '', is_ssl(), false );
+	}
+
+	/**
+	 * Get session ID from our cookie.
 	 *
 	 * @return string|null
 	 */
 	private static function get_session_id() {
-		if ( function_exists( 'WC' ) && WC()->session ) {
-			return substr( md5( WC()->session->get_customer_id() ), 0, 32 );
-		}
-		return null;
+		$sid = isset( $_COOKIE[ self::COOKIE_NAME ] ) ? sanitize_text_field( $_COOKIE[ self::COOKIE_NAME ] ) : null;
+		PREVIEW_AI_Logger::debug( 'get_session_id', array( 'sid' => $sid ) );
+		return $sid;
 	}
 
 	/**
@@ -102,14 +114,14 @@ class PREVIEW_AI_Tracking {
 		}
 
 		// Use provided session_id or get current session.
-		if ( null === $session_id && $user_id <= 0 ) {
+		if ( null === $session_id ) {
 			$session_id = self::get_session_id();
 		}
 
 		$data = array(
 			'event_type'   => $event_type,
 			'user_id'      => $user_id > 0 ? $user_id : null,
-			'session_id'   => $user_id > 0 ? null : $session_id,
+			'session_id'   => $session_id,
 			'product_id'   => absint( $product_id ),
 			'variation_id' => $variation_id ? absint( $variation_id ) : null,
 			'order_id'     => $order_id ? absint( $order_id ) : null,
@@ -122,10 +134,6 @@ class PREVIEW_AI_Tracking {
 		if ( false === $result ) {
 			return false;
 		}
-
-		// Update aggregated stats.
-		$stat_key = 'preview' === $event_type ? 'previews' : ( 'conversion' === $event_type ? 'conversions' : 'refunds' );
-		self::increment_stat( $stat_key );
 
 		return $wpdb->insert_id;
 	}
@@ -141,23 +149,20 @@ class PREVIEW_AI_Tracking {
 	}
 
 	/**
-	 * Save session_id to order for guest attribution.
+	 * Save session_id to order for attribution.
 	 *
-	 * @param int $order_id Order ID.
+	 * @param int|\WC_Order $order_or_id Order ID (classic) or Order object (blocks).
 	 */
-	public static function save_to_order( $order_id ) {
-		$order = wc_get_order( $order_id );
+	public static function save_to_order( $order_or_id ) {
+		$order = $order_or_id instanceof \WC_Order ? $order_or_id : wc_get_order( $order_or_id );
 		if ( ! $order ) {
 			return;
 		}
 
-		// Only save session_id for guests.
-		if ( $order->get_user_id() <= 0 ) {
-			$session_id = self::get_session_id();
-			if ( $session_id ) {
-				$order->update_meta_data( '_preview_ai_session_id', $session_id );
-				$order->save();
-			}
+		$session_id = self::get_session_id();
+		if ( $session_id ) {
+			$order->update_meta_data( '_preview_ai_session_id', $session_id );
+			$order->save();
 		}
 	}
 
@@ -206,33 +211,37 @@ class PREVIEW_AI_Tracking {
 			return;
 		}
 
-		// Build query to find previews from this user in last 7 days.
+		// Build query to find previews from this user.
 		$table = self::get_table_name();
 		$since = gmdate( 'Y-m-d H:i:s', strtotime( '-7 days' ) );
 
+		$where_clauses = array( "event_type = 'preview'", "created_at >= %s" );
+		$params        = array( $since );
+
+		$user_where = array();
 		if ( $user_id > 0 ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$previewed = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT DISTINCT product_id, variation_id FROM $table 
-					WHERE user_id = %d AND event_type = 'preview' AND created_at >= %s",
-					$user_id,
-					$since
-				),
-				ARRAY_A
-			);
-		} else {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$previewed = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT DISTINCT product_id, variation_id FROM $table 
-					WHERE session_id = %s AND event_type = 'preview' AND created_at >= %s",
-					$session_id,
-					$since
-				),
-				ARRAY_A
-			);
+			$user_where[] = $wpdb->prepare( 'user_id = %d', $user_id );
 		}
+		if ( ! empty( $session_id ) ) {
+			$user_where[] = $wpdb->prepare( 'session_id = %s', $session_id );
+		}
+
+		if ( empty( $user_where ) ) {
+			return;
+		}
+
+		$where_clauses[] = '(' . implode( ' OR ', $user_where ) . ')';
+		$where_str       = implode( ' AND ', $where_clauses );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$previewed = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DISTINCT product_id, variation_id FROM $table WHERE $where_str",
+				...$params
+			),
+			ARRAY_A
+		);
+
 
 		if ( empty( $previewed ) ) {
 			return;
@@ -253,17 +262,19 @@ class PREVIEW_AI_Tracking {
 		}
 
 		if ( empty( $converted_items ) ) {
+			PREVIEW_AI_Logger::debug( 'no-converted-items', array( 'converted_items' => $converted_items ) );
 			return;
 		}
 
 		// Record conversion events.
+		$order_total = (float) $order->get_total();
 		foreach ( $converted_items as $item ) {
 			self::record_event(
 				'conversion',
 				$item['product_id'],
 				$item['variation_id'],
 				$order_id,
-				$item['total'],
+				$order_total,
 				$user_id > 0 ? $user_id : null,
 				$user_id <= 0 ? $session_id : null
 			);
@@ -328,29 +339,16 @@ class PREVIEW_AI_Tracking {
 	}
 
 	/**
-	 * Increment aggregated stat.
-	 *
-	 * @param string $key Stat key.
-	 */
-	private static function increment_stat( $key ) {
-		$stats         = get_option( self::OPTION_STATS, array() );
-		$stats[ $key ] = isset( $stats[ $key ] ) ? $stats[ $key ] + 1 : 1;
-		update_option( self::OPTION_STATS, $stats, false );
-	}
-
-	/**
 	 * Get aggregated stats.
 	 *
 	 * @return array
 	 */
 	public static function get_stats() {
-		return wp_parse_args(
-			get_option( self::OPTION_STATS, array() ),
-			array(
-				'previews'    => 0,
-				'conversions' => 0,
-				'refunds'     => 0,
-			)
+		$detailed = self::get_detailed_stats( 'all' );
+		return array(
+			'previews'    => $detailed['previews'],
+			'conversions' => $detailed['conversions'],
+			'refunds'     => $detailed['refunds'],
 		);
 	}
 
@@ -397,25 +395,25 @@ class PREVIEW_AI_Tracking {
 		$orders_refunded   = (int) ( $counts['orders_refunded'] ?? 0 );
 
 		// Get total revenue from influenced orders (full order value).
-		$influenced_revenue = 0;
-		$avg_order_value    = 0;
-		if ( $orders_influenced > 0 ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$order_ids = $wpdb->get_col(
-				"SELECT DISTINCT order_id FROM $table 
-				WHERE event_type = 'conversion' AND order_id IS NOT NULL $date_filter"
-			);
+		// We use a subquery to get the total of each unique order influenced.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$revenue_data = $wpdb->get_row(
+			"SELECT 
+				SUM(CASE WHEN event_type = 'conversion' THEN order_total ELSE 0 END) as influenced_revenue,
+				SUM(CASE WHEN event_type = 'refund' THEN order_total ELSE 0 END) as refunded_revenue,
+				AVG(CASE WHEN event_type = 'conversion' THEN order_total END) as avg_order_value
+			FROM (
+				SELECT DISTINCT order_id, order_total, event_type
+				FROM $table 
+				WHERE event_type IN ('conversion', 'refund') AND order_id IS NOT NULL $date_filter
+			) as unique_orders",
+			ARRAY_A
+		);
 
-			if ( ! empty( $order_ids ) ) {
-				foreach ( $order_ids as $order_id ) {
-					$order = wc_get_order( $order_id );
-					if ( $order ) {
-						$influenced_revenue += (float) $order->get_total();
-					}
-				}
-				$avg_order_value = $influenced_revenue / count( $order_ids );
-			}
-		}
+		$influenced_revenue = (float) ( $revenue_data['influenced_revenue'] ?? 0 );
+		$refunded_revenue   = (float) ( $revenue_data['refunded_revenue'] ?? 0 );
+		$avg_order_value    = (float) ( $revenue_data['avg_order_value'] ?? 0 );
+		$net_revenue        = $influenced_revenue - $refunded_revenue;
 
 		// User conversion rate (users who tried AND bought).
 		$user_conversion_rate = $users_tried > 0 ? round( ( $users_converted / $users_tried ) * 100, 1 ) : 0;
@@ -430,6 +428,8 @@ class PREVIEW_AI_Tracking {
 			// Secondary metrics.
 			'avg_order_value'      => round( $avg_order_value, 2 ),
 			'orders_refunded'      => $orders_refunded,
+			'refunded_revenue'     => $refunded_revenue,
+			'net_revenue'          => $net_revenue,
 
 			// Legacy (for backward compatibility).
 			'previews'             => $users_tried,
@@ -437,7 +437,6 @@ class PREVIEW_AI_Tracking {
 			'refunds'              => $orders_refunded,
 			'conversion_rate'      => $user_conversion_rate,
 			'revenue'              => $influenced_revenue,
-			'net_revenue'          => $influenced_revenue,
 			'unique_users'         => $users_tried,
 		);
 	}

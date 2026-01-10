@@ -93,6 +93,19 @@
 	transform: translateY(0);
 }
 
+/* Button Shape Variants */
+.preview-ai-chip.preview-ai-shape-pill {
+	border-radius: var(--pai-radius-full);
+}
+
+.preview-ai-chip.preview-ai-shape-squared {
+	border-radius: var(--pai-radius-sm);
+}
+
+.preview-ai-chip.preview-ai-shape-sharp {
+	border-radius: 0 !important;
+}
+
 .preview-ai-chip-icon {
 	display: flex;
 	align-items: center;

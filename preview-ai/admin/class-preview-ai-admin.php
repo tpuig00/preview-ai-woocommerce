@@ -89,6 +89,8 @@ class PREVIEW_AI_Admin {
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_text', 'sanitize_text_field' );
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_icon', 'sanitize_key' );
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_position', 'sanitize_key' );
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_shape', 'sanitize_key' );
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_height', 'absint' );
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_accent_color', 'sanitize_hex_color' );
 
 		// Clear account status when API key changes.
@@ -137,6 +139,8 @@ class PREVIEW_AI_Admin {
 			'button_text'     => get_option( 'preview_ai_button_text', '' ),
 			'button_icon'     => get_option( 'preview_ai_button_icon', 'wand' ),
 			'button_position' => get_option( 'preview_ai_button_position', 'center' ),
+			'button_shape'    => get_option( 'preview_ai_button_shape', 'pill' ),
+			'button_height'   => get_option( 'preview_ai_button_height', 38 ),
 			'accent_color'    => get_option( 'preview_ai_accent_color', '#3b82f6' ),
 		);
 	}
@@ -575,6 +579,7 @@ class PREVIEW_AI_Admin {
 		$has_image      = $product && $product->get_image_id();
 		$enabled        = get_post_meta( $post->ID, '_preview_ai_enabled', true );
 		$subtype        = get_post_meta( $post->ID, '_preview_ai_recommended_subtype', true );
+		$supported      = get_post_meta( $post->ID, '_preview_ai_supported', true );
 		$global_enabled = get_option( 'preview_ai_enabled', 0 );
 
 		// Determine current state.
@@ -587,20 +592,34 @@ class PREVIEW_AI_Admin {
 			$is_enabled = (bool) $global_enabled;
 		}
 
-		// Can't be enabled without image.
-		if ( ! $has_image ) {
+		// Can't be enabled if not supported or no image.
+		if ( 'no' === $supported || ! $has_image ) {
 			$is_enabled = false;
 		}
 
-		// Determine status for display: Active if has subtype (analyzed), otherwise Disabled.
-		if ( $has_image && ! empty( $subtype ) ) {
-			$status_class = 'preview-ai-col--active';
-			$status_text  = __( 'Active', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
-		} else {
+		// Determine status for display.
+		if ( ! $has_image ) {
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'No Image', 'preview-ai' );
+			$status_icon  = '—';
+		} elseif ( 'no' === $supported ) {
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'Not Supported', 'preview-ai' );
+			$status_icon  = '<span class="dashicons dashicons-warning"></span>';
+		} elseif ( ! $is_enabled ) {
 			$status_class = 'preview-ai-col--disabled';
 			$status_text  = __( 'Disabled', 'preview-ai' );
 			$status_icon  = '—';
+		} elseif ( empty( $subtype ) ) {
+			// Enabled but not yet analyzed.
+			$status_class = 'preview-ai-col--active';
+			$status_text  = __( 'Pending Analysis', 'preview-ai' );
+			$status_icon  = '<span class="dashicons dashicons-update"></span>';
+		} else {
+			// Enabled and analyzed.
+			$status_class = 'preview-ai-col--active';
+			$status_text  = __( 'Active', 'preview-ai' );
+			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
 		}
 
 		?>
@@ -637,25 +656,22 @@ class PREVIEW_AI_Admin {
 			</div>
 
 			<?php
+			// Show detected clothing type (read-only, set by AI analysis).
+			if ( ! empty( $subtype ) ) :
+				$clothing_subtypes = self::get_clothing_subtypes();
+				$subtype_label     = isset( $clothing_subtypes[ $subtype ] ) ? $clothing_subtypes[ $subtype ]['label'] : $subtype;
+			?>
+			<div class="options_group" style="border-top: 1px solid #eee; padding-top: 12px;">
+				<p class="form-field">
+					<label><?php esc_html_e( 'Detected Type', 'preview-ai' ); ?></label>
+					<span style="display: inline-block; padding: 4px 10px; background: #f0f0f1; border-radius: 4px; font-size: 13px;">
+						<?php echo esc_html( $subtype_label ); ?>
+					</span>
+				</p>
+			</div>
+			<?php endif; ?>
 
-			// Clothing subtype select.
-			$subtype_options   = array( '' => __( 'Select clothing type...', 'preview-ai' ) );
-			$clothing_subtypes = self::get_clothing_subtypes();
-			foreach ( $clothing_subtypes as $key => $data ) {
-				$subtype_options[ $key ] = $data['label'] . ' — ' . $data['examples'];
-			}
-
-			woocommerce_wp_select(
-				array(
-					'id'          => '_preview_ai_clothing_subtype',
-					'label'       => __( 'Clothing Type', 'preview-ai' ),
-					'options'     => $subtype_options,
-					'value'       => $subtype,
-					'desc_tip'    => true,
-					'description' => __( 'Select what type of clothing this product is. This helps the AI generate accurate previews.', 'preview-ai' ),
-				)
-			);
-
+		<?php
 		// Check if product has variations without images.
 		$product                = wc_get_product( $post->ID );
 		$has_shared_images      = false;
@@ -692,25 +708,200 @@ class PREVIEW_AI_Admin {
 	/**
 	 * Save Preview AI product meta.
 	 *
+	 * When enabling Preview AI on a product that hasn't been analyzed,
+	 * automatically triggers analysis via the backend API.
+	 *
 	 * @since    1.0.0
 	 * @param    int $post_id    Product ID.
 	 */
 	public function save_product_data( $post_id ) {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce handles nonce.
 		$enabled = isset( $_POST['_preview_ai_enabled'] ) ? 'yes' : 'no';
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$subtype = isset( $_POST['_preview_ai_clothing_subtype'] ) ? sanitize_key( $_POST['_preview_ai_clothing_subtype'] ) : '';
+		$product = wc_get_product( $post_id );
 
 		// Can't enable if product has no image.
-		if ( 'yes' === $enabled ) {
-			$product = wc_get_product( $post_id );
-			if ( $product && ! $product->get_image_id() ) {
-				$enabled = 'no';
+		if ( 'yes' === $enabled && $product && ! $product->get_image_id() ) {
+			$enabled = 'no';
+		}
+
+		// Check if product needs analysis (enabling and not yet analyzed).
+		$was_analyzed = get_post_meta( $post_id, '_preview_ai_supported', true );
+
+		// Can't enable if product was already analyzed and is not supported.
+		if ( 'yes' === $enabled && 'no' === $was_analyzed ) {
+			$enabled = 'no';
+		}
+
+		if ( 'yes' === $enabled && empty( $was_analyzed ) && $product ) {
+			// Analyze product via backend API (includes variations if variable product).
+			$analysis_result = $this->analyze_single_product( $product );
+
+			if ( ! is_wp_error( $analysis_result ) ) {
+				// Handle response format: single product vs catalog (with variations).
+				if ( isset( $analysis_result['classifications'] ) ) {
+					// Catalog response (variable product with variations).
+					$this->save_catalog_classifications( $analysis_result );
+
+					// Check parent product support status.
+					$parent_classification = null;
+					foreach ( $analysis_result['classifications'] as $classification ) {
+						if ( absint( $classification['id'] ) === $post_id && empty( $classification['variation_id'] ) ) {
+							$parent_classification = $classification;
+							break;
+						}
+					}
+
+					if ( $parent_classification ) {
+						$is_supported = isset( $parent_classification['supported'] ) && $parent_classification['supported'];
+						if ( ! $is_supported ) {
+							$enabled = 'no';
+						}
+					}
+				} else {
+					// Single product response.
+					$this->save_single_product_classification( $post_id, $analysis_result );
+
+					$is_supported = isset( $analysis_result['supported'] ) && $analysis_result['supported'];
+					if ( ! $is_supported ) {
+						$enabled = 'no';
+					}
+				}
 			}
 		}
 
 		update_post_meta( $post_id, '_preview_ai_enabled', $enabled );
-		update_post_meta( $post_id, '_preview_ai_recommended_subtype', $subtype );
+	}
+
+	/**
+	 * Analyze a single product (and its variations) via the backend API.
+	 *
+	 * For variable products, analyzes the parent and all variations
+	 * that have their own images (different from parent).
+	 *
+	 * @since    1.0.0
+	 * @param    WC_Product $product    WooCommerce product object.
+	 * @return   array|WP_Error         Analysis result or error.
+	 */
+	private function analyze_single_product( $product ) {
+		$product_id = $product->get_id();
+
+		// Get categories.
+		$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
+		$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
+
+		// Get tags.
+		$tags     = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
+		$tags_str = is_array( $tags ) ? implode( ', ', $tags ) : '';
+
+		// Get thumbnail URL.
+		$thumbnail_id  = $product->get_image_id();
+		$thumbnail_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
+
+		// Build products array (parent + variations with own images).
+		$products_data = array();
+
+		// Add parent product.
+		$products_data[] = array(
+			'id'            => $product_id,
+			'title'         => $product->get_name(),
+			'categories'    => $categories_str,
+			'tags'          => $tags_str,
+			'thumbnail_url' => $thumbnail_url,
+			'variation_id'  => null,
+		);
+
+		// For variable products, add variations with their own images.
+		if ( $product->is_type( 'variable' ) ) {
+			$variation_ids = $product->get_children();
+
+			foreach ( $variation_ids as $variation_id ) {
+				$variation = wc_get_product( $variation_id );
+				if ( ! $variation ) {
+					continue;
+				}
+
+				$var_image_id = $variation->get_image_id();
+
+				// Only include if variation has a different image than parent.
+				if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
+					$var_thumbnail_url = wp_get_attachment_url( $var_image_id );
+
+					$products_data[] = array(
+						'id'            => $product_id,
+						'title'         => $product->get_name(),
+						'categories'    => $categories_str,
+						'tags'          => $tags_str,
+						'thumbnail_url' => $var_thumbnail_url,
+						'variation_id'  => $variation_id,
+					);
+				}
+			}
+		}
+
+		$api = new PREVIEW_AI_Api();
+
+		// If only parent (simple product or variable without different images), use single endpoint.
+		if ( count( $products_data ) === 1 ) {
+			return $api->analyze_product( $products_data[0] );
+		}
+
+		// For variable products with variations, use bulk endpoint.
+		return $api->analyze_catalog( $products_data, true );
+	}
+
+	/**
+	 * Save classification result for a single product.
+	 *
+	 * @since    1.0.0
+	 * @param    int   $product_id    Product ID.
+	 * @param    array $classification Classification data from API.
+	 */
+	private function save_single_product_classification( $product_id, $classification ) {
+		$valid_subtypes = array_keys( self::get_clothing_subtypes() );
+
+		$subtype      = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
+		$garment_type = isset( $classification['garment_type'] ) ? sanitize_key( $classification['garment_type'] ) : '';
+		$is_supported = isset( $classification['supported'] ) && $classification['supported'];
+		$variation_id = isset( $classification['variation_id'] ) ? absint( $classification['variation_id'] ) : null;
+
+		// Save supported status on parent product.
+		update_post_meta( $product_id, '_preview_ai_supported', $is_supported ? 'yes' : 'no' );
+
+		// Save subtype if valid (on parent product).
+		if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
+			update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
+		}
+
+		// Save garment_type if available (on parent product).
+		if ( ! empty( $garment_type ) ) {
+			update_post_meta( $product_id, '_preview_ai_garment_type', $garment_type );
+		}
+
+		// Save image_analysis if available.
+		if ( ! empty( $classification['image_analysis'] ) ) {
+			$analysis = $classification['image_analysis'];
+
+			// Sanitize detected_objects array.
+			$detected_objects = array();
+			if ( ! empty( $analysis['detected_objects'] ) && is_array( $analysis['detected_objects'] ) ) {
+				$detected_objects = array_map( 'sanitize_text_field', $analysis['detected_objects'] );
+			}
+
+			$image_analysis = array(
+				'has_model'         => ! empty( $analysis['has_model'] ),
+				'shot_type'         => sanitize_key( $analysis['shot_type'] ?? 'unknown' ),
+				'framing'           => sanitize_key( $analysis['framing'] ?? 'unknown' ),
+				'multiple_garments' => ! empty( $analysis['multiple_garments'] ),
+				'detected_objects'  => $detected_objects,
+				'confidence'        => floatval( $analysis['confidence'] ?? 0.0 ),
+				'image_id'          => absint( $analysis['image_id'] ?? 0 ),
+				'updated_at'        => sanitize_text_field( $analysis['updated_at'] ?? current_time( 'Y-m-d' ) ),
+			);
+
+			// Save to variation if exists, otherwise to parent.
+			$meta_target = $variation_id ? $variation_id : $product_id;
+			update_post_meta( $meta_target, '_preview_ai_image_analysis', $image_analysis );
+		}
 	}
 
 	/**
@@ -745,16 +936,32 @@ class PREVIEW_AI_Admin {
 			return;
 		}
 
-		$subtype = get_post_meta( $post_id, '_preview_ai_recommended_subtype', true );
+		$subtype   = get_post_meta( $post_id, '_preview_ai_recommended_subtype', true );
+		$enabled   = get_post_meta( $post_id, '_preview_ai_enabled', true );
+		$supported = get_post_meta( $post_id, '_preview_ai_supported', true );
 
-		// Active if has subtype (analyzed), otherwise Disabled.
+		// Check if product type is not supported (V1: only upper_body, lower_body).
+		if ( 'no' === $supported ) {
+			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Product type not supported yet (V1 supports tops and pants only)', 'preview-ai' ) . '">';
+			echo esc_html__( 'Not supported', 'preview-ai' );
+			echo '</span>';
+			return;
+		}
+
+		// Check if explicitly disabled.
+		if ( 'no' === $enabled ) {
+			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
+			return;
+		}
+
+		// Active if has subtype and not disabled.
 		if ( ! empty( $subtype ) ) {
 			echo '<span class="preview-ai-col preview-ai-col--active" title="' . esc_attr__( 'Preview AI active on this product', 'preview-ai' ) . '">';
 			echo '<span class="dashicons dashicons-visibility"></span> ';
 			echo esc_html__( 'Active', 'preview-ai' );
 			echo '</span>';
 		} else {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
+			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Not analyzed yet - run Learn Catalog', 'preview-ai' ) . '">—</span>';
 		}
 	}
 
@@ -784,11 +991,21 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'preview-ai' ) ) );
 		}
 
-		// Get all published products.
+		// Get only NEW products (not yet analyzed).
 		$products_data = $this->get_catalog_products_data();
 
 		if ( empty( $products_data ) ) {
-			wp_send_json_error( array( 'message' => __( 'No products found to analyze.', 'preview-ai' ) ) );
+			wp_send_json_success(
+				array(
+					'status'  => 'complete',
+					'message' => __( 'All products have already been analyzed. No new products to process.', 'preview-ai' ),
+					'stats'   => array(
+						'total'      => 0,
+						'configured' => 0,
+					),
+				)
+			);
+			return;
 		}
 
 		$total_products = count( $products_data );
@@ -843,7 +1060,7 @@ class PREVIEW_AI_Admin {
 
 		$try_product_url = '';
 		if ( ! empty( $stats['configured_ids'] ) ) {
-			$try_product_url = get_permalink( $stats['configured_ids'][0] );
+			$try_product_url = add_query_arg( 'demo', 'yes', get_permalink( $stats['configured_ids'][0] ) );
 		}
 
 		$warning = '';
@@ -987,7 +1204,7 @@ class PREVIEW_AI_Admin {
 		} elseif ( 'completed' === $status && ! empty( $progress ) ) {
 			$try_product_url = '';
 			if ( ! empty( $progress['configured_ids'] ) ) {
-				$try_product_url = get_permalink( $progress['configured_ids'][0] );
+				$try_product_url = add_query_arg( 'demo', 'yes', get_permalink( $progress['configured_ids'][0] ) );
 			}
 
 			$warning = '';
@@ -1033,6 +1250,7 @@ class PREVIEW_AI_Admin {
 	/**
 	 * Get catalog products data for AI analysis.
 	 *
+	 * Only includes products NOT yet analyzed (no _preview_ai_supported meta).
 	 * Includes parent products and variations with their own images.
 	 * Sends thumbnail URLs for backend to download and process.
 	 *
@@ -1040,11 +1258,18 @@ class PREVIEW_AI_Admin {
 	 * @return   array    Array of products with id, title, categories, tags, thumbnail_url, variation_id.
 	 */
 	private function get_catalog_products_data() {
+		// Only get products that haven't been analyzed yet (no _preview_ai_supported meta).
 		$products = wc_get_products(
 			array(
-				'status' => 'publish',
-				'limit'  => -1,
-				'type'   => array( 'simple', 'variable' ),
+				'status'     => 'publish',
+				'limit'      => -1,
+				'type'       => array( 'simple', 'variable' ),
+				'meta_query' => array(
+					array(
+						'key'     => '_preview_ai_supported',
+						'compare' => 'NOT EXISTS',
+					),
+				),
 			)
 		);
 
@@ -1075,13 +1300,19 @@ class PREVIEW_AI_Admin {
 				'variation_id'  => null,
 			);
 
-			// If variable product, include variations with their own images.
+			// If variable product, include variations with their own images (only if not analyzed).
 			if ( $product->is_type( 'variable' ) ) {
 				$variation_ids = $product->get_children();
 
 				foreach ( $variation_ids as $variation_id ) {
 					$variation = wc_get_product( $variation_id );
 					if ( ! $variation ) {
+						continue;
+					}
+
+					// Skip variations that already have image analysis.
+					$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
+					if ( ! empty( $var_analysis ) ) {
 						continue;
 					}
 
@@ -1141,11 +1372,16 @@ class PREVIEW_AI_Admin {
 			$variation_id = isset( $classification['variation_id'] ) ? absint( $classification['variation_id'] ) : null;
 			$subtype      = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
 			$garment_type = isset( $classification['garment_type'] ) ? sanitize_key( $classification['garment_type'] ) : '';
+			// V1: Backend sends 'supported' flag for upper_body/lower_body only.
+			$is_supported = isset( $classification['supported'] ) ? (bool) $classification['supported'] : true;
 
 			// Only count and save subtype/garment_type for parent products (once per parent).
 			if ( ! in_array( $product_id, $processed_parents, true ) ) {
 				$stats['total']++;
 				$processed_parents[] = $product_id;
+
+				// Save supported status (V1: only upper_body and lower_body are supported).
+				update_post_meta( $product_id, '_preview_ai_supported', $is_supported ? 'yes' : 'no' );
 
 				if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
 					update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
@@ -1153,8 +1389,16 @@ class PREVIEW_AI_Admin {
 					if ( ! empty( $garment_type ) ) {
 						update_post_meta( $product_id, '_preview_ai_garment_type', $garment_type );
 					}
-					$stats['configured']++;
-					$stats['configured_ids'][] = $product_id;
+
+					// Only auto-enable if subtype is supported in V1.
+					if ( $is_supported ) {
+						$stats['configured']++;
+						$stats['configured_ids'][] = $product_id;
+					} else {
+						// Not supported: disable Preview AI for this product.
+						update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
+						$stats['needs_review']++;
+					}
 				} else {
 					update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
 					$stats['needs_review']++;
@@ -1256,7 +1500,7 @@ class PREVIEW_AI_Admin {
 			return false;
 		}
 
-		return get_permalink( $products[0] );
+		return add_query_arg( 'demo', 'yes', get_permalink( $products[0] ) );
 	}
 
 	/**
@@ -1501,7 +1745,7 @@ class PREVIEW_AI_Admin {
 				</div>
 				<div class="preview-ai-onboarding__text">
 					<h3><?php esc_html_e( 'Activate Preview AI', 'preview-ai' ); ?></h3>
-					<p><?php esc_html_e( 'Get 50 free previews to try Preview AI on your store. Enter your email to activate:', 'preview-ai' ); ?></p>
+					<p><?php esc_html_e( 'Get 20 FREE previews to try Preview AI on your store. Enter your email to activate:', 'preview-ai' ); ?></p>
 				</div>
 				<form class="preview-ai-onboarding__form" id="preview-ai-register-form">
 					<input type="email" 

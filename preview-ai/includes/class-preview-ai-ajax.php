@@ -113,10 +113,19 @@ class PREVIEW_AI_Ajax {
 	/**
 	 * Check if Preview AI is enabled for a product.
 	 *
+	 * V1: Also checks if product subtype is supported (upper_body, lower_body only).
+	 *
 	 * @param int $product_id Product ID.
 	 * @return bool
 	 */
 	private function is_enabled_for_product( $product_id ) {
+		// V1: Check if product type is supported (upper_body, lower_body).
+		// Products with footwear, accessories, etc. are not supported yet.
+		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
+		if ( 'no' === $supported ) {
+			return false;
+		}
+
 		$enabled = get_post_meta( $product_id, '_preview_ai_enabled', true );
 
 		if ( '' === $enabled ) {

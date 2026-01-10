@@ -1,0 +1,84 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Preview AI 1.0.0\n"
+"Report-Msgid-Bugs-To: https://previewai.app/support\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Spanish <es@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-01-10 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.8.1\n"
+"X-Domain: preview-ai\n"
+
+#: public/partials/preview-ai-public-display.php:24
+#: public/class-preview-ai-public.php:240
+msgid "See it on you"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:55
+#: admin/class-preview-ai-admin.php:327
+msgid "Close"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:60
+msgid "Welcome back!"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:61
+msgid "Use your saved photo to try on this product instantly"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:67
+msgid "Use this photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:76
+#: public/partials/preview-ai-public-display.php:94
+#: public/partials/preview-ai-public-display.php:173
+#: public/partials/preview-ai-public-display.php:227
+msgid "Your Looks"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:80
+msgid "Your photo is stored only on this device. We never upload or save it on our servers."
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:81
+msgid "Delete my photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:103
+msgid "No looks yet. Generate your first preview!"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:150
+msgid "For best results:"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:188
+msgid "Analyzing your photo..."
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:204
+msgid "Generate preview"
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:333
+msgid "Preview AI Activated!"
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:334
+msgid "Setting up your store..."
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:340
+#: admin/class-preview-ai-admin.php:549
+msgid "Analyzing your product catalog..."
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:436
+msgid "Catalog configured!"
+msgstr ""
+

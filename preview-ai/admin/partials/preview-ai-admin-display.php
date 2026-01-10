@@ -33,6 +33,11 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		   class="nav-tab <?php echo 'stats' === $active_tab ? 'nav-tab-active' : ''; ?>">
 			<?php esc_html_e( 'Statistics', 'preview-ai' ); ?>
 		</a>
+
+		<a href="https://www.previewai.app/contact" target="_blank" class="nav-tab" style="margin-left: auto; border: none; color: #646970; font-weight: 400; font-size: 12px; opacity: 0.8;">
+			<span class="dashicons dashicons-sos" style="margin-right: 4px; font-size: 16px; width: 16px; height: 16px; vertical-align: middle;"></span>
+			<?php esc_html_e( 'Contact Support', 'preview-ai' ); ?>
+		</a>
 	</nav>
 
 	<?php if ( 'stats' === $active_tab ) : ?>
@@ -274,7 +279,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							$is_paid_plan = ( 'free_trial' !== $subscription_status && ! empty( $subscription_status ) );
 							?>
 							<?php if ( $is_paid_plan ) : ?>
-								<a href="https://billing.stripe.com/p/login/test_cNi4gyfXV4u2bnb8QHgIo00" 
+								<a href="https://previewai.app/account/" 
 								   target="_blank" 
 								   class="button" 
 								   style="margin-left: 8px;"
@@ -442,6 +447,51 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</td>
 					</tr>
 
+					<!-- Button Shape -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_button_shape">
+								<?php esc_html_e( 'Button Shape', 'preview-ai' ); ?>
+							</label>
+						</th>
+						<td>
+							<select id="preview_ai_button_shape" name="preview_ai_button_shape">
+								<option value="pill" <?php selected( $widget_settings['button_shape'], 'pill' ); ?>>
+									<?php esc_html_e( 'Pill (Rounded)', 'preview-ai' ); ?>
+								</option>
+								<option value="squared" <?php selected( $widget_settings['button_shape'], 'squared' ); ?>>
+									<?php esc_html_e( 'Rounded Corners', 'preview-ai' ); ?>
+								</option>
+								<option value="sharp" <?php selected( $widget_settings['button_shape'], 'sharp' ); ?>>
+									<?php esc_html_e( 'Squared (Sharp)', 'preview-ai' ); ?>
+								</option>
+							</select>
+						</td>
+					</tr>
+
+					<!-- Button Height -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_button_height">
+								<?php esc_html_e( 'Button Height', 'preview-ai' ); ?>
+							</label>
+						</th>
+						<td>
+							<input type="number"
+								   id="preview_ai_button_height"
+								   name="preview_ai_button_height"
+								   value="<?php echo esc_attr( $widget_settings['button_height'] ); ?>"
+								   min="24"
+								   max="80"
+								   step="1"
+								   style="width: 80px;"
+							/> px
+							<p class="description">
+								<?php esc_html_e( 'Height of the button in pixels. Default: 38px.', 'preview-ai' ); ?>
+							</p>
+						</td>
+					</tr>
+
 					<!-- Accent Color -->
 					<tr>
 						<th scope="row">
@@ -477,4 +527,15 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			</div>
 		</form>
 	<?php endif; ?>
+
+	<div style="margin-top: 40px; padding: 24px; border: 1px dashed #c3c4c7; border-radius: 8px; background: #fff; text-align: center;">
+		<h3 style="margin: 0 0 8px; color: #1d2327;"><?php esc_html_e( 'Need help or have a suggestion?', 'preview-ai' ); ?></h3>
+		<p style="margin: 0 0 16px; color: #50575e;">
+			<?php esc_html_e( 'We are here to help you get the most out of Preview AI. Whether you have a technical issue or an idea to improve the plugin, we want to hear from you.', 'preview-ai' ); ?>
+		</p>
+		<a href="https://www.previewai.app/contact" target="_blank" class="button">
+			<span class="dashicons dashicons-external" style="font-size: 16px; vertical-align: middle; margin-right: 4px;"></span>
+			<?php esc_html_e( 'Contact Support & Suggestions', 'preview-ai' ); ?>
+		</a>
+	</div>
 </div>
