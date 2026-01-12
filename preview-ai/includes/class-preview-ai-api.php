@@ -284,6 +284,18 @@ class PREVIEW_AI_Api {
 	}
 
 	/**
+	 * Check if the store is compatible with Preview AI based on categories and sample products.
+	 *
+	 * @param array $preflight_data Data with categories and samples.
+	 * @return array|WP_Error Response data or error.
+	 */
+	public function check_store_compatibility( $preflight_data ) {
+		PREVIEW_AI_Logger::debug( 'Starting store compatibility check' );
+
+		return $this->request( 'catalog/preflight', $preflight_data, 30 );
+	}
+
+	/**
 	 * Send catalog data to AI backend for product classification and image analysis.
 	 *
 	 * @param array $products_data  Array of products with id, title, categories, tags, thumbnail_url, variation_id.

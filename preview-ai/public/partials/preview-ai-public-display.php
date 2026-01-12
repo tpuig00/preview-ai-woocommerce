@@ -153,7 +153,7 @@ $height_style   = ( 38 !== (int) $button_height ) ? 'height:' . absint( $button_
 						<li><?php echo esc_html( $tip ); ?></li>
 					<?php endforeach; ?>
 				</ul>
-				<p class="preview-ai-tips-pro"><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></p>
+				<p class="preview-ai-tips-pro"><strong><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></strong></p>
 			</div>
 
 			<!-- Upload button -->

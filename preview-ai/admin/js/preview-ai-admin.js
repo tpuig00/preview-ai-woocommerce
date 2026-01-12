@@ -209,6 +209,10 @@
 					success: function( response ) {
 						if ( ! response.success ) {
 							showErrorResult( response.data.message || previewAiAdmin.i18n.error );
+							// If not compatible, we might want to reload to show the specific error UI
+							if ( response.data && response.data.code === 'store_not_compatible' ) {
+								setTimeout( function() { window.location.reload(); }, 3000 );
+							}
 							return;
 						}
 
@@ -234,6 +238,25 @@
 				});
 			});
 		}
+
+		// Re-verify compatibility.
+		$( document ).on( 'click', '#preview_ai_reverify_compatibility', function( e ) {
+			e.preventDefault();
+			var $link = $( this );
+			$link.css( 'opacity', '0.5' ).css( 'pointer-events', 'none' );
+			
+			$.ajax({
+				url: previewAiAdmin.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'preview_ai_reverify_compatibility',
+					nonce: previewAiAdmin.nonce
+				},
+				success: function() {
+					window.location.reload();
+				}
+			});
+		} );
 
 		// Handle dismissible notices - save to user meta.
 		$( document ).on( 'click', '.notice[data-notice] .notice-dismiss', function() {

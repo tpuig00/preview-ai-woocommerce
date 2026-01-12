@@ -28,8 +28,7 @@ global $wpdb;
  */
 $options = array(
 	'preview_ai_enabled',
-	'preview_ai_product_type',
-	'preview_ai_clothing_subtype',
+	'preview_ai_api_key',
 	'preview_ai_display_mode',
 	'preview_ai_needs_onboarding',
 	'preview_ai_needs_first_try',
@@ -42,12 +41,36 @@ $options = array(
 	'preview_ai_catalog_analysis_progress',
 	'preview_ai_catalog_pending_products',
 	'preview_ai_catalog_analysis_results',
+	'preview_ai_store_compatibility',
+	'preview_ai_accent_color',
+	'preview_ai_button_text',
+	'preview_ai_button_icon',
+	'preview_ai_button_position',
+	'preview_ai_button_shape',
+	'preview_ai_button_height',
 );
 
 foreach ( $options as $option ) {
 	delete_option( $option );
 	delete_site_option( $option ); // For multisite
 }
+
+/**
+ * 1.1. Delete product metadata related to the plugin.
+ * This removes all _preview_ai_* meta keys from the postmeta table.
+ */
+$wpdb->query(
+	"DELETE FROM {$wpdb->prefix}postmeta 
+	WHERE meta_key LIKE '_preview_ai_%'"
+);
+
+/**
+ * 1.2. Delete user metadata related to the plugin.
+ */
+$wpdb->query(
+	"DELETE FROM {$wpdb->prefix}usermeta 
+	WHERE meta_key LIKE 'preview_ai_%'"
+);
 
 /**
  * 2. Delete transients.

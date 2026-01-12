@@ -208,53 +208,6 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</td>
 					</tr>
 
-					<!-- Default Product Type -->
-					<tr>
-						<th scope="row">
-							<label for="preview_ai_product_type">
-								<?php esc_html_e( 'Default Product Type', 'preview-ai' ); ?>
-							</label>
-						</th>
-						<td>
-							<?php $current_type = get_option( 'preview_ai_product_type', 'clothing' ); ?>
-							<select id="preview_ai_product_type" name="preview_ai_product_type">
-								<?php foreach ( PREVIEW_AI_Admin::get_product_types() as $value => $data ) : ?>
-									<?php if ( $data['available'] ) : ?>
-										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current_type, $value ); ?>>
-											<?php echo esc_html( $data['label'] ); ?>
-										</option>
-									<?php else : ?>
-										<option value="" disabled>
-											<?php echo esc_html( $data['label'] ); ?> — <?php esc_html_e( 'Coming Soon', 'preview-ai' ); ?>
-										</option>
-									<?php endif; ?>
-								<?php endforeach; ?>
-							</select>
-						</td>
-					</tr>
-
-					<!-- Clothing Subtype -->
-					<tr id="preview_ai_clothing_subtype_row">
-						<th scope="row">
-							<label for="preview_ai_clothing_subtype">
-								<?php esc_html_e( 'Clothing Subtype', 'preview-ai' ); ?>
-							</label>
-						</th>
-						<td>
-							<?php
-							$current_subtype   = get_option( 'preview_ai_clothing_subtype', 'mixed' );
-							$clothing_subtypes = PREVIEW_AI_Admin::get_clothing_subtypes();
-							?>
-							<select id="preview_ai_clothing_subtype" name="preview_ai_clothing_subtype">
-								<?php foreach ( $clothing_subtypes as $value => $data ) : ?>
-									<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current_subtype, $value ); ?>>
-										<?php echo esc_html( $data['label'] . ' — ' . $data['examples'] ); ?>
-									</option>
-								<?php endforeach; ?>
-							</select>
-						</td>
-					</tr>
-
 					<!-- API Key -->
 					<tr>
 						<th scope="row">
@@ -303,6 +256,10 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			$catalog_status = PREVIEW_AI_Admin::get_catalog_analysis_status();
 			$is_processing  = 'processing' === $catalog_status['status'];
 			$progress       = $catalog_status['progress'];
+
+			// Get compatibility status.
+			$preflight     = get_option( 'preview_ai_store_compatibility' );
+			$is_compatible = ! empty( $preflight ) ? $preflight['compatible'] : true;
 			?>
 			<div class="preview-ai-learn-catalog" style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
 				<h2 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #1d2327;">
@@ -317,7 +274,19 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 					<?php esc_html_e( 'Nothing will be modified in your store. Only recommendations will be assigned.', 'preview-ai' ); ?>
 				</p>
 				
-				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" style="display: inline-flex; align-items: center; gap: 8px;" <?php echo $is_processing ? 'disabled' : ''; ?>>
+				<?php if ( ! $is_compatible ) : ?>
+					<div id="preview_ai_compatibility_error" style="margin-bottom: 16px; padding: 12px 16px; border-radius: 4px; background-color: #fcf0f1; border: 1px solid #d63638; color: #d63638; font-size: 13px;">
+						<span class="dashicons dashicons-warning" style="vertical-align: middle; margin-right: 8px; font-size: 18px; width: 18px; height: 18px;"></span>
+						<?php echo esc_html( $preflight['message'] ); ?>
+						<p style="margin: 8px 0 0;">
+							<a href="#" id="preview_ai_reverify_compatibility" style="color: #d63638; text-decoration: underline;">
+								<?php esc_html_e( 'Re-verify compatibility', 'preview-ai' ); ?>
+							</a>
+						</p>
+					</div>
+				<?php endif; ?>
+
+				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" style="display: inline-flex; align-items: center; gap: 8px;" <?php echo ( $is_processing || ! $is_compatible ) ? 'disabled' : ''; ?>>
 					<span class="dashicons dashicons-welcome-learn-more" style="font-size: 18px; width: 18px; height: 18px;"></span>
 					<?php esc_html_e( 'Analyze My Catalog', 'preview-ai' ); ?>
 				</button>

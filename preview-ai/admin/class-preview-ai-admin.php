@@ -13,17 +13,13 @@
 class PREVIEW_AI_Admin {
 
 	/**
-	 * Option keys for background catalog analysis.
+	 * Sub-module instances.
 	 */
-	const ANALYSIS_STATUS_OPTION   = 'preview_ai_catalog_analysis_status';
-	const ANALYSIS_PROGRESS_OPTION = 'preview_ai_catalog_analysis_progress';
-	const ANALYSIS_PENDING_OPTION  = 'preview_ai_catalog_pending_products';
-	const ANALYSIS_RESULTS_OPTION  = 'preview_ai_catalog_analysis_results';
-
-	/**
-	 * Batch size for background processing.
-	 */
-	const CATALOG_BATCH_SIZE = 50;
+	private $settings;
+	private $product;
+	private $catalog;
+	private $onboarding;
+	private $notices;
 
 	/**
 	 * The ID of this plugin.
@@ -53,12 +49,16 @@ class PREVIEW_AI_Admin {
 	public function __construct( $plugin_name, $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
+
+		$this->settings   = new PREVIEW_AI_Admin_Settings();
+		$this->product    = new PREVIEW_AI_Admin_Product();
+		$this->catalog    = new PREVIEW_AI_Admin_Catalog();
+		$this->onboarding = new PREVIEW_AI_Admin_Onboarding();
+		$this->notices    = new PREVIEW_AI_Admin_Notices();
 	}
 
 	/**
 	 * Register the admin menu under Products.
-	 *
-	 * @since    1.0.0
 	 */
 	public function add_admin_menu() {
 		add_submenu_page(
@@ -72,431 +72,121 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
-	 * Register plugin settings.
+	 * Add settings link to plugin action links.
 	 *
-	 * @since    1.0.0
+	 * @param array $links Array of plugin action links.
+	 * @return array Modified array of plugin action links.
+	 */
+	public function add_action_links( $links ) {
+		$settings_link = array(
+			'<a href="' . admin_url( 'edit.php?post_type=product&page=preview-ai' ) . '">' . __( 'Settings', 'preview-ai' ) . '</a>',
+		);
+		return array_merge( $settings_link, $links );
+	}
+
+	/**
+	 * Delegated methods to sub-modules.
 	 */
 	public function register_settings() {
-		// General settings group.
-		register_setting( 'preview_ai_general_settings', 'preview_ai_api_endpoint', 'esc_url_raw' );
-		register_setting( 'preview_ai_general_settings', 'preview_ai_api_key', 'sanitize_text_field' );
-		register_setting( 'preview_ai_general_settings', 'preview_ai_enabled', 'absint' );
-		register_setting( 'preview_ai_general_settings', 'preview_ai_product_type', 'sanitize_key' );
-		register_setting( 'preview_ai_general_settings', 'preview_ai_clothing_subtype', 'sanitize_key' );
-
-		// Widget settings group.
-		register_setting( 'preview_ai_widget_settings', 'preview_ai_display_mode', 'sanitize_key' );
-		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_text', 'sanitize_text_field' );
-		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_icon', 'sanitize_key' );
-		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_position', 'sanitize_key' );
-		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_shape', 'sanitize_key' );
-		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_height', 'absint' );
-		register_setting( 'preview_ai_widget_settings', 'preview_ai_accent_color', 'sanitize_hex_color' );
-
-		// Clear account status when API key changes.
-		add_action( 'update_option_preview_ai_api_key', array( 'PREVIEW_AI_Api', 'clear_account_status' ) );
+		$this->settings->register_settings();
 	}
 
-	/**
-	 * Get available button icons.
-	 *
-	 * @since    1.0.0
-	 * @return   array
-	 */
 	public static function get_button_icons() {
-		return array(
-			'wand'   => array(
-				'label' => __( 'Magic Wand', 'preview-ai' ),
-				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>',
-			),
-			'camera' => array(
-				'label' => __( 'Camera', 'preview-ai' ),
-				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
-			),
-			'eye'    => array(
-				'label' => __( 'Eye / Preview', 'preview-ai' ),
-				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
-			),
-			'shirt'  => array(
-				'label' => __( 'T-Shirt', 'preview-ai' ),
-				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>',
-			),
-			'spark'  => array(
-				'label' => __( 'Sparkles / AI', 'preview-ai' ),
-				'svg'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>',
-			),
-		);
+		return PREVIEW_AI_Admin_Settings::get_button_icons();
 	}
 
-	/**
-	 * Get widget settings with defaults.
-	 *
-	 * @since    1.0.0
-	 * @return   array
-	 */
 	public static function get_widget_settings() {
-		return array(
-			'button_text'     => get_option( 'preview_ai_button_text', '' ),
-			'button_icon'     => get_option( 'preview_ai_button_icon', 'wand' ),
-			'button_position' => get_option( 'preview_ai_button_position', 'center' ),
-			'button_shape'    => get_option( 'preview_ai_button_shape', 'pill' ),
-			'button_height'   => get_option( 'preview_ai_button_height', 38 ),
-			'accent_color'    => get_option( 'preview_ai_accent_color', '#3b82f6' ),
-		);
+		return PREVIEW_AI_Admin_Settings::get_widget_settings();
 	}
 
-	/**
-	 * Get available product types for AI context.
-	 *
-	 * @since    1.0.0
-	 * @return   array    List of product types with availability status.
-	 */
 	public static function get_product_types() {
-		return array(
-			'clothing' => array(
-				'label'     => __( 'Clothing', 'preview-ai' ),
-				'available' => true,
-			),
-			'furniture' => array(
-				'label'     => __( 'Furniture', 'preview-ai' ),
-				'available' => false,
-			),
-			'decoration' => array(
-				'label'     => __( 'Decoration', 'preview-ai' ),
-				'available' => false,
-			),
-			'crafts' => array(
-				'label'     => __( 'Crafts', 'preview-ai' ),
-				'available' => false,
-			),
-			'generic' => array(
-				'label'     => __( 'Other (Generic)', 'preview-ai' ),
-				'available' => false,
-			),
-		);
+		return PREVIEW_AI_Admin_Settings::get_product_types();
 	}
 
-	/**
-	 * Get clothing subtypes with example items and tips.
-	 *
-	 * @since    1.0.0
-	 * @return   array    List of clothing subtypes.
-	 */
 	public static function get_clothing_subtypes() {
-		return array(
-			'mixed' => array(
-				'label'    => __( 'Mixed / All types', 'preview-ai' ),
-				'examples' => __( 'All types of clothing', 'preview-ai' ),
-				'tips'     => array(
-					__( 'One person only', 'preview-ai' ),
-					__( 'Front-facing, good lighting', 'preview-ai' ),
-					__( 'Avoid heavy cropping and occlusions', 'preview-ai' ),
-				),
-			),
-		
-			'upper_body' => array(
-				'label'    => __( 'Upper Body', 'preview-ai' ),
-				'examples' => __( 'T-shirts, shirts, blouses, jackets, hoodies, tops', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Front-facing with shoulders and torso visible', 'preview-ai' ),
-					__( 'Arms relaxed', 'preview-ai' ),
-					__( 'Good light, no torso occlusions', 'preview-ai' ),
-				),
-			),
-		
-			'lower_body' => array(
-				'label'    => __( 'Lower Body', 'preview-ai' ),
-				'examples' => __( 'Pants, shorts, leggings, skirts', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Hips, knees and full feet visible (no crop)', 'preview-ai' ),
-					__( 'Standing, front-facing', 'preview-ai' ),
-					__( 'Good light, no leg occlusions', 'preview-ai' ),
-				),
-			),
-		
-			'full_body' => array(
-				'label'    => __( 'Full Body', 'preview-ai' ),
-				'examples' => __( 'Dresses, jumpsuits, full suits', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Full body head-to-toe (no crop)', 'preview-ai' ),
-					__( 'Front-facing and upright (avoid side pose or crouching)', 'preview-ai' ),
-					__( 'One person, simple background, good light', 'preview-ai' ),
-				),
-			),
-		
-			'headwear' => array(
-				'label'    => __( 'Headwear', 'preview-ai' ),
-				'examples' => __( 'Caps, hats, berets, head scarves', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include head plus some torso', 'preview-ai' ),
-					__( 'Front-facing, good lighting', 'preview-ai' ),
-					__( 'No occlusions over the head (hair/hands/objects)', 'preview-ai' ),
-				),
-			),
-		
-			'footwear' => array(
-				'label'    => __( 'Footwear', 'preview-ai' ),
-				'examples' => __( 'Shoes, boots, sandals, slippers', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Both feet fully visible (not cropped)', 'preview-ai' ),
-					__( 'Best framing: knees-to-feet, front-facing', 'preview-ai' ),
-					__( 'Good light, sharp photo', 'preview-ai' ),
-				),
-			),
-		
-			'neckwear' => array(
-				'label'    => __( 'Neckwear', 'preview-ai' ),
-				'examples' => __( 'Necklaces, scarves, chokers', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include face, neck and some torso (no extreme close-up)', 'preview-ai' ),
-					__( 'Front-facing, good lighting', 'preview-ai' ),
-					__( 'No occlusions over the accessory', 'preview-ai' ),
-				),
-			),
-		
-			'waistwear' => array(
-				'label'    => __( 'Waistwear', 'preview-ai' ),
-				'examples' => __( 'Belts, fanny packs, waist bags', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Front-facing with waist and hips visible', 'preview-ai' ),
-					__( 'No hands/objects covering the waist area', 'preview-ai' ),
-					__( 'One person, good lighting', 'preview-ai' ),
-				),
-			),
-		
-			'wrist_hand' => array(
-				'label'    => __( 'Wrist & Hand', 'preview-ai' ),
-				'examples' => __( 'Bracelets, watches, rings', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include arm and some torso (no extreme close-up)', 'preview-ai' ),
-					__( 'Keep the accessory visible (no motion blur)', 'preview-ai' ),
-					__( 'Good light, simple background', 'preview-ai' ),
-				),
-			),
-		
-			'ear' => array(
-				'label'    => __( 'Ear Accessories', 'preview-ai' ),
-				'examples' => __( 'Earrings, hoops, ear cuffs', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include face and some torso (no extreme close-up)', 'preview-ai' ),
-					__( 'Good light, ear not covered by hair/hands', 'preview-ai' ),
-					__( 'One person only', 'preview-ai' ),
-				),
-			),
-		);
-		
+		return PREVIEW_AI_Admin_Settings::get_clothing_subtypes();
+	}
+
+	public function add_product_data_tab( $tabs ) {
+		return $this->product->add_product_data_tab( $tabs );
+	}
+
+	public function render_product_data_panel() {
+		$this->product->render_product_data_panel();
+	}
+
+	public function save_product_data( $post_id ) {
+		$this->product->save_product_data( $post_id );
+	}
+
+	public function add_product_column( $columns ) {
+		return $this->product->add_product_column( $columns );
+	}
+
+	public function render_product_column( $column, $post_id ) {
+		$this->product->render_product_column( $column, $post_id );
+	}
+
+	public function handle_learn_catalog() {
+		$this->catalog->handle_learn_catalog();
+	}
+
+	public function process_catalog_batch() {
+		$this->catalog->process_catalog_batch();
+	}
+
+	public function handle_catalog_status() {
+		$this->catalog->handle_catalog_status();
+	}
+
+	public function handle_reverify_compatibility() {
+		$this->catalog->handle_reverify_compatibility();
+	}
+
+	public static function get_catalog_analysis_status() {
+		return PREVIEW_AI_Admin_Catalog::get_catalog_analysis_status();
+	}
+
+	public function display_admin_notices() {
+		$this->notices->display_admin_notices();
+	}
+
+	public function handle_dismiss_notice() {
+		$this->notices->handle_dismiss_notice();
+	}
+
+	public function handle_dismiss_try_notice() {
+		$this->notices->handle_dismiss_try_notice();
+	}
+
+	public function handle_register_site() {
+		$this->onboarding->handle_register_site();
+	}
+
+	public function display_onboarding_notice() {
+		$this->onboarding->display_onboarding_notice();
 	}
 
 	/**
 	 * Render the settings page.
-	 *
-	 * @since    1.0.0
 	 */
 	public function render_settings_page() {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			return;
 		}
 
-		// Check if coming from onboarding (just registered).
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$is_onboarding = isset( $_GET['onboarding'] ) && 'complete' === $_GET['onboarding'];
 
 		if ( $is_onboarding ) {
-			// Add script to auto-trigger catalog analysis.
-			add_action( 'admin_footer', array( $this, 'render_onboarding_wizard' ) );
+			add_action( 'admin_footer', array( $this->onboarding, 'render_onboarding_wizard' ) );
 		}
 
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-admin-display.php';
 	}
 
 	/**
-	 * Render onboarding wizard that auto-analyzes catalog.
-	 *
-	 * This is shown after user completes registration and is redirected
-	 * to the settings page. It automatically triggers catalog analysis
-	 * and shows progress/results.
-	 *
-	 * @since 1.0.0
-	 */
-	public function render_onboarding_wizard() {
-		// Mark that user needs to try the widget (only during initial onboarding).
-		update_option( 'preview_ai_needs_first_try', true );
-		?>
-		<div id="preview-ai-onboarding-wizard" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100000;display:flex;align-items:center;justify-content:center;">
-			<div style="background:#fff;border-radius:16px;padding:48px;max-width:520px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.3);position:relative;">
-				<button type="button" id="preview-ai-onboarding-close" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;padding:8px;border-radius:50%;transition:background 0.2s;" title="<?php esc_attr_e( 'Close', 'preview-ai' ); ?>">
-					<svg width="20" height="20" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-				</button>
-				<div style="width:72px;height:72px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(34,197,94,0.3);">
-					<svg width="36" height="36" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-				</div>
-				<h2 style="margin:0 0 8px;font-size:26px;color:#1e293b;font-weight:700;">🎉 <?php esc_html_e( 'Preview AI Activated!', 'preview-ai' ); ?></h2>
-				<p style="color:#64748b;margin:0 0 32px;font-size:15px;"><?php esc_html_e( 'Setting up your store...', 'preview-ai' ); ?></p>
-				
-				<div id="onboarding-progress" style="margin-bottom:32px;">
-					<div style="height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;">
-						<div id="onboarding-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width 0.5s ease;"></div>
-					</div>
-					<p id="onboarding-status" style="margin:16px 0 0;color:#64748b;font-size:14px;"><?php esc_html_e( 'Analyzing your product catalog...', 'preview-ai' ); ?></p>
-				</div>
-				
-				<div id="onboarding-result" style="display:none;"></div>
-			</div>
-		</div>
-
-		<script>
-		(function($) {
-			'use strict';
-			
-			var ajaxUrl = '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>';
-			var nonce = '<?php echo esc_js( wp_create_nonce( 'preview_ai_learn_catalog' ) ); ?>';
-			
-			var $bar = $('#onboarding-bar');
-			var $status = $('#onboarding-status');
-			var $result = $('#onboarding-result');
-			var $progress = $('#onboarding-progress');
-			
-			setTimeout(function() { $bar.css('width', '20%'); }, 200);
-			setTimeout(function() { $bar.css('width', '40%'); }, 600);
-			
-			$.ajax({
-				url: ajaxUrl,
-				type: 'POST',
-				data: {
-					action: 'preview_ai_learn_catalog',
-					nonce: nonce
-				},
-				beforeSend: function() {
-					$bar.css('width', '60%');
-					$status.text('<?php echo esc_js( __( 'Configuring products...', 'preview-ai' ) ); ?>');
-				},
-				success: function(response) {
-					$bar.css('width', '100%');
-					
-					setTimeout(function() {
-						$progress.slideUp(300);
-						
-						if (response.success) {
-							var status = response.data.status || 'completed';
-							
-							// Handle background processing (large catalogs)
-							if (status === 'scheduled') {
-								var totalProducts = response.data.total || 0;
-								$result.html(
-									'<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:20px;margin-bottom:24px;">' +
-									'<p style="color:#1d4ed8;font-weight:600;margin:0;font-size:16px;">⏳ ' + 
-									'<?php echo esc_js( __( 'Analyzing in background', 'preview-ai' ) ); ?></p>' +
-									'<p style="color:#1e40af;margin:8px 0 0;font-size:14px;">' + totalProducts + ' <?php echo esc_js( __( 'products are being analyzed. This may take a few minutes.', 'preview-ai' ) ); ?></p>' +
-									'<p style="color:#3b82f6;margin:12px 0 0;font-size:13px;"><?php echo esc_js( __( 'You can close this window and check progress in Preview AI settings.', 'preview-ai' ) ); ?></p>' +
-									'</div>' +
-									'<div style="text-align:center;">' +
-									'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;font-size:14px;" onclick="location.reload()">' +
-									'<?php echo esc_js( __( 'Close & Continue', 'preview-ai' ) ); ?></button>' +
-									'</div>'
-								).slideDown(300);
-								return;
-							}
-							
-							var configured = response.data.configured || 0;
-							var total = response.data.total || 0;
-							var isLimited = response.data.is_limited || false;
-							var tryProductUrl = response.data.try_product_url || '';
-							var warning = response.data.warning || '';
-							
-							var limitedNotice = '';
-							if (isLimited) {
-								limitedNotice = '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin-top:12px;">' +
-									'<p style="color:#92400e;margin:0;font-size:13px;">⚡ <?php echo esc_js( __( 'Free trial: Only 3 random products were analyzed.', 'preview-ai' ) ); ?></p>' +
-									'</div>';
-							}
-							
-							var warningNotice = '';
-							if (warning) {
-								warningNotice = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-top:12px;">' +
-									'<p style="color:#dc2626;margin:0;font-size:13px;">⚠️ ' + warning + '</p>' +
-									'</div>';
-							}
-							
-							// If we have a product to try, show the "Try it" flow
-							var actionButtons = '';
-							if (tryProductUrl && configured > 0) {
-								actionButtons = '<div style="margin-bottom:16px;">' +
-									'<a href="' + tryProductUrl + '" target="_blank" class="button button-primary" style="height:auto;padding:14px 32px;font-size:15px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;box-shadow:0 4px 14px rgba(99,102,241,0.4);">' +
-									'✨ <?php echo esc_js( __( 'Try Preview AI Now', 'preview-ai' ) ); ?></a>' +
-									'</div>' +
-									'<p style="color:#64748b;font-size:13px;margin:0;"><?php echo esc_js( __( 'See how your customers will experience the magic!', 'preview-ai' ) ); ?></p>';
-							} else {
-								actionButtons = '<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;font-size:14px;" onclick="location.reload()">' +
-									'<?php echo esc_js( __( 'Close & Configure Products', 'preview-ai' ) ); ?></button>';
-							}
-							
-							$result.html(
-								'<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;">' +
-								'<p style="color:#166534;font-weight:600;margin:0;font-size:16px;">✓ ' + 
-								'<?php echo esc_js( __( 'Catalog configured!', 'preview-ai' ) ); ?></p>' +
-								'<p style="color:#15803d;margin:8px 0 0;font-size:14px;">' + configured + ' <?php echo esc_js( __( 'products ready for preview', 'preview-ai' ) ); ?></p>' +
-								limitedNotice +
-								warningNotice +
-								'</div>' +
-								'<div style="text-align:center;">' +
-								actionButtons +
-								'</div>'
-							).slideDown(300);
-						} else {
-							$result.html(
-								'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;margin-bottom:24px;">' +
-								'<p style="color:#dc2626;font-weight:600;margin:0;">' + (response.data.message || '<?php echo esc_js( __( 'Could not analyze catalog', 'preview-ai' ) ); ?>') + '</p>' +
-								'<p style="color:#b91c1c;margin:8px 0 0;font-size:14px;"><?php echo esc_js( __( 'You can configure products manually.', 'preview-ai' ) ); ?></p>' +
-								'</div>' +
-								'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="location.reload()">' +
-								'<?php echo esc_js( __( 'Continue to Settings', 'preview-ai' ) ); ?></button>'
-							).slideDown(300);
-						}
-					}, 500);
-				},
-				error: function() {
-					$bar.css('width', '100%');
-					$progress.slideUp(300);
-					
-					$result.html(
-						'<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:20px;margin-bottom:24px;">' +
-						'<p style="color:#92400e;font-weight:600;margin:0;"><?php echo esc_js( __( 'Could not connect to server', 'preview-ai' ) ); ?></p>' +
-						'<p style="color:#a16207;margin:8px 0 0;font-size:14px;"><?php echo esc_js( __( 'You can analyze your catalog later from settings.', 'preview-ai' ) ); ?></p>' +
-						'</div>' +
-						'<button type="button" class="button button-primary" style="height:auto;padding:12px 24px;" onclick="location.reload()">' +
-						'<?php echo esc_js( __( 'Continue', 'preview-ai' ) ); ?></button>'
-					).slideDown(300);
-				}
-			});
-			
-			// Clean URL (remove onboarding param).
-			if (history.replaceState) {
-				var cleanUrl = window.location.href
-					.replace(/[?&]onboarding=complete/, '')
-					.replace(/\?$/, '');
-				history.replaceState(null, '', cleanUrl);
-			}
-			
-			// Close button handler.
-			$('#preview-ai-onboarding-close').on('click', function() {
-				$('#preview-ai-onboarding-wizard').fadeOut(300, function() {
-					$(this).remove();
-				});
-			}).on('mouseenter', function() {
-				$(this).css('background', '#f1f5f9');
-			}).on('mouseleave', function() {
-				$(this).css('background', 'none');
-			});
-			
-		})(jQuery);
-		</script>
-		<?php
-	}
-
-	/**
 	 * Register the stylesheets for the admin area.
-	 *
-	 * @since    1.0.0
 	 */
 	public function enqueue_styles() {
 		wp_enqueue_style(
@@ -506,16 +196,11 @@ class PREVIEW_AI_Admin {
 			$this->version,
 			'all'
 		);
-
-		// Color picker styles for settings page.
 		wp_enqueue_style( 'wp-color-picker' );
 	}
 
 	/**
 	 * Register the JavaScript for the admin area.
-	 *
-	 * @since    1.0.0
-	 * @param    string $hook    The current admin page hook.
 	 */
 	public function enqueue_scripts( $hook ) {
 		wp_enqueue_script(
@@ -526,12 +211,10 @@ class PREVIEW_AI_Admin {
 			true
 		);
 
-		// Only localize script data on Preview AI settings page or product edit pages.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$is_settings_page = ( 'product_page_preview-ai' === $hook || ( isset( $_GET['page'] ) && 'preview-ai' === $_GET['page'] ) );
 		$is_product_page  = ( 'post.php' === $hook || 'post-new.php' === $hook );
 
-		// Always localize for onboarding notice.
 		wp_localize_script(
 			$this->plugin_name,
 			'previewAiAdmin',
@@ -553,893 +236,7 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
-	 * Add Preview AI tab to WooCommerce Product Data.
-	 *
-	 * @since    1.0.0
-	 * @param    array $tabs    Existing product data tabs.
-	 * @return   array          Modified tabs.
-	 */
-	public function add_product_data_tab( $tabs ) {
-		$tabs['preview_ai'] = array(
-			'label'    => __( 'Preview AI', 'preview-ai' ),
-			'target'   => 'preview_ai_product_data',
-			'priority' => 80,
-		);
-		return $tabs;
-	}
-
-	/**
-	 * Render Preview AI tab content in Product Data.
-	 *
-	 * @since    1.0.0
-	 */
-	public function render_product_data_panel() {
-		global $post;
-		$product        = wc_get_product( $post->ID );
-		$has_image      = $product && $product->get_image_id();
-		$enabled        = get_post_meta( $post->ID, '_preview_ai_enabled', true );
-		$subtype        = get_post_meta( $post->ID, '_preview_ai_recommended_subtype', true );
-		$supported      = get_post_meta( $post->ID, '_preview_ai_supported', true );
-		$global_enabled = get_option( 'preview_ai_enabled', 0 );
-
-		// Determine current state.
-		$is_enabled = false;
-		if ( 'yes' === $enabled ) {
-			$is_enabled = true;
-		} elseif ( 'no' === $enabled ) {
-			$is_enabled = false;
-		} else {
-			$is_enabled = (bool) $global_enabled;
-		}
-
-		// Can't be enabled if not supported or no image.
-		if ( 'no' === $supported || ! $has_image ) {
-			$is_enabled = false;
-		}
-
-		// Determine status for display.
-		if ( ! $has_image ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'No Image', 'preview-ai' );
-			$status_icon  = '—';
-		} elseif ( 'no' === $supported ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'Not Supported', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-warning"></span>';
-		} elseif ( ! $is_enabled ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'Disabled', 'preview-ai' );
-			$status_icon  = '—';
-		} elseif ( empty( $subtype ) ) {
-			// Enabled but not yet analyzed.
-			$status_class = 'preview-ai-col--active';
-			$status_text  = __( 'Pending Analysis', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-update"></span>';
-		} else {
-			// Enabled and analyzed.
-			$status_class = 'preview-ai-col--active';
-			$status_text  = __( 'Active', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
-		}
-
-		?>
-		<div id="preview_ai_product_data" class="panel woocommerce_options_panel">
-
-			<?php if ( ! $has_image ) : ?>
-			<div class="preview-ai-notice" style="margin: 12px; background: #fff8e5; border-left: 4px solid #ffb900;">
-				<span class="preview-ai-notice__icon">⚠️</span>
-				<div class="preview-ai-notice__content">
-					<?php esc_html_e( 'This product has no image. Add a product image to enable Preview AI.', 'preview-ai' ); ?>
-				</div>
-			</div>
-			<?php endif; ?>
-
-			<!-- Status + Toggle row -->
-			<div class="preview-ai-metabox-header">
-				<div class="preview-ai-metabox-header__left">
-					<span class="preview-ai-metabox-header__title"><?php esc_html_e( 'Preview AI', 'preview-ai' ); ?></span>
-					<span class="preview-ai-col <?php echo esc_attr( $status_class ); ?>">
-						<?php echo $status_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> 
-						<?php echo esc_html( $status_text ); ?>
-					</span>
-				</div>
-				<label class="preview-ai-switch">
-					<input type="checkbox" 
-						   id="_preview_ai_enabled" 
-						   name="_preview_ai_enabled" 
-						   value="yes" 
-						   <?php checked( $is_enabled ); ?> 
-						   <?php disabled( ! $has_image ); ?>
-					/>
-					<span class="preview-ai-switch__track"></span>
-				</label>
-			</div>
-
-			<?php
-			// Show detected clothing type (read-only, set by AI analysis).
-			if ( ! empty( $subtype ) ) :
-				$clothing_subtypes = self::get_clothing_subtypes();
-				$subtype_label     = isset( $clothing_subtypes[ $subtype ] ) ? $clothing_subtypes[ $subtype ]['label'] : $subtype;
-			?>
-			<div class="options_group" style="border-top: 1px solid #eee; padding-top: 12px;">
-				<p class="form-field">
-					<label><?php esc_html_e( 'Detected Type', 'preview-ai' ); ?></label>
-					<span style="display: inline-block; padding: 4px 10px; background: #f0f0f1; border-radius: 4px; font-size: 13px;">
-						<?php echo esc_html( $subtype_label ); ?>
-					</span>
-				</p>
-			</div>
-			<?php endif; ?>
-
-		<?php
-		// Check if product has variations without images.
-		$product                = wc_get_product( $post->ID );
-		$has_shared_images      = false;
-
-		if ( $product && $product->is_type( 'variable' ) ) {
-			foreach ( $product->get_children() as $variation_id ) {
-				if ( empty( get_post_meta( $variation_id, '_thumbnail_id', true ) ) ) {
-					$has_shared_images = true;
-					break;
-				}
-			}
-		}
-
-		// Show notice only if there are variations sharing images.
-		if ( $has_shared_images ) :
-		?>
-		<div class="options_group">
-			<div class="preview-ai-notice">
-				<span class="preview-ai-notice__icon">ℹ️</span>
-				<div class="preview-ai-notice__content">
-					<?php esc_html_e( "Some variations don't have their own image.", 'preview-ai' ); ?><br>
-					<span class="preview-ai-notice__sub"><?php esc_html_e( 'Preview AI will use the main product image, so the preview will look the same for those variations.', 'preview-ai' ); ?></span><br>
-					<a href="#" class="preview-ai-notice__link" title="<?php esc_attr_e( 'Add an image to each variation for more accurate previews.', 'preview-ai' ); ?>"><?php esc_html_e( 'See how to improve', 'preview-ai' ); ?> →</a>
-				</div>
-			</div>
-		</div>
-		<?php
-		endif;
-		?>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Save Preview AI product meta.
-	 *
-	 * When enabling Preview AI on a product that hasn't been analyzed,
-	 * automatically triggers analysis via the backend API.
-	 *
-	 * @since    1.0.0
-	 * @param    int $post_id    Product ID.
-	 */
-	public function save_product_data( $post_id ) {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce handles nonce.
-		$enabled = isset( $_POST['_preview_ai_enabled'] ) ? 'yes' : 'no';
-		$product = wc_get_product( $post_id );
-
-		// Can't enable if product has no image.
-		if ( 'yes' === $enabled && $product && ! $product->get_image_id() ) {
-			$enabled = 'no';
-		}
-
-		// Check if product needs analysis (enabling and not yet analyzed).
-		$was_analyzed = get_post_meta( $post_id, '_preview_ai_supported', true );
-
-		// Can't enable if product was already analyzed and is not supported.
-		if ( 'yes' === $enabled && 'no' === $was_analyzed ) {
-			$enabled = 'no';
-		}
-
-		if ( 'yes' === $enabled && empty( $was_analyzed ) && $product ) {
-			// Analyze product via backend API (includes variations if variable product).
-			$analysis_result = $this->analyze_single_product( $product );
-
-			if ( ! is_wp_error( $analysis_result ) ) {
-				// Handle response format: single product vs catalog (with variations).
-				if ( isset( $analysis_result['classifications'] ) ) {
-					// Catalog response (variable product with variations).
-					$this->save_catalog_classifications( $analysis_result );
-
-					// Check parent product support status.
-					$parent_classification = null;
-					foreach ( $analysis_result['classifications'] as $classification ) {
-						if ( absint( $classification['id'] ) === $post_id && empty( $classification['variation_id'] ) ) {
-							$parent_classification = $classification;
-							break;
-						}
-					}
-
-					if ( $parent_classification ) {
-						$is_supported = isset( $parent_classification['supported'] ) && $parent_classification['supported'];
-						if ( ! $is_supported ) {
-							$enabled = 'no';
-						}
-					}
-				} else {
-					// Single product response.
-					$this->save_single_product_classification( $post_id, $analysis_result );
-
-					$is_supported = isset( $analysis_result['supported'] ) && $analysis_result['supported'];
-					if ( ! $is_supported ) {
-						$enabled = 'no';
-					}
-				}
-			}
-		}
-
-		update_post_meta( $post_id, '_preview_ai_enabled', $enabled );
-	}
-
-	/**
-	 * Analyze a single product (and its variations) via the backend API.
-	 *
-	 * For variable products, analyzes the parent and all variations
-	 * that have their own images (different from parent).
-	 *
-	 * @since    1.0.0
-	 * @param    WC_Product $product    WooCommerce product object.
-	 * @return   array|WP_Error         Analysis result or error.
-	 */
-	private function analyze_single_product( $product ) {
-		$product_id = $product->get_id();
-
-		// Get categories.
-		$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
-		$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
-
-		// Get tags.
-		$tags     = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
-		$tags_str = is_array( $tags ) ? implode( ', ', $tags ) : '';
-
-		// Get thumbnail URL.
-		$thumbnail_id  = $product->get_image_id();
-		$thumbnail_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
-
-		// Build products array (parent + variations with own images).
-		$products_data = array();
-
-		// Add parent product.
-		$products_data[] = array(
-			'id'            => $product_id,
-			'title'         => $product->get_name(),
-			'categories'    => $categories_str,
-			'tags'          => $tags_str,
-			'thumbnail_url' => $thumbnail_url,
-			'variation_id'  => null,
-		);
-
-		// For variable products, add variations with their own images.
-		if ( $product->is_type( 'variable' ) ) {
-			$variation_ids = $product->get_children();
-
-			foreach ( $variation_ids as $variation_id ) {
-				$variation = wc_get_product( $variation_id );
-				if ( ! $variation ) {
-					continue;
-				}
-
-				$var_image_id = $variation->get_image_id();
-
-				// Only include if variation has a different image than parent.
-				if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
-					$var_thumbnail_url = wp_get_attachment_url( $var_image_id );
-
-					$products_data[] = array(
-						'id'            => $product_id,
-						'title'         => $product->get_name(),
-						'categories'    => $categories_str,
-						'tags'          => $tags_str,
-						'thumbnail_url' => $var_thumbnail_url,
-						'variation_id'  => $variation_id,
-					);
-				}
-			}
-		}
-
-		$api = new PREVIEW_AI_Api();
-
-		// If only parent (simple product or variable without different images), use single endpoint.
-		if ( count( $products_data ) === 1 ) {
-			return $api->analyze_product( $products_data[0] );
-		}
-
-		// For variable products with variations, use bulk endpoint.
-		return $api->analyze_catalog( $products_data, true );
-	}
-
-	/**
-	 * Save classification result for a single product.
-	 *
-	 * @since    1.0.0
-	 * @param    int   $product_id    Product ID.
-	 * @param    array $classification Classification data from API.
-	 */
-	private function save_single_product_classification( $product_id, $classification ) {
-		$valid_subtypes = array_keys( self::get_clothing_subtypes() );
-
-		$subtype      = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
-		$garment_type = isset( $classification['garment_type'] ) ? sanitize_key( $classification['garment_type'] ) : '';
-		$is_supported = isset( $classification['supported'] ) && $classification['supported'];
-		$variation_id = isset( $classification['variation_id'] ) ? absint( $classification['variation_id'] ) : null;
-
-		// Save supported status on parent product.
-		update_post_meta( $product_id, '_preview_ai_supported', $is_supported ? 'yes' : 'no' );
-
-		// Save subtype if valid (on parent product).
-		if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
-			update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
-		}
-
-		// Save garment_type if available (on parent product).
-		if ( ! empty( $garment_type ) ) {
-			update_post_meta( $product_id, '_preview_ai_garment_type', $garment_type );
-		}
-
-		// Save image_analysis if available.
-		if ( ! empty( $classification['image_analysis'] ) ) {
-			$analysis = $classification['image_analysis'];
-
-			// Sanitize detected_objects array.
-			$detected_objects = array();
-			if ( ! empty( $analysis['detected_objects'] ) && is_array( $analysis['detected_objects'] ) ) {
-				$detected_objects = array_map( 'sanitize_text_field', $analysis['detected_objects'] );
-			}
-
-			$image_analysis = array(
-				'has_model'         => ! empty( $analysis['has_model'] ),
-				'shot_type'         => sanitize_key( $analysis['shot_type'] ?? 'unknown' ),
-				'framing'           => sanitize_key( $analysis['framing'] ?? 'unknown' ),
-				'multiple_garments' => ! empty( $analysis['multiple_garments'] ),
-				'detected_objects'  => $detected_objects,
-				'confidence'        => floatval( $analysis['confidence'] ?? 0.0 ),
-				'image_id'          => absint( $analysis['image_id'] ?? 0 ),
-				'updated_at'        => sanitize_text_field( $analysis['updated_at'] ?? current_time( 'Y-m-d' ) ),
-			);
-
-			// Save to variation if exists, otherwise to parent.
-			$meta_target = $variation_id ? $variation_id : $product_id;
-			update_post_meta( $meta_target, '_preview_ai_image_analysis', $image_analysis );
-		}
-	}
-
-	/**
-	 * Add Preview AI column to product list.
-	 *
-	 * @since    1.0.0
-	 * @param    array $columns    Existing columns.
-	 * @return   array             Modified columns.
-	 */
-	public function add_product_column( $columns ) {
-		$new_columns = array();
-
-		foreach ( $columns as $key => $value ) {
-			$new_columns[ $key ] = $value;
-			if ( 'name' === $key ) {
-				$new_columns['preview_ai'] = __( 'Preview AI', 'preview-ai' );
-			}
-		}
-
-		return $new_columns;
-	}
-
-	/**
-	 * Render Preview AI column content.
-	 *
-	 * @since    1.0.0
-	 * @param    string $column     Column name.
-	 * @param    int    $post_id    Product ID.
-	 */
-	public function render_product_column( $column, $post_id ) {
-		if ( 'preview_ai' !== $column ) {
-			return;
-		}
-
-		$subtype   = get_post_meta( $post_id, '_preview_ai_recommended_subtype', true );
-		$enabled   = get_post_meta( $post_id, '_preview_ai_enabled', true );
-		$supported = get_post_meta( $post_id, '_preview_ai_supported', true );
-
-		// Check if product type is not supported (V1: only upper_body, lower_body).
-		if ( 'no' === $supported ) {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Product type not supported yet (V1 supports tops and pants only)', 'preview-ai' ) . '">';
-			echo esc_html__( 'Not supported', 'preview-ai' );
-			echo '</span>';
-			return;
-		}
-
-		// Check if explicitly disabled.
-		if ( 'no' === $enabled ) {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
-			return;
-		}
-
-		// Active if has subtype and not disabled.
-		if ( ! empty( $subtype ) ) {
-			echo '<span class="preview-ai-col preview-ai-col--active" title="' . esc_attr__( 'Preview AI active on this product', 'preview-ai' ) . '">';
-			echo '<span class="dashicons dashicons-visibility"></span> ';
-			echo esc_html__( 'Active', 'preview-ai' );
-			echo '</span>';
-		} else {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Not analyzed yet - run Learn Catalog', 'preview-ai' ) . '">—</span>';
-		}
-	}
-
-	/**
-	 * Check if current account is on free trial (no Stripe subscription).
-	 *
-	 * @since    1.0.0
-	 * @return   bool True if free trial, false otherwise.
-	 */
-	private function is_free_tier() {
-		$status = PREVIEW_AI_Api::get_account_status();
-		$subscription_status = isset( $status['subscription_status'] ) ? $status['subscription_status'] : 'free_trial';
-		return 'free_trial' === $subscription_status;
-	}
-
-	/**
-	 * Handle AJAX request for Learn My Catalog feature.
-	 * Uses Action Scheduler for large catalogs (>50 products) on paid plans.
-	 * Free trial users always process synchronously (backend limits to 3 products).
-	 *
-	 * @since    1.0.0
-	 */
-	public function handle_learn_catalog() {
-		check_ajax_referer( 'preview_ai_learn_catalog', 'nonce' );
-
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'preview-ai' ) ) );
-		}
-
-		// Get only NEW products (not yet analyzed).
-		$products_data = $this->get_catalog_products_data();
-
-		if ( empty( $products_data ) ) {
-			wp_send_json_success(
-				array(
-					'status'  => 'complete',
-					'message' => __( 'All products have already been analyzed. No new products to process.', 'preview-ai' ),
-					'stats'   => array(
-						'total'      => 0,
-						'configured' => 0,
-					),
-				)
-			);
-			return;
-		}
-
-		$total_products = count( $products_data );
-
-		// Free tier: always process synchronously.
-		// Backend limits to 3 random products, so sending all at once
-		// ensures a representative sample from the entire catalog.
-		if ( $this->is_free_tier() ) {
-			$this->process_catalog_sync( $products_data );
-			return;
-		}
-
-		// Paid plans: for small catalogs, process immediately.
-		if ( $total_products <= self::CATALOG_BATCH_SIZE ) {
-			$this->process_catalog_sync( $products_data );
-			return;
-		}
-
-		// Paid plans: for large catalogs, use Action Scheduler.
-		$this->schedule_catalog_analysis( $products_data );
-
-		wp_send_json_success(
-			array(
-				'status'  => 'scheduled',
-				'total'   => $total_products,
-				'message' => sprintf(
-					/* translators: %d: number of products */
-					__( 'Analysis scheduled for %d products. Processing in background...', 'preview-ai' ),
-					$total_products
-				),
-			)
-		);
-	}
-
-	/**
-	 * Process catalog synchronously (for small catalogs).
-	 *
-	 * @param array $products_data Products to analyze.
-	 */
-	private function process_catalog_sync( $products_data ) {
-		$api    = new PREVIEW_AI_Api();
-		$result = $api->analyze_catalog( $products_data );
-
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-		}
-
-		$stats = $this->save_catalog_classifications( $result );
-
-		$is_limited      = isset( $result['is_limited'] ) && $result['is_limited'];
-		$analysis_errors = isset( $result['analysis_errors'] ) ? intval( $result['analysis_errors'] ) : 0;
-
-		$try_product_url = '';
-		if ( ! empty( $stats['configured_ids'] ) ) {
-			$try_product_url = add_query_arg( 'demo', 'yes', get_permalink( $stats['configured_ids'][0] ) );
-		}
-
-		$warning = '';
-		if ( $analysis_errors >= 3 ) {
-			$warning = __( 'Some product images could not be analyzed. If this persists, please contact support.', 'preview-ai' );
-		}
-
-		wp_send_json_success(
-			array(
-				'status'          => 'completed',
-				'total'           => $stats['total'],
-				'configured'      => $stats['configured'],
-				'needs_review'    => $stats['needs_review'],
-				'images_analyzed' => $stats['images_analyzed'],
-				'is_limited'      => $is_limited,
-				'analysis_errors' => $analysis_errors,
-				'try_product_url' => $try_product_url,
-				'warning'         => $warning,
-				'message'         => sprintf(
-					__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
-					$stats['configured'],
-					$stats['needs_review'],
-					$stats['images_analyzed']
-				),
-			)
-		);
-	}
-
-	/**
-	 * Schedule catalog analysis with Action Scheduler.
-	 *
-	 * @param array $products_data Products to analyze.
-	 */
-	private function schedule_catalog_analysis( $products_data ) {
-		// Clear any previous analysis.
-		delete_option( self::ANALYSIS_RESULTS_OPTION );
-
-		// Save products to process.
-		update_option( self::ANALYSIS_PENDING_OPTION, $products_data, false );
-
-		// Initialize progress.
-		update_option(
-			self::ANALYSIS_PROGRESS_OPTION,
-			array(
-				'total'           => count( $products_data ),
-				'processed'       => 0,
-				'configured'      => 0,
-				'needs_review'    => 0,
-				'images_analyzed' => 0,
-				'analysis_errors' => 0,
-				'configured_ids'  => array(),
-			),
-			false
-		);
-
-		// Set status to processing.
-		update_option( self::ANALYSIS_STATUS_OPTION, 'processing', false );
-
-		// Schedule first batch (Action Scheduler from WooCommerce).
-		if ( function_exists( 'as_schedule_single_action' ) ) {
-			as_schedule_single_action( time(), 'preview_ai_process_catalog_batch' );
-		} else {
-			// Fallback: process synchronously if Action Scheduler not available.
-			update_option( self::ANALYSIS_STATUS_OPTION, 'idle', false );
-			$this->process_catalog_sync( $products_data );
-		}
-	}
-
-	/**
-	 * Process a batch of products (called by Action Scheduler).
-	 */
-	public function process_catalog_batch() {
-		$products = get_option( self::ANALYSIS_PENDING_OPTION, array() );
-		$progress = get_option( self::ANALYSIS_PROGRESS_OPTION, array() );
-
-		if ( empty( $products ) ) {
-			// All done.
-			update_option( self::ANALYSIS_STATUS_OPTION, 'completed', false );
-			delete_option( self::ANALYSIS_PENDING_OPTION );
-			return;
-		}
-
-		// Take a batch.
-		$batch = array_splice( $products, 0, self::CATALOG_BATCH_SIZE );
-		update_option( self::ANALYSIS_PENDING_OPTION, $products, false );
-
-		// Process batch.
-		$api    = new PREVIEW_AI_Api();
-		$result = $api->analyze_catalog( $batch );
-
-		if ( ! is_wp_error( $result ) ) {
-			$stats = $this->save_catalog_classifications( $result );
-
-			// Update progress.
-			$progress['processed']       += count( $batch );
-			$progress['configured']      += $stats['configured'];
-			$progress['needs_review']    += $stats['needs_review'];
-			$progress['images_analyzed'] += $stats['images_analyzed'];
-			$progress['analysis_errors'] += isset( $result['analysis_errors'] ) ? intval( $result['analysis_errors'] ) : 0;
-			$progress['configured_ids']   = array_merge( $progress['configured_ids'], $stats['configured_ids'] );
-
-			update_option( self::ANALYSIS_PROGRESS_OPTION, $progress, false );
-		}
-
-		// Schedule next batch if there are more products.
-		if ( ! empty( $products ) && function_exists( 'as_schedule_single_action' ) ) {
-			as_schedule_single_action( time() + 2, 'preview_ai_process_catalog_batch' );
-		} else {
-			// All done.
-			update_option( self::ANALYSIS_STATUS_OPTION, 'completed', false );
-			delete_option( self::ANALYSIS_PENDING_OPTION );
-		}
-	}
-
-	/**
-	 * AJAX handler to get catalog analysis status.
-	 */
-	public function handle_catalog_status() {
-		check_ajax_referer( 'preview_ai_learn_catalog', 'nonce' );
-
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'preview-ai' ) ) );
-		}
-
-		$status   = get_option( self::ANALYSIS_STATUS_OPTION, 'idle' );
-		$progress = get_option( self::ANALYSIS_PROGRESS_OPTION, array() );
-
-		$response = array(
-			'status' => $status,
-		);
-
-		if ( 'processing' === $status && ! empty( $progress ) ) {
-			$response['total']     = $progress['total'];
-			$response['processed'] = $progress['processed'];
-			$response['message']   = sprintf(
-				/* translators: 1: processed count, 2: total count */
-				__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
-				$progress['processed'],
-				$progress['total']
-			);
-		} elseif ( 'completed' === $status && ! empty( $progress ) ) {
-			$try_product_url = '';
-			if ( ! empty( $progress['configured_ids'] ) ) {
-				$try_product_url = add_query_arg( 'demo', 'yes', get_permalink( $progress['configured_ids'][0] ) );
-			}
-
-			$warning = '';
-			if ( isset( $progress['analysis_errors'] ) && $progress['analysis_errors'] >= 3 ) {
-				$warning = __( 'Some product images could not be analyzed. If this persists, please contact support.', 'preview-ai' );
-			}
-
-			$response['configured']      = $progress['configured'];
-			$response['needs_review']    = $progress['needs_review'];
-			$response['images_analyzed'] = $progress['images_analyzed'];
-			$response['analysis_errors'] = $progress['analysis_errors'];
-			$response['try_product_url'] = $try_product_url;
-			$response['warning']         = $warning;
-			$response['message']         = sprintf(
-				__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
-				$progress['configured'],
-				$progress['needs_review'],
-				$progress['images_analyzed']
-			);
-
-			// Reset status after reading completion.
-			update_option( self::ANALYSIS_STATUS_OPTION, 'idle', false );
-		}
-
-		wp_send_json_success( $response );
-	}
-
-	/**
-	 * Get current catalog analysis status.
-	 *
-	 * @return array Status data.
-	 */
-	public static function get_catalog_analysis_status() {
-		$status   = get_option( self::ANALYSIS_STATUS_OPTION, 'idle' );
-		$progress = get_option( self::ANALYSIS_PROGRESS_OPTION, array() );
-
-		return array(
-			'status'    => $status,
-			'progress'  => $progress,
-		);
-	}
-
-	/**
-	 * Get catalog products data for AI analysis.
-	 *
-	 * Only includes products NOT yet analyzed (no _preview_ai_supported meta).
-	 * Includes parent products and variations with their own images.
-	 * Sends thumbnail URLs for backend to download and process.
-	 *
-	 * @since    1.0.0
-	 * @return   array    Array of products with id, title, categories, tags, thumbnail_url, variation_id.
-	 */
-	private function get_catalog_products_data() {
-		// Only get products that haven't been analyzed yet (no _preview_ai_supported meta).
-		$products = wc_get_products(
-			array(
-				'status'     => 'publish',
-				'limit'      => -1,
-				'type'       => array( 'simple', 'variable' ),
-				'meta_query' => array(
-					array(
-						'key'     => '_preview_ai_supported',
-						'compare' => 'NOT EXISTS',
-					),
-				),
-			)
-		);
-
-		$products_data = array();
-
-		foreach ( $products as $product ) {
-			$product_id = $product->get_id();
-
-			// Get categories.
-			$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
-			$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
-
-			// Get tags.
-			$tags     = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
-			$tags_str = is_array( $tags ) ? implode( ', ', $tags ) : '';
-
-			// Get parent product thumbnail URL.
-			$thumbnail_id  = $product->get_image_id();
-			$thumbnail_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
-
-			// Add parent product data.
-			$products_data[] = array(
-				'id'            => $product_id,
-				'title'         => $product->get_name(),
-				'categories'    => $categories_str,
-				'tags'          => $tags_str,
-				'thumbnail_url' => $thumbnail_url,
-				'variation_id'  => null,
-			);
-
-			// If variable product, include variations with their own images (only if not analyzed).
-			if ( $product->is_type( 'variable' ) ) {
-				$variation_ids = $product->get_children();
-
-				foreach ( $variation_ids as $variation_id ) {
-					$variation = wc_get_product( $variation_id );
-					if ( ! $variation ) {
-						continue;
-					}
-
-					// Skip variations that already have image analysis.
-					$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
-					if ( ! empty( $var_analysis ) ) {
-						continue;
-					}
-
-					$var_image_id = $variation->get_image_id();
-
-					// Only include if variation has a different image than parent.
-					if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
-						$var_thumbnail_url = wp_get_attachment_url( $var_image_id );
-
-						$products_data[] = array(
-							'id'            => $product_id,
-							'title'         => $product->get_name(),
-							'categories'    => $categories_str,
-							'tags'          => $tags_str,
-							'thumbnail_url' => $var_thumbnail_url,
-							'variation_id'  => $variation_id,
-						);
-					}
-				}
-			}
-		}
-
-		return $products_data;
-	}
-
-	/**
-	 * Save AI classifications as product meta.
-	 *
-	 * Saves subtype on parent product and image_analysis on variation or parent.
-	 *
-	 * @since    1.0.0
-	 * @param    array $result    API response with classifications.
-	 * @return   array            Statistics array with total, configured, needs_review, images_analyzed, configured_ids.
-	 */
-	private function save_catalog_classifications( $result ) {
-		$stats = array(
-			'total'           => 0,
-			'configured'      => 0,
-			'needs_review'    => 0,
-			'images_analyzed' => 0,
-			'configured_ids'  => array(),
-		);
-
-		if ( empty( $result['classifications'] ) || ! is_array( $result['classifications'] ) ) {
-			return $stats;
-		}
-
-		$valid_subtypes   = array_keys( self::get_clothing_subtypes() );
-		$processed_parents = array(); // Track which parents we've already processed for subtype.
-
-		foreach ( $result['classifications'] as $classification ) {
-			if ( empty( $classification['id'] ) ) {
-				continue;
-			}
-
-			$product_id   = absint( $classification['id'] );
-			$variation_id = isset( $classification['variation_id'] ) ? absint( $classification['variation_id'] ) : null;
-			$subtype      = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
-			$garment_type = isset( $classification['garment_type'] ) ? sanitize_key( $classification['garment_type'] ) : '';
-			// V1: Backend sends 'supported' flag for upper_body/lower_body only.
-			$is_supported = isset( $classification['supported'] ) ? (bool) $classification['supported'] : true;
-
-			// Only count and save subtype/garment_type for parent products (once per parent).
-			if ( ! in_array( $product_id, $processed_parents, true ) ) {
-				$stats['total']++;
-				$processed_parents[] = $product_id;
-
-				// Save supported status (V1: only upper_body and lower_body are supported).
-				update_post_meta( $product_id, '_preview_ai_supported', $is_supported ? 'yes' : 'no' );
-
-				if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
-					update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
-					// Save garment_type if available (more specific classification).
-					if ( ! empty( $garment_type ) ) {
-						update_post_meta( $product_id, '_preview_ai_garment_type', $garment_type );
-					}
-
-					// Only auto-enable if subtype is supported in V1.
-					if ( $is_supported ) {
-						$stats['configured']++;
-						$stats['configured_ids'][] = $product_id;
-					} else {
-						// Not supported: disable Preview AI for this product.
-						update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
-						$stats['needs_review']++;
-					}
-				} else {
-					update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
-					$stats['needs_review']++;
-				}
-			}
-
-			// Save image_analysis on variation or parent.
-			if ( ! empty( $classification['image_analysis'] ) ) {
-				$analysis = $classification['image_analysis'];
-
-				// Sanitize detected_objects array
-				$detected_objects = array();
-				if ( ! empty( $analysis['detected_objects'] ) && is_array( $analysis['detected_objects'] ) ) {
-					$detected_objects = array_map( 'sanitize_text_field', $analysis['detected_objects'] );
-				}
-
-				$image_analysis = array(
-					'has_model'        => ! empty( $analysis['has_model'] ),
-					'shot_type'        => sanitize_key( $analysis['shot_type'] ?? 'unknown' ),
-					'framing'          => sanitize_key( $analysis['framing'] ?? 'unknown' ),
-					'multiple_garments' => ! empty( $analysis['multiple_garments'] ),
-					'detected_objects'  => $detected_objects,
-					'confidence'        => floatval( $analysis['confidence'] ?? 0.0 ),
-					'image_id'          => absint( $analysis['image_id'] ?? 0 ),
-					'updated_at'        => sanitize_text_field( $analysis['updated_at'] ?? current_time( 'Y-m-d' ) ),
-				);
-
-				// Save to variation if exists, otherwise to parent.
-				$meta_target = $variation_id ? $variation_id : $product_id;
-				update_post_meta( $meta_target, '_preview_ai_image_analysis', $image_analysis );
-				$stats['images_analyzed']++;
-			}
-		}
-
-		return $stats;
-	}
-
-	/**
 	 * Handle AJAX request to verify API key.
-	 *
-	 * @since 1.0.0
 	 */
 	public function handle_verify_api_key() {
 		check_ajax_referer( 'preview_ai_verify_api_key', 'nonce' );
@@ -1448,7 +245,6 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
 		}
 
-		// Use API key from field if provided, otherwise from DB.
 		$api_key = isset( $_POST['api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) : null;
 		$api     = new PREVIEW_AI_Api( $api_key );
 		$result  = $api->verify_api_key();
@@ -1471,363 +267,5 @@ class PREVIEW_AI_Admin {
 			'renew_date'         => $renew_date,
 			'subscription_status' => $subscription_status,
 		) );
-	}
-
-	/**
-	 * Get URL of first configured product for onboarding.
-	 *
-	 * @since 1.0.0
-	 * @return string|false Product URL or false if none found.
-	 */
-	private function get_first_configured_product_url() {
-		$products = get_posts(
-			array(
-				'post_type'      => 'product',
-				'post_status'    => 'publish',
-				'posts_per_page' => 1,
-				'meta_query'     => array(
-					array(
-						'key'     => '_preview_ai_recommended_subtype',
-						'value'   => '',
-						'compare' => '!=',
-					),
-				),
-				'fields'         => 'ids',
-			)
-		);
-
-		if ( empty( $products ) ) {
-			return false;
-		}
-
-		return add_query_arg( 'demo', 'yes', get_permalink( $products[0] ) );
-	}
-
-	/**
-	 * Display admin notices for API issues.
-	 *
-	 * @since 1.0.0
-	 */
-	public function display_admin_notices() {
-		// Only show on relevant admin pages.
-		$screen = get_current_screen();
-		if ( ! $screen ) {
-			return;
-		}
-
-		$relevant_screens = array( 'product_page_preview-ai', 'product', 'edit-product' );
-		if ( ! in_array( $screen->id, $relevant_screens, true ) ) {
-			return;
-		}
-
-		$api_key = get_option( 'preview_ai_api_key', '' );
-
-		// No API key configured.
-		if ( empty( $api_key ) ) {
-			?>
-			<div class="notice notice-warning">
-				<p>
-					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
-					<?php esc_html_e( 'API key not configured. The widget is hidden from your customers.', 'preview-ai' ); ?>
-					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai' ) ); ?>">
-						<?php esc_html_e( 'Configure now', 'preview-ai' ); ?>
-					</a>
-				</p>
-			</div>
-			<?php
-			return;
-		}
-
-		// Onboarding: User hasn't tried the widget yet.
-		if ( get_option( 'preview_ai_needs_first_try' ) ) {
-			$try_product_url = $this->get_first_configured_product_url();
-			if ( $try_product_url ) {
-				?>
-				<div class="notice notice-info preview-ai-try-notice" style="border-left-color:#6366f1;padding:16px 20px;">
-					<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-						<div style="flex-shrink:0;width:44px;height:44px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;display:flex;align-items:center;justify-content:center;">
-							<span style="font-size:22px;">✨</span>
-						</div>
-						<div style="flex:1;min-width:200px;">
-							<p style="margin:0 0 4px;font-weight:600;color:#1e293b;">
-								<?php esc_html_e( 'One last step: Try Preview AI!', 'preview-ai' ); ?>
-							</p>
-							<p style="margin:0;color:#64748b;font-size:13px;">
-								<?php esc_html_e( 'See how your customers will experience the virtual try-on.', 'preview-ai' ); ?>
-							</p>
-						</div>
-						<a href="<?php echo esc_url( $try_product_url ); ?>" target="_blank" class="button button-primary" style="height:auto;padding:10px 20px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;">
-							<?php esc_html_e( 'Try It Now →', 'preview-ai' ); ?>
-						</a>
-						<button type="button" class="button" style="height:auto;padding:10px 16px;" onclick="jQuery.post(ajaxurl, {action:'preview_ai_dismiss_try_notice',nonce:'<?php echo esc_js( wp_create_nonce( 'preview_ai_dismiss_notice' ) ); ?>'}, function(){jQuery('.preview-ai-try-notice').slideUp();});">
-							<?php esc_html_e( 'I already tried it', 'preview-ai' ); ?>
-						</button>
-					</div>
-				</div>
-				<?php
-			}
-		}
-
-		// Check account status.
-		$status = PREVIEW_AI_Api::get_account_status();
-
-		if ( empty( $status ) ) {
-			return;
-		}
-
-		// No tokens left (only show if account is still active).
-		if ( isset( $status['tokens_remaining'] ) && $status['tokens_remaining'] <= 0 &&
-			( ! isset( $status['active'] ) || $status['active'] ) ) {
-			?>
-			<div class="notice notice-error">
-				<p>
-					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
-					<?php esc_html_e( '⚠️ Your tokens have run out. The widget has been automatically disabled and your customers cannot preview products.', 'preview-ai' ); ?>
-					<a href="https://previewai.app/pricing" target="_blank" style="font-weight: bold;">
-						<?php esc_html_e( 'Upgrade your plan →', 'preview-ai' ); ?>
-					</a>
-				</p>
-			</div>
-			<?php
-			return;
-		}
-
-		// Account deactivated.
-		if ( isset( $status['active'] ) && ! $status['active'] ) {
-			?>
-			<div class="notice notice-error">
-				<p>
-					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
-					<?php esc_html_e( '⚠️ Your subscription has been deactivated. The widget is hidden from your customers.', 'preview-ai' ); ?>
-					<a href="https://previewai.app/support" target="_blank">
-						<?php esc_html_e( 'Contact support', 'preview-ai' ); ?>
-					</a>
-				</p>
-			</div>
-			<?php
-			return;
-		}
-
-		// Low tokens warning (less than 10%).
-		if ( isset( $status['tokens_remaining'], $status['tokens_limit'] ) &&
-			$status['tokens_limit'] > 0 &&
-			( $status['tokens_remaining'] / $status['tokens_limit'] ) < 0.1 ) {
-			
-			$user_id = get_current_user_id();
-			if ( get_user_meta( $user_id, 'preview_ai_dismissed_low_tokens', true ) ) {
-				return;
-			}
-			?>
-			<div class="notice notice-warning is-dismissible" data-notice="preview_ai_low_tokens">
-				<p>
-					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
-					<?php
-					printf(
-						/* translators: %d: tokens remaining */
-						esc_html__( 'You have only %d tokens remaining this month.', 'preview-ai' ),
-						intval( $status['tokens_remaining'] )
-					);
-					?>
-					<a href="https://previewai.app/pricing" target="_blank">
-						<?php esc_html_e( 'Upgrade your plan', 'preview-ai' ); ?>
-					</a>
-				</p>
-			</div>
-			<?php
-		}
-	}
-
-	/**
-	 * Handle AJAX request to dismiss admin notice.
-	 *
-	 * @since 1.0.0
-	 */
-	public function handle_dismiss_notice() {
-		check_ajax_referer( 'preview_ai_dismiss_notice', 'nonce' );
-
-		$notice = isset( $_POST['notice'] ) ? sanitize_key( $_POST['notice'] ) : '';
-
-		if ( 'preview_ai_low_tokens' === $notice ) {
-			update_user_meta( get_current_user_id(), 'preview_ai_dismissed_low_tokens', true );
-		}
-
-		wp_send_json_success();
-	}
-
-	/**
-	 * Handle AJAX request to dismiss the "try it" onboarding notice.
-	 *
-	 * @since 1.0.0
-	 */
-	public function handle_dismiss_try_notice() {
-		check_ajax_referer( 'preview_ai_dismiss_notice', 'nonce' );
-
-		delete_option( 'preview_ai_needs_first_try' );
-
-		wp_send_json_success();
-	}
-
-	/**
-	 * Handle AJAX request to register site for free trial.
-	 *
-	 * This is called when the user submits their email during
-	 * the onboarding process. Creates a free-tier API key automatically.
-	 *
-	 * @since 1.0.0
-	 */
-	public function handle_register_site() {
-		check_ajax_referer( 'preview_ai_register_site', 'nonce' );
-
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
-		}
-
-		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-
-		if ( empty( $email ) || ! is_email( $email ) ) {
-			wp_send_json_error( array( 'message' => __( 'Please enter a valid email address.', 'preview-ai' ) ) );
-		}
-
-		// Call the registration API.
-		$result = PREVIEW_AI_Api::register_site( $email );
-
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-		}
-
-		// Save the API key.
-		if ( isset( $result['api_key'] ) ) {
-			update_option( 'preview_ai_api_key', sanitize_text_field( $result['api_key'] ) );
-			delete_option( 'preview_ai_needs_onboarding' );
-
-			// Update account status.
-			PREVIEW_AI_Api::update_account_status( array(
-				'tokens_remaining' => $result['tokens_limit'] ?? 0,
-				'tokens_limit'     => $result['tokens_limit'] ?? 0,
-				'active'           => true,
-			) );
-		}
-
-		wp_send_json_success( array(
-			'message'      => $result['message'] ?? __( 'Your free trial has been activated!', 'preview-ai' ),
-			'tokens_limit' => $result['tokens_limit'] ?? 0,
-		) );
-	}
-
-	/**
-	 * Display onboarding notice for new installations.
-	 *
-	 * Shows an inline form to collect email and activate free trial.
-	 *
-	 * @since 1.0.0
-	 */
-	public function display_onboarding_notice() {
-		// Only show if onboarding is needed and no API key exists.
-		if ( ! get_option( 'preview_ai_needs_onboarding' ) ) {
-			return;
-		}
-
-		$api_key = get_option( 'preview_ai_api_key', '' );
-		if ( ! empty( $api_key ) ) {
-			delete_option( 'preview_ai_needs_onboarding' );
-			return;
-		}
-
-		// Get admin email as default.
-		$admin_email = get_option( 'admin_email', '' );
-		?>
-		<div class="notice notice-info preview-ai-onboarding-notice" id="preview-ai-onboarding">
-			<div class="preview-ai-onboarding__content">
-				<div class="preview-ai-onboarding__icon">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-						<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-					</svg>
-				</div>
-				<div class="preview-ai-onboarding__text">
-					<h3><?php esc_html_e( 'Activate Preview AI', 'preview-ai' ); ?></h3>
-					<p><?php esc_html_e( 'Get 20 FREE previews to try Preview AI on your store. Enter your email to activate:', 'preview-ai' ); ?></p>
-				</div>
-				<form class="preview-ai-onboarding__form" id="preview-ai-register-form">
-					<input type="email" 
-						   name="email" 
-						   id="preview-ai-register-email"
-						   value="<?php echo esc_attr( $admin_email ); ?>" 
-						   placeholder="<?php esc_attr_e( 'Your email address', 'preview-ai' ); ?>"
-						   required />
-					<button type="submit" class="button button-primary">
-						<span class="preview-ai-onboarding__btn-text"><?php esc_html_e( 'Start Free Trial', 'preview-ai' ); ?></span>
-						<span class="preview-ai-onboarding__btn-loading" style="display:none;">
-							<span class="spinner is-active" style="margin:0;float:none;"></span>
-						</span>
-					</button>
-				</form>
-			</div>
-			<div class="preview-ai-onboarding__success" style="display:none;">
-				<span class="dashicons dashicons-yes-alt"></span>
-				<span class="preview-ai-onboarding__success-text"></span>
-			</div>
-		</div>
-		<style>
-			.preview-ai-onboarding-notice {
-				padding: 16px 20px;
-				border-left-color: #6366f1;
-			}
-			.preview-ai-onboarding__content {
-				display: flex;
-				align-items: center;
-				gap: 16px;
-				flex-wrap: wrap;
-			}
-			.preview-ai-onboarding__icon {
-				flex-shrink: 0;
-				width: 48px;
-				height: 48px;
-				background: linear-gradient(135deg, #6366f1, #8b5cf6);
-				border-radius: 12px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-			}
-			.preview-ai-onboarding__icon svg {
-				width: 24px;
-				height: 24px;
-				stroke: white;
-			}
-			.preview-ai-onboarding__text {
-				flex: 1;
-				min-width: 200px;
-			}
-			.preview-ai-onboarding__text h3 {
-				margin: 0 0 4px;
-				font-size: 15px;
-			}
-			.preview-ai-onboarding__text p {
-				margin: 0;
-				color: #646970;
-			}
-			.preview-ai-onboarding__form {
-				display: flex;
-				gap: 8px;
-				flex-wrap: wrap;
-			}
-			.preview-ai-onboarding__form input[type="email"] {
-				width: 280px;
-				max-width: 100%;
-			}
-			.preview-ai-onboarding__success {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				color: #00a32a;
-				font-weight: 500;
-			}
-			.preview-ai-onboarding__success .dashicons {
-				color: #00a32a;
-				font-size: 24px;
-				width: 24px;
-				height: 24px;
-			}
-		</style>
-		<?php
 	}
 }

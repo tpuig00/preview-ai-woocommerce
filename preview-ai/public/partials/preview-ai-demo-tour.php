@@ -337,6 +337,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	var highlightedElements = [];
 	var isMobile = window.innerWidth < 768;
 
+	// Translations for JS
+	var i18n = {
+		demoTour: <?php echo wp_json_encode( __( 'Demo Tour', 'preview-ai' ) ); ?>,
+		skip: <?php echo wp_json_encode( __( 'Skip', 'preview-ai' ) ); ?>
+	};
+
 	// Tour steps configuration
 	var steps = [
 		{
@@ -344,28 +350,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 			targets: ['.woocommerce-product-gallery', '.variations'],
 			fallbackTargets: ['.product-gallery', '.wp-post-image', '.woocommerce-product-gallery__image'],
 			icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
-			title: '<?php echo esc_js( __( '🎨 Preview AI Understands Your Catalog', 'preview-ai' ) ); ?>',
-			text: '<?php echo esc_js( __( 'Our AI analyzes your <strong>product images</strong>, including all <strong>variations and color options</strong>. If you have photos for each variant, Preview AI will use them for more accurate try-ons.', 'preview-ai' ) ); ?>',
+			title: <?php echo wp_json_encode( __( '🎨 Preview AI Understands Your Catalog', 'preview-ai' ) ); ?>,
+			text: <?php echo wp_json_encode( __( 'Our AI analyzes your <strong>product images</strong>, including all <strong>variations and color options</strong>. If you have photos for each variant, Preview AI will use them for more accurate try-ons.', 'preview-ai' ) ); ?>,
 			features: [
-				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>', text: '<?php echo esc_js( __( 'Auto-detection', 'preview-ai' ) ); ?>' },
-				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>', text: '<?php echo esc_js( __( 'Real-time', 'preview-ai' ) ); ?>' },
-				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>', text: '<?php echo esc_js( __( 'All colors', 'preview-ai' ) ); ?>' }
+				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>', text: <?php echo wp_json_encode( __( 'Auto-detection', 'preview-ai' ) ); ?> },
+				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>', text: <?php echo wp_json_encode( __( 'Real-time', 'preview-ai' ) ); ?> },
+				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>', text: <?php echo wp_json_encode( __( 'All colors', 'preview-ai' ) ); ?> }
 			],
-			cta: '<?php echo esc_js( __( 'Next', 'preview-ai' ) ); ?>'
+			cta: <?php echo wp_json_encode( __( 'Next', 'preview-ai' ) ); ?>
 		},
 		{
 			// Step 2: The widget
 			targets: ['.preview-ai-chip'],
 			fallbackTargets: ['.preview-ai-chip-wrapper', '#preview-ai-trigger'],
 			icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg>',
-			title: '<?php echo esc_js( __( '✨ Your Customers See This', 'preview-ai' ) ); ?>',
-			text: '<?php echo esc_js( __( 'This widget is <strong>fully customizable</strong> and adapts to your store\'s design. Customers click here to instantly try on your products using their own photo.', 'preview-ai' ) ); ?>',
+			title: <?php echo wp_json_encode( __( '✨ Your Customers See This', 'preview-ai' ) ); ?>,
+			text: <?php echo wp_json_encode( __( 'This widget is <strong>fully customizable</strong> and adapts to your store\'s design. Customers click here to instantly try on your products using their own photo.', 'preview-ai' ) ); ?>,
 			features: [
-				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>', text: '<?php echo esc_js( __( 'Customizable', 'preview-ai' ) ); ?>' },
-				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>', text: '<?php echo esc_js( __( 'Responsive', 'preview-ai' ) ); ?>' },
-				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>', text: '<?php echo esc_js( __( 'One-click', 'preview-ai' ) ); ?>' }
+				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>', text: <?php echo wp_json_encode( __( 'Customizable', 'preview-ai' ) ); ?> },
+				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>', text: <?php echo wp_json_encode( __( 'Responsive', 'preview-ai' ) ); ?> },
+				{ icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>', text: <?php echo wp_json_encode( __( 'One-click', 'preview-ai' ) ); ?> }
 			],
-			cta: '<?php echo esc_js( __( 'Try it now!', 'preview-ai' ) ); ?>',
+			cta: <?php echo wp_json_encode( __( 'Try it now!', 'preview-ai' ) ); ?>,
 			triggerOnComplete: true
 		}
 	];
@@ -462,32 +468,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 			dotsHtml += '<span class="' + dotClass + '"></span>';
 		}
 
-		tooltip.innerHTML = '\
-			<div class="preview-ai-demo-header">\
-				<div class="preview-ai-demo-badge">\
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\
-						<path d="M12 2L2 7l10 5 10-5-10-5z"/>\
-						<path d="M2 17l10 5 10-5"/>\
-						<path d="M2 12l10 5 10-5"/>\
-					</svg>\
-					<?php echo esc_js( __( 'Demo Tour', 'preview-ai' ) ); ?>\
-				</div>\
-				<div class="preview-ai-demo-steps">' + dotsHtml + '</div>\
-			</div>\
-			<div class="preview-ai-demo-icon">' + step.icon + '</div>\
-			<h3 class="preview-ai-demo-title">' + step.title + '</h3>\
-			<p class="preview-ai-demo-text">' + step.text + '</p>\
-			' + featuresHtml + '\
-			<div class="preview-ai-demo-actions">\
-				<button class="preview-ai-demo-cta">\
-					' + step.cta + '\
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\
-						<path d="M5 12h14M12 5l7 7-7 7"/>\
-					</svg>\
-				</button>\
-				<span class="preview-ai-demo-skip"><?php echo esc_js( __( 'Skip', 'preview-ai' ) ); ?></span>\
-			</div>\
-		';
+		tooltip.innerHTML = 
+			'<div class="preview-ai-demo-header">' +
+				'<div class="preview-ai-demo-badge">' +
+					'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+						'<path d="M12 2L2 7l10 5 10-5-10-5z"/>' +
+						'<path d="M2 17l10 5 10-5"/>' +
+						'<path d="M2 12l10 5 10-5"/>' +
+					'</svg>' +
+					i18n.demoTour +
+				'</div>' +
+				'<div class="preview-ai-demo-steps">' + dotsHtml + '</div>' +
+			'</div>' +
+			'<div class="preview-ai-demo-icon">' + step.icon + '</div>' +
+			'<h3 class="preview-ai-demo-title">' + step.title + '</h3>' +
+			'<p class="preview-ai-demo-text">' + step.text + '</p>' +
+			featuresHtml +
+			'<div class="preview-ai-demo-actions">' +
+				'<button class="preview-ai-demo-cta">' +
+					step.cta +
+					'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+						'<path d="M5 12h14M12 5l7 7-7 7"/>' +
+					'</svg>' +
+				'</button>' +
+				'<span class="preview-ai-demo-skip">' + i18n.skip + '</span>' +
+			'</div>';
 
 		// Highlight elements
 		highlightElements(elements);

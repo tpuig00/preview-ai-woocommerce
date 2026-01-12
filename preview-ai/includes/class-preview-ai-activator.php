@@ -55,7 +55,60 @@ class PREVIEW_AI_Activator {
 			update_option( 'preview_ai_api_endpoint', 'https://api.previewai.app/api/' );
 		}
 
+		// Set accent color based on theme primary color if possible.
+		if ( false === get_option( 'preview_ai_accent_color' ) ) {
+			$detected_color = self::detect_store_primary_color();
+			if ( $detected_color ) {
+				update_option( 'preview_ai_accent_color', $detected_color );
+			} else {
+				update_option( 'preview_ai_accent_color', '#3b82f6' ); // Default blue.
+			}
+		}
+
 		// Clear any cached API status.
 		delete_transient( 'preview_ai_account_status' );
+	}
+
+	/**
+	 * Try to detect the store's primary/accent color.
+	 *
+	 * @return string|null Hex color or null if not detected.
+	 */
+	private static function detect_store_primary_color() {
+		// 1. Storefront theme.
+		$storefront_accent = get_theme_mod( 'storefront_accent_color' );
+		if ( $storefront_accent ) {
+			return $storefront_accent;
+		}
+
+		// 2. Astra theme.
+		$astra_settings = get_option( 'astra-settings' );
+		if ( is_array( $astra_settings ) && ! empty( $astra_settings['theme-color-1'] ) ) {
+			return $astra_settings['theme-color-1'];
+		}
+
+		// 3. OceanWP theme.
+		$ocean_primary = get_theme_mod( 'ocean_primary_color' );
+		if ( $ocean_primary ) {
+			return $ocean_primary;
+		}
+
+		// 4. GeneratePress theme.
+		$gp_settings = get_option( 'generate_settings' );
+		if ( is_array( $gp_settings ) && ! empty( $gp_settings['global_colors'] ) ) {
+			foreach ( $gp_settings['global_colors'] as $color ) {
+				if ( isset( $color['slug'] ) && 'primary' === $color['slug'] ) {
+					return $color['color'];
+				}
+			}
+		}
+
+		// 5. Divi theme.
+		$divi_accent = get_option( 'et_divi_accent_color' );
+		if ( $divi_accent ) {
+			return $divi_accent;
+		}
+
+		return null;
 	}
 }

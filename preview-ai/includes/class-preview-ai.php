@@ -112,6 +112,15 @@ class Preview_Ai {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-preview-ai-i18n.php';
 
 		/**
+		 * Admin sub-modules for modularity.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-preview-ai-admin-settings.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-preview-ai-admin-product.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-preview-ai-admin-catalog.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-preview-ai-admin-onboarding.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-preview-ai-admin-notices.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-preview-ai-admin.php';
@@ -190,6 +199,9 @@ class Preview_Ai {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
+		// Plugin action links.
+		$this->loader->add_filter( 'plugin_action_links_' . PREVIEW_AI_PLUGIN_BASENAME, $plugin_admin, 'add_action_links' );
+
 		// WooCommerce Product Data tab.
 		$this->loader->add_filter( 'woocommerce_product_data_tabs', $plugin_admin, 'add_product_data_tab' );
 		$this->loader->add_action( 'woocommerce_product_data_panels', $plugin_admin, 'render_product_data_panel' );
@@ -206,6 +218,7 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_preview_ai_dismiss_try_notice', $plugin_admin, 'handle_dismiss_try_notice' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_register_site', $plugin_admin, 'handle_register_site' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_catalog_status', $plugin_admin, 'handle_catalog_status' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_reverify_compatibility', $plugin_admin, 'handle_reverify_compatibility' );
 
 		// Action Scheduler hook for background catalog processing.
 		$this->loader->add_action( 'preview_ai_process_catalog_batch', $plugin_admin, 'process_catalog_batch' );

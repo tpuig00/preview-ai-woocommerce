@@ -80,9 +80,49 @@ class PREVIEW_AI_Public {
 	public function enqueue_scripts() {
 
 		wp_enqueue_script(
+			$this->Preview_Ai . '-storage',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-storage.js',
+			array( 'jquery' ),
+			$this->version,
+			true
+		);
+
+		wp_enqueue_script(
+			$this->Preview_Ai . '-image',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-image.js',
+			array( 'jquery' ),
+			$this->version,
+			true
+		);
+
+		wp_enqueue_script(
+			$this->Preview_Ai . '-tryons',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-tryons.js',
+			array( 'jquery', $this->Preview_Ai . '-storage' ),
+			$this->version,
+			true
+		);
+
+		wp_enqueue_script(
+			$this->Preview_Ai . '-modal',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-modal.js',
+			array( 'jquery', $this->Preview_Ai . '-storage', $this->Preview_Ai . '-image' ),
+			$this->version,
+			true
+		);
+
+		wp_enqueue_script(
+			$this->Preview_Ai . '-api',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-api.js',
+			array( 'jquery', $this->Preview_Ai . '-storage' ),
+			$this->version,
+			true
+		);
+
+		wp_enqueue_script(
 			$this->Preview_Ai,
 			plugin_dir_url( __FILE__ ) . 'js/preview-ai-public.js',
-			array( 'jquery' ),
+			array( 'jquery', $this->Preview_Ai . '-storage', $this->Preview_Ai . '-image', $this->Preview_Ai . '-tryons', $this->Preview_Ai . '-modal', $this->Preview_Ai . '-api' ),
 			$this->version,
 			true
 		);
@@ -271,13 +311,13 @@ class PREVIEW_AI_Public {
 	/**
 	 * Check if Preview AI is enabled for this product.
 	 *
-	 * V1: Also checks if product subtype is supported (upper_body, lower_body only).
+	 * V1: Also checks if product subtype is supported (upper_body, lower_body and full_body).
 	 *
 	 * @param int $product_id Product ID.
 	 * @return bool
 	 */
 	public static function is_enabled_for_product( $product_id ) {
-		// V1: Check if product type is supported (upper_body, lower_body).
+		// V1: Check if product type is supported (upper_body, lower_body and full_body).
 		// Products with footwear, accessories, etc. are not supported yet.
 		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
 		if ( 'no' === $supported ) {
