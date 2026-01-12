@@ -49,12 +49,14 @@ class PREVIEW_AI_Admin_Onboarding {
 			var currentWidth = 0;
 			var progressInterval = setInterval(function() {
 				if (currentWidth < 95) {
-					// Faster at the beginning, slower as it approaches 95%
-					var step = currentWidth < 60 ? Math.floor(Math.random() * 5) + 2 : Math.floor(Math.random() * 2) + 1;
-					currentWidth = Math.min(95, currentWidth + step);
-					$bar.css('width', currentWidth + '%');
+					// Load slowly to give sense of thorough analysis
+					var step = currentWidth < 60 ? Math.floor(Math.random() * 3) + 1 : (Math.random() < 0.5 ? 1 : 0);
+					if (step > 0 || currentWidth < 20) { // Keep moving at the start, then allow "pauses"
+						currentWidth = Math.min(95, currentWidth + (step || 1));
+						$bar.css('width', currentWidth + '%');
+					}
 				}
-			}, 500);
+			}, 800);
 			
 			$.ajax({
 				url: ajaxUrl,
