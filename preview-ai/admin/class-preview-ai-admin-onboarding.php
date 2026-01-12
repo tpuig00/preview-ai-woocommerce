@@ -46,8 +46,15 @@ class PREVIEW_AI_Admin_Onboarding {
 			var $result = $('#onboarding-result');
 			var $progress = $('#onboarding-progress');
 			
-			setTimeout(function() { $bar.css('width', '20%'); }, 200);
-			setTimeout(function() { $bar.css('width', '40%'); }, 600);
+			var currentWidth = 0;
+			var progressInterval = setInterval(function() {
+				if (currentWidth < 95) {
+					// Faster at the beginning, slower as it approaches 95%
+					var step = currentWidth < 60 ? Math.floor(Math.random() * 5) + 2 : Math.floor(Math.random() * 2) + 1;
+					currentWidth = Math.min(95, currentWidth + step);
+					$bar.css('width', currentWidth + '%');
+				}
+			}, 500);
 			
 			$.ajax({
 				url: ajaxUrl,
@@ -57,10 +64,10 @@ class PREVIEW_AI_Admin_Onboarding {
 					nonce: nonce
 				},
 				beforeSend: function() {
-					$bar.css('width', '60%');
 					$status.text('<?php echo esc_js( __( 'Configuring products...', 'preview-ai' ) ); ?>');
 				},
 				success: function(response) {
+					clearInterval(progressInterval);
 					$bar.css('width', '100%');
 					
 					setTimeout(function() {
@@ -175,6 +182,7 @@ class PREVIEW_AI_Admin_Onboarding {
 					}, 500);
 				},
 				error: function() {
+					clearInterval(progressInterval);
 					$bar.css('width', '100%');
 					$progress.slideUp(300);
 					
