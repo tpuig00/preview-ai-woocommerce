@@ -11,7 +11,7 @@
  * Description:       Preview AI is a plugin that allows your customers to preview your products in real-time using AI image generation.
  * Version:           1.0.0
  * Author:            Preview AI
- * Author URI:        https://previewai.app/
+ * Author URI:        https://profiles.wordpress.org/previewai/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       preview-ai
