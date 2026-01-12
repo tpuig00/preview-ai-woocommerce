@@ -87,6 +87,7 @@ class PREVIEW_AI_Logger {
 		}
 
 		// Use WordPress error_log function.
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		error_log( $log_message );
 	}
 }

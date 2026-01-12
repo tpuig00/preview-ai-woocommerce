@@ -33,7 +33,7 @@ define( 'PREVIEW_AI_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
  * The code that runs during plugin activation.
  * This action is documented in includes/class-preview-ai-activator.php
  */
-function activate_Preview_Ai() {
+function preview_ai_activate() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-preview-ai-activator.php';
 	PREVIEW_AI_Activator::activate();
 }
@@ -42,13 +42,13 @@ function activate_Preview_Ai() {
  * The code that runs during plugin deactivation.
  * This action is documented in includes/class-preview-ai-deactivator.php
  */
-function deactivate_Preview_Ai() {
+function preview_ai_deactivate() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-preview-ai-deactivator.php';
 	PREVIEW_AI_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_Preview_Ai' );
-register_deactivation_hook( __FILE__, 'deactivate_Preview_Ai' );
+register_activation_hook( __FILE__, 'preview_ai_activate' );
+register_deactivation_hook( __FILE__, 'preview_ai_deactivate' );
 
 /**
  * Check if tracking table needs update on plugins_loaded.
@@ -74,10 +74,10 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-preview-ai.php';
  *
  * @since    1.0.0
  */
-function run_Preview_Ai() {
+function preview_ai_run() {
 
 	$plugin = new Preview_Ai();
 	$plugin->run();
 
 }
-run_Preview_Ai();
+preview_ai_run();

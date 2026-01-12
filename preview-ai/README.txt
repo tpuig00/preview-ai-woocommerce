@@ -1,9 +1,12 @@
-=== Plugin Name ===
+=== Preview AI ===
 Contributors: previewai
 Donate link: https://previewai.app/
-Tags: ai, image generation, virtual try-on, woocommerce, fashion
-Requires at least: 5.6
-Tested up to: 6.4
+Tags: ai, image generation, virtual try-on, woocommerce, fashion, shopping
+Requires at least: 6.0
+Tested up to: 6.9
+Requires PHP: 7.4
+WC requires at least: 8.0
+WC tested up to: 10.4
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -15,6 +18,12 @@ Preview AI allows your customers to preview your products in real-time using adv
 Preview AI is a powerful WooCommerce plugin that allows your customers to preview your products (especially clothing) in real-time using advanced AI image generation. Enhance your store's user experience and reduce returns by letting users see how they would look with your products.
 
 Our AI technology analyzes the user's photo and the product image to generate a high-quality preview of the user wearing the item.
+
+= Compatibility =
+* **Elementor:** Fully compatible with a dedicated widget for your custom templates.
+* **Translation Plugins:** Ready for WPML, Loco Translate, and Polylang.
+* **Themes:** Compatible with most modern WordPress themes (Astra, Botiga, Hello Elementor, OceanWP, etc.).
+* **WooCommerce:** Optimized for the latest versions of WooCommerce.
 
 = Features =
 * AI-powered virtual try-on for clothing.
@@ -40,7 +49,13 @@ We offer a free trial with 20 monthly previews. After that, you can choose a pla
 Currently, we support upper body, lower body, and full body clothing. Our AI is optimized for these categories. More product types are coming soon!
 
 = Does it work with Elementor? =
-Yes, we have a dedicated Elementor widget for the Preview AI button, allowing you to place it anywhere on your product pages.
+Yes, we have a dedicated Elementor widget for the Preview AI button, allowing you to place it anywhere on your product pages. It also works via shortcode [preview_ai].
+
+= Is it compatible with WPML or Loco Translate? =
+Absolutely. The plugin is fully internationalized and compatible with WPML, Loco Translate, and other translation plugins.
+
+= Does it work with my theme? =
+Preview AI is designed to be theme-agnostic. It works perfectly with popular themes like Botiga, Astra, and Hello Elementor. If you use a custom theme, you can use our widget or shortcode.
 
 = Does it store user photos? =
 User photos are processed by our AI backend to generate the preview and are not stored permanently unless required for the generation process. We respect user privacy.

@@ -99,6 +99,7 @@ class PREVIEW_AI_Admin_Catalog {
 				'status'  => 'scheduled',
 				'total'   => $total_products,
 				'message' => sprintf(
+					/* translators: %d: number of products */
 					__( 'Analysis scheduled for %d products. Processing in background...', 'preview-ai' ),
 					$total_products
 				),
@@ -144,6 +145,7 @@ class PREVIEW_AI_Admin_Catalog {
 				'try_product_url' => $try_product_url,
 				'warning'         => $warning,
 				'message'         => sprintf(
+					/* translators: 1: number of configured products, 2: number of products needing review, 3: number of images analyzed */
 					__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
 					$stats['configured'],
 					$stats['needs_review'],
@@ -243,6 +245,7 @@ class PREVIEW_AI_Admin_Catalog {
 			$response['total']     = $progress['total'];
 			$response['processed'] = $progress['processed'];
 			$response['message']   = sprintf(
+				/* translators: 1: processed products, 2: total products */
 				__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
 				$progress['processed'],
 				$progress['total']
@@ -265,6 +268,7 @@ class PREVIEW_AI_Admin_Catalog {
 			$response['try_product_url'] = $try_product_url;
 			$response['warning']         = $warning;
 			$response['message']         = sprintf(
+				/* translators: 1: number of configured products, 2: number of products needing review, 3: number of images analyzed */
 				__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
 				$progress['configured'],
 				$progress['needs_review'],

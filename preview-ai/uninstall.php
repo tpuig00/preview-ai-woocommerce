@@ -26,7 +26,7 @@ global $wpdb;
 /**
  * 1. Delete plugin options.
  */
-$options = array(
+$preview_ai_options = array(
 	'preview_ai_enabled',
 	'preview_ai_api_key',
 	'preview_ai_display_mode',
@@ -50,9 +50,9 @@ $options = array(
 	'preview_ai_button_height',
 );
 
-foreach ( $options as $option ) {
-	delete_option( $option );
-	delete_site_option( $option ); // For multisite
+foreach ( $preview_ai_options as $preview_ai_option ) {
+	delete_option( $preview_ai_option );
+	delete_site_option( $preview_ai_option ); // For multisite
 }
 
 /**
@@ -86,23 +86,23 @@ if ( function_exists( 'as_unschedule_all_actions' ) ) {
 	as_unschedule_all_actions( 'preview_ai_process_catalog_batch' );
 } else {
 	// Fallback: delete directly from the database if Action Scheduler is not available.
-	$actions_table = $wpdb->prefix . 'actionscheduler_actions';
-	$logs_table    = $wpdb->prefix . 'actionscheduler_logs';
-	
+	$preview_ai_actions_table = $wpdb->prefix . 'actionscheduler_actions';
+	$preview_ai_logs_table    = $wpdb->prefix . 'actionscheduler_logs';
+
 	// First, delete the associated logs.
 	$wpdb->query(
 		$wpdb->prepare(
-			"DELETE al FROM {$logs_table} al
-			INNER JOIN {$actions_table} aa ON al.action_id = aa.action_id
+			"DELETE al FROM {$preview_ai_logs_table} al
+			INNER JOIN {$preview_ai_actions_table} aa ON al.action_id = aa.action_id
 			WHERE aa.hook = %s",
 			'preview_ai_process_catalog_batch'
 		)
 	);
-	
+
 	// Then, delete the actions.
 	$wpdb->query(
 		$wpdb->prepare(
-			"DELETE FROM {$actions_table} WHERE hook = %s",
+			"DELETE FROM {$preview_ai_actions_table} WHERE hook = %s",
 			'preview_ai_process_catalog_batch'
 		)
 	);
@@ -111,5 +111,5 @@ if ( function_exists( 'as_unschedule_all_actions' ) ) {
 /**
  * 3. Delete custom database table.
  */
-$table_name = $wpdb->prefix . 'preview_ai_events';
-$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+$preview_ai_events_table = $wpdb->prefix . 'preview_ai_events';
+$wpdb->query( "DROP TABLE IF EXISTS {$preview_ai_events_table}" );

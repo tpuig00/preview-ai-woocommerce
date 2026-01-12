@@ -49,7 +49,8 @@ class PREVIEW_AI_Ajax {
 		}
 
 		// Process image to base64.
-		$upload = $this->upload_image( $_FILES['image'] );
+		$image_file = isset( $_FILES['image'] ) ? $_FILES['image'] : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$upload = $this->upload_image( $image_file );
 		if ( is_wp_error( $upload ) ) {
 			wp_send_json_error( array( 'message' => $upload->get_error_message() ) );
 		}
@@ -90,12 +91,13 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Preview AI not enabled for this product', 'preview-ai' ) ) );
 		}
 
-		$validation = $this->validate_upload_file( $_FILES['image'] );
+		$image_file = isset( $_FILES['image'] ) ? $_FILES['image'] : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$validation = $this->validate_upload_file( $image_file );
 		if ( is_wp_error( $validation ) ) {
 			wp_send_json_error( array( 'message' => $validation->get_error_message() ) );
 		}
 
-		$upload = $this->upload_image( $_FILES['image'] );
+		$upload = $this->upload_image( $image_file );
 		if ( is_wp_error( $upload ) ) {
 			wp_send_json_error( array( 'message' => $upload->get_error_message() ) );
 		}

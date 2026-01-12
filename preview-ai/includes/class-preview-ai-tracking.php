@@ -88,7 +88,7 @@ class PREVIEW_AI_Tracking {
 	 * @return string|null
 	 */
 	private static function get_session_id() {
-		$sid = isset( $_COOKIE[ self::COOKIE_NAME ] ) ? sanitize_text_field( $_COOKIE[ self::COOKIE_NAME ] ) : null;
+		$sid = isset( $_COOKIE[ self::COOKIE_NAME ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE_NAME ] ) ) : null;
 		PREVIEW_AI_Logger::debug( 'get_session_id', array( 'sid' => $sid ) );
 		return $sid;
 	}

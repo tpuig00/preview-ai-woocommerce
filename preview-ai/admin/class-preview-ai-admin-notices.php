@@ -103,7 +103,10 @@ class PREVIEW_AI_Admin_Notices {
 			<div class="notice notice-warning is-dismissible" data-notice="preview_ai_low_tokens">
 				<p>
 					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
-					<?php printf( esc_html__( 'You have only %d tokens remaining this month.', 'preview-ai' ), intval( $status['tokens_remaining'] ) ); ?>
+					<?php
+					/* translators: %d: remaining tokens */
+					printf( esc_html__( 'You have only %d tokens remaining this month.', 'preview-ai' ), intval( $status['tokens_remaining'] ) );
+					?>
 					<a href="https://previewai.app/pricing" target="_blank">
 						<?php esc_html_e( 'Upgrade your plan', 'preview-ai' ); ?>
 					</a>

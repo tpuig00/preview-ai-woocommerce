@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 // Cargar el entorno de WordPress
 require_once('../../../wp-load.php');
 

@@ -299,8 +299,8 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							printf(
 								/* translators: 1: processed count, 2: total count */
 								esc_html__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
-								$progress['processed'],
-								$progress['total']
+								absint( $progress['processed'] ),
+								absint( $progress['total'] )
 							);
 						} else {
 							esc_html_e( 'Analyzing your catalog...', 'preview-ai' );
