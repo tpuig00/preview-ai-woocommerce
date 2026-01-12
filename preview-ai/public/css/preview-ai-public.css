@@ -8,21 +8,24 @@
 ───────────────────────────────────────────────────────────── */
 .preview-ai-chip-wrapper,
 .preview-ai-modal,
-.preview-ai-modal-content,
-.preview-ai-chip-wrapper *,
-.preview-ai-modal *,
-.preview-ai-modal-content * {
-	font-size: 16px !important;
-	line-height: 1.5 !important;
+.preview-ai-modal-content {
+	font-size: 16px;
+	line-height: 1.5;
+	text-transform: none;
+	letter-spacing: normal;
+	box-sizing: border-box;
+}
+
+/* Reset para botones dentro del widget - evita estilos de tema */
+.preview-ai-modal button,
+.preview-ai-modal a,
+.preview-ai-chip-wrapper button {
+	box-sizing: border-box !important;
 	text-transform: none !important;
 	letter-spacing: normal !important;
-	box-sizing: border-box !important;
-	/* Reset básico para elementos internos */
-	min-width: 0 !important;
-	min-height: 0 !important;
-	max-width: none !important;
 	text-decoration: none !important;
 	outline: none !important;
+	background-image: none !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1028,75 +1031,77 @@ a.preview-ai-action-btn--secondary:hover {
 ───────────────────────────────────────────────────────────── */
 /* Your Looks button in instructions section */
 .preview-ai-instructions-looks-btn {
-	display: none;
-	width: 100%;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
-	height: 44px;
-	margin-top: 0.75rem;
-	padding: 0 1rem;
-	border: 1px solid var(--pai-border);
-	border-radius: var(--pai-radius-full);
-	background: var(--pai-bg);
-	color: var(--pai-text-secondary);
-	font-family: inherit;
-	font-size: 14px;
-	font-weight: 500;
-	cursor: pointer;
-	transition: all var(--pai-transition-fast);
+	display: none !important;
+	width: 100% !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 0.5rem !important;
+	height: 44px !important;
+	margin-top: 0.75rem !important;
+	padding: 0 1rem !important;
+	border: 1px solid var(--pai-border) !important;
+	border-radius: var(--pai-radius-full) !important;
+	background: var(--pai-bg) !important;
+	color: var(--pai-text-secondary) !important;
+	font-family: inherit !important;
+	font-size: 14px !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	transition: all var(--pai-transition-fast) !important;
+	box-shadow: none !important;
 }
 
 .preview-ai-instructions-looks-btn.has-looks {
-	display: inline-flex;
+	display: inline-flex !important;
 }
 
 .preview-ai-instructions-looks-btn:hover {
-	background: var(--pai-bg-soft);
-	border-color: var(--pai-text-muted);
-	color: var(--pai-text);
+	background: var(--pai-bg-soft) !important;
+	border-color: var(--pai-text-muted) !important;
+	color: var(--pai-text) !important;
 }
 
 .preview-ai-instructions-looks-btn svg {
-	width: 18px;
-	height: 18px;
-	flex-shrink: 0;
+	width: 18px !important;
+	height: 18px !important;
+	flex-shrink: 0 !important;
 }
 
 .preview-ai-view-tryons-btn {
-	display: none;
-	width: 100%;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
-	height: 44px;
-	margin-top: 0.75rem;
-	padding: 0 1rem;
-	border: 1px solid var(--pai-border);
-	border-radius: var(--pai-radius-full);
-	background: var(--pai-bg);
-	color: var(--pai-text-secondary);
-	font-family: inherit;
-	font-size: 14px;
-	font-weight: 500;
-	cursor: pointer;
-	transition: all var(--pai-transition-fast);
+	display: none !important;
+	width: 100% !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 0.5rem !important;
+	height: 44px !important;
+	margin-top: 0.75rem !important;
+	padding: 0 1rem !important;
+	border: 1px solid var(--pai-border) !important;
+	border-radius: var(--pai-radius-full) !important;
+	background: var(--pai-bg) !important;
+	color: var(--pai-text-secondary) !important;
+	font-family: inherit !important;
+	font-size: 14px !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	transition: all var(--pai-transition-fast) !important;
+	box-shadow: none !important;
 }
 
 .preview-ai-view-tryons-btn.has-tryons {
-	display: inline-flex;
+	display: inline-flex !important;
 }
 
 .preview-ai-view-tryons-btn:hover {
-	background: var(--pai-bg-soft);
-	border-color: var(--pai-text-muted);
-	color: var(--pai-text);
+	background: var(--pai-bg-soft) !important;
+	border-color: var(--pai-text-muted) !important;
+	color: var(--pai-text) !important;
 }
 
 .preview-ai-view-tryons-btn svg {
-	width: 18px;
-	height: 18px;
-	flex-shrink: 0;
+	width: 18px !important;
+	height: 18px !important;
+	flex-shrink: 0 !important;
 }
 
 .preview-ai-tryons-badge {
@@ -1136,29 +1141,31 @@ a.preview-ai-action-btn--secondary:hover {
 }
 
 .preview-ai-tryons-back {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 36px;
-	height: 36px;
-	padding: 0;
-	border: none;
-	border-radius: 50%;
-	background: var(--pai-bg-soft);
-	color: var(--pai-text-secondary);
-	cursor: pointer;
-	transition: all var(--pai-transition-fast);
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 36px !important;
+	height: 36px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	border-radius: 50% !important;
+	background: var(--pai-bg-soft) !important;
+	color: var(--pai-text-secondary) !important;
+	cursor: pointer !important;
+	transition: all var(--pai-transition-fast) !important;
+	box-shadow: none !important;
 }
 
 .preview-ai-tryons-back:hover {
-	background: var(--pai-bg);
-	color: var(--pai-text);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	background: var(--pai-bg) !important;
+	color: var(--pai-text) !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
 .preview-ai-tryons-back svg {
-	width: 20px;
-	height: 20px;
+	width: 20px !important;
+	height: 20px !important;
 }
 
 .preview-ai-tryons-title {
@@ -1260,11 +1267,11 @@ a.preview-ai-action-btn--secondary:hover {
 }
 
 .preview-ai-tryon-img-container > img:first-child {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	cursor: pointer;
-	transition: transform var(--pai-transition);
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover !important;
+	cursor: pointer !important;
+	transition: transform var(--pai-transition) !important;
 }
 
 .preview-ai-tryon-card:hover .preview-ai-tryon-img-container > img:first-child {
@@ -1272,16 +1279,16 @@ a.preview-ai-action-btn--secondary:hover {
 }
 
 .preview-ai-tryon-product-thumb {
-	position: absolute;
-	bottom: 0.75rem;
-	right: 0.75rem;
-	width: 72px;
-	height: 72px;
-	object-fit: cover;
-	border-radius: var(--pai-radius-sm);
-	background: white;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-	border: 2px solid white;
+	position: absolute !important;
+	bottom: 0.75rem !important;
+	right: 0.75rem !important;
+	width: 72px !important;
+	height: 72px !important;
+	object-fit: cover !important;
+	border-radius: var(--pai-radius-sm) !important;
+	background: white !important;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
+	border: 2px solid white !important;
 }
 
 .preview-ai-tryon-info {
@@ -1367,26 +1374,28 @@ a.preview-ai-tryon-btn--primary:hover {
 }
 
 .preview-ai-tryon-delete {
-	position: absolute;
-	top: 0.5rem;
-	right: 0.5rem;
-	z-index: 5;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	padding: 0;
-	border: none;
-	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.5);
-	color: white;
-	font-size: 18px;
-	font-weight: 400;
-	line-height: 1;
-	cursor: pointer;
+	position: absolute !important;
+	top: 0.5rem !important;
+	right: 0.5rem !important;
+	z-index: 5 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 28px !important;
+	height: 28px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	border-radius: 50% !important;
+	background: rgba(0, 0, 0, 0.5) !important;
+	color: white !important;
+	font-size: 18px !important;
+	font-weight: 400 !important;
+	line-height: 1 !important;
+	cursor: pointer !important;
 	opacity: 0;
-	transition: all var(--pai-transition-fast);
+	transition: all var(--pai-transition-fast) !important;
+	box-shadow: none !important;
 }
 
 .preview-ai-tryon-card:hover .preview-ai-tryon-delete {
@@ -1394,8 +1403,8 @@ a.preview-ai-tryon-btn--primary:hover {
 }
 
 .preview-ai-tryon-delete:hover {
-	background: rgba(239, 68, 68, 0.9);
-	transform: scale(1.1);
+	background: rgba(239, 68, 68, 0.9) !important;
+	transform: scale(1.1) !important;
 }
 
 /* Action button tertiary style - full width row below */
