@@ -77,7 +77,12 @@ $height_style   = ( 38 !== (int) $button_height ) ? 'height:' . absint( $button_
 				<span id="preview-ai-tryons-badge" class="preview-ai-tryons-badge"></span>
 			</button>
 			<div class="preview-ai-saved-photo-privacy">
-				<p><?php esc_html_e( 'Your photo is stored only on this device. We never upload or save it on our servers.', 'preview-ai' ); ?></p>
+				<div class="preview-ai-privacy-info">
+					<span class="preview-ai-privacy-icon">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+					</span>
+					<p><?php esc_html_e( 'Your photos stay on your device. We never upload or store them.', 'preview-ai' ); ?></p>
+				</div>
 				<a href="#" id="preview-ai-forget-photo" class="preview-ai-forget-link"><?php esc_html_e( 'Delete my photo', 'preview-ai' ); ?></a>
 			</div>
 		</div>
@@ -147,13 +152,13 @@ $height_style   = ( 38 !== (int) $button_height ) ? 'height:' . absint( $button_
 			</div>
 
 			<div class="preview-ai-tips">
-				<p class="preview-ai-tips-title"><?php esc_html_e( 'For best results:', 'preview-ai' ); ?></p>
+				<p class="preview-ai-tips-title"><?php esc_html_e( 'For best results', 'preview-ai' ); ?></p>
 				<ul>
 					<?php foreach ( $tips as $tip ) : ?>
 						<li><?php echo esc_html( $tip ); ?></li>
 					<?php endforeach; ?>
 				</ul>
-				<p class="preview-ai-tips-pro"><strong><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></strong></p>
+				<p class="preview-ai-tips-pro"><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></p>
 			</div>
 
 			<!-- Upload button -->
