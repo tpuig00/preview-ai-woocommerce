@@ -35,15 +35,20 @@ if ( ! isset( $button_shape ) ) {
 if ( ! isset( $button_height ) ) {
 	$button_height = 38;
 }
+if ( ! isset( $button_full_width ) ) {
+	$button_full_width = 0;
+}
 
 $position_class = 'preview-ai-position-' . esc_attr( $button_position );
 $shape_class    = 'preview-ai-shape-' . esc_attr( $button_shape );
-$height_style   = ( 38 !== (int) $button_height ) ? 'height:' . absint( $button_height ) . 'px;' : '';
+$height_style   = ( 38 !== (int) $button_height ) ? 'height:' . absint( $button_height ) . 'px !important;' : '';
+$width_style    = ( ! empty( $button_full_width ) ) ? 'width: 100% !important; justify-content: center !important;' : '';
+$inline_style   = $height_style . $width_style;
 ?>
 
 <!-- Action Chip Container -->
 <div class="preview-ai-chip-wrapper <?php echo esc_attr( $position_class ); ?>">
-	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $shape_class ); ?>" <?php echo $height_style ? 'style="' . esc_attr( $height_style ) . '"' : ''; ?>>
+	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $shape_class ); ?>" <?php echo $inline_style ? 'style="' . esc_attr( $inline_style ) . '"' : ''; ?>>
 		<span class="preview-ai-chip-icon"><?php echo $button_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
 		<span class="preview-ai-chip-text"><?php echo esc_html( $button_text ); ?></span>
 	</button>

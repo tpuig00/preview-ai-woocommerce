@@ -121,9 +121,16 @@ class PREVIEW_AI_Ajax {
 	 * @return bool
 	 */
 	private function is_enabled_for_product( $product_id ) {
+		// If `_preview_ai_supported` is empty, the product hasn't been processed yet.
+		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
+
+		// Product hasn't been analyzed yet - don't allow.
+		if ( '' === $supported ) {
+			return false;
+		}
+
 		// V1: Check if product type is supported (upper_body, lower_body and full_body).
 		// Products with footwear, accessories, etc. are not supported yet.
-		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
 		if ( 'no' === $supported ) {
 			return false;
 		}

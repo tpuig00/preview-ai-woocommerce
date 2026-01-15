@@ -246,7 +246,7 @@ class Preview_Ai {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-		$this->loader->add_action( 'woocommerce_single_product_summary', $plugin_public, 'render_widget', 31 );
+		$this->loader->add_action( 'woocommerce_after_add_to_cart_button', $plugin_public, 'render_widget', 10 );
 
 		// Set tracking cookie early (before AJAX).
 		$this->loader->add_action( 'wp_loaded', 'PREVIEW_AI_Tracking', 'maybe_set_cookie' );

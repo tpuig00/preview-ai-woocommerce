@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Current plugin version.
  */
-define( 'PREVIEW_AI_VERSION', '1.0.0' );
+define( 'PREVIEW_AI_VERSION', '1.0.1' );
 define( 'PREVIEW_AI_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 /**

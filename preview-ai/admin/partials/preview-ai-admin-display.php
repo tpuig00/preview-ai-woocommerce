@@ -461,6 +461,30 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</td>
 					</tr>
 
+					<!-- Button Full Width -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_button_full_width">
+								<?php esc_html_e( 'Full Width', 'preview-ai' ); ?>
+							</label>
+						</th>
+						<td>
+							<label class="preview-ai-toggle">
+								<input type="hidden" name="preview_ai_button_full_width" value="0" />
+								<input type="checkbox" 
+									   id="preview_ai_button_full_width" 
+									   name="preview_ai_button_full_width" 
+									   value="1" 
+									   <?php checked( 1, $widget_settings['button_full_width'] ); ?> 
+								/>
+								<span class="preview-ai-toggle__slider"></span>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Make the button 100% width of its container.', 'preview-ai' ); ?>
+							</p>
+						</td>
+					</tr>
+
 					<!-- Accent Color -->
 					<tr>
 						<th scope="row">

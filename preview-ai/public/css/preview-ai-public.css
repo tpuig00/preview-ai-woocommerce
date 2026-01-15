@@ -59,15 +59,24 @@
 
 /* ─────────────────────────────────────────────────────────────
    Action Chip Container
+   Forzado a ocupar 100% para aparecer debajo del botón "Añadir al carrito"
 ───────────────────────────────────────────────────────────── */
 .preview-ai-chip-wrapper {
-	display: flex;
-	margin: 0.75rem 0;
+	display: block !important;
+	flex: 0 0 100% !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	margin: 1rem 0 0.5rem 0 !important;
+	padding: 0 !important;
+	clear: both !important;
+	order: 9999 !important;
+	grid-column: 1 / -1 !important; /* Para padres con CSS Grid */
+	text-align: center;
 }
 
-.preview-ai-position-left { justify-content: flex-start; }
-.preview-ai-position-center { justify-content: center; }
-.preview-ai-position-right { justify-content: flex-end; }
+.preview-ai-position-left { text-align: left !important; }
+.preview-ai-position-center { text-align: center !important; }
+.preview-ai-position-right { text-align: right !important; }
 
 /* ─────────────────────────────────────────────────────────────
    Action Chip
@@ -1404,14 +1413,17 @@ a.preview-ai-tryon-btn--primary:hover {
 }
 
 /* Action button tertiary style - full width row below */
-.preview-ai-action-btn--tertiary {
+button.preview-ai-action-btn--tertiary,
+a.preview-ai-action-btn--tertiary {
 	flex: 1 1 100% !important;
+	width: 100% !important;
 	margin-top: 0.5rem !important;
 	border-color: var(--pai-border) !important;
 	color: var(--pai-text-secondary) !important;
 }
 
-.preview-ai-action-btn--tertiary:hover {
+button.preview-ai-action-btn--tertiary:hover,
+a.preview-ai-action-btn--tertiary:hover {
 	background: var(--pai-bg-soft) !important;
 	border-color: var(--pai-text-muted) !important;
 	color: var(--pai-text) !important;

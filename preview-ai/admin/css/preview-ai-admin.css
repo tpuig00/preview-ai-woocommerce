@@ -121,6 +121,12 @@
 	color: #D97706;
 }
 
+/* Pending - Light blue/gray for "not analyzed" state */
+.preview-ai-col--pending {
+	background: #F0F9FF;
+	color: #0369A1;
+}
+
 /* Disabled - Gray */
 .preview-ai-col--disabled {
 	color: #9CA3AF;

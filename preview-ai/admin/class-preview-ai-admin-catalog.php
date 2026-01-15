@@ -377,10 +377,11 @@ class PREVIEW_AI_Admin_Catalog {
 	 */
 	public function get_catalog_products_data( $relevant_categories = array() ) {
 		$args = array(
-			'status'     => 'publish',
-			'limit'      => -1,
-			'type'       => array( 'simple', 'variable' ),
-			'meta_query' => array(
+			'status'       => 'publish',
+			'limit'        => -1,
+			'type'         => array( 'simple', 'variable' ),
+			'stock_status' => 'instock',
+			'meta_query'   => array(
 				array(
 					'key'     => '_preview_ai_supported',
 					'compare' => 'NOT EXISTS',
@@ -418,6 +419,9 @@ class PREVIEW_AI_Admin_Catalog {
 				foreach ( $variation_ids as $variation_id ) {
 					$variation = wc_get_product( $variation_id );
 					if ( ! $variation ) continue;
+
+					// Skip out of stock variations.
+					if ( ! $variation->is_in_stock() ) continue;
 
 					$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
 					if ( ! empty( $var_analysis ) ) continue;

@@ -25,6 +25,7 @@ class PREVIEW_AI_Admin_Settings {
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_position', 'sanitize_key' );
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_shape', 'sanitize_key' );
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_height', 'absint' );
+		register_setting( 'preview_ai_widget_settings', 'preview_ai_button_full_width', 'absint' );
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_accent_color', 'sanitize_hex_color' );
 
 		// Clear account status when API key changes.
@@ -69,6 +70,7 @@ class PREVIEW_AI_Admin_Settings {
 			'button_position' => get_option( 'preview_ai_button_position', 'center' ),
 			'button_shape'    => get_option( 'preview_ai_button_shape', 'pill' ),
 			'button_height'   => get_option( 'preview_ai_button_height', 38 ),
+			'button_full_width' => get_option( 'preview_ai_button_full_width', 0 ),
 			'accent_color'    => get_option( 'preview_ai_accent_color', '#3b82f6' ),
 		);
 	}

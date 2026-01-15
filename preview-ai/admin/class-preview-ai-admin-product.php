@@ -28,20 +28,21 @@ class PREVIEW_AI_Admin_Product {
 		$subtype        = get_post_meta( $post->ID, '_preview_ai_recommended_subtype', true );
 		$supported      = get_post_meta( $post->ID, '_preview_ai_supported', true );
 		$global_enabled = get_option( 'preview_ai_enabled', 0 );
+		$was_analyzed   = '' !== $supported; // Product has been processed by catalog.
 
 		// Determine current state.
 		$is_enabled = false;
-		if ( 'yes' === $enabled ) {
-			$is_enabled = true;
-		} elseif ( 'no' === $enabled ) {
-			$is_enabled = false;
-		} else {
-			$is_enabled = (bool) $global_enabled;
-		}
 
-		// Can't be enabled if not supported or no image.
-		if ( 'no' === $supported || ! $has_image ) {
-			$is_enabled = false;
+		// Can only be enabled if product was analyzed and is supported.
+		if ( $was_analyzed && 'yes' === $supported && $has_image ) {
+			if ( 'yes' === $enabled ) {
+				$is_enabled = true;
+			} elseif ( 'no' === $enabled ) {
+				$is_enabled = false;
+			} else {
+				// No explicit setting, use global.
+				$is_enabled = (bool) $global_enabled;
+			}
 		}
 
 		// Determine status for display.
@@ -54,19 +55,26 @@ class PREVIEW_AI_Admin_Product {
 			$status_text  = __( 'Not Supported', 'preview-ai' );
 			$status_icon  = '<span class="dashicons dashicons-warning"></span>';
 		} elseif ( ! $is_enabled ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'Disabled', 'preview-ai' );
-			$status_icon  = '—';
-		} elseif ( empty( $subtype ) ) {
-			// Enabled but not yet analyzed.
-			$status_class = 'preview-ai-col--active';
-			$status_text  = __( 'Pending Analysis', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-update"></span>';
+			if ( ! $was_analyzed ) {
+				$status_class = 'preview-ai-col--pending';
+				$status_text  = __( 'Not Analyzed', 'preview-ai' );
+				$status_icon  = '<span class="dashicons dashicons-clock"></span>';
+			} else {
+				$status_class = 'preview-ai-col--disabled';
+				$status_text  = __( 'Disabled', 'preview-ai' );
+				$status_icon  = '—';
+			}
 		} else {
-			// Enabled and analyzed.
-			$status_class = 'preview-ai-col--active';
-			$status_text  = __( 'Active', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
+			// Enabled.
+			if ( ! $was_analyzed ) {
+				$status_class = 'preview-ai-col--active';
+				$status_text  = __( 'Active (Pending Analysis)', 'preview-ai' );
+				$status_icon  = '<span class="dashicons dashicons-update"></span>';
+			} else {
+				$status_class = 'preview-ai-col--active';
+				$status_text  = __( 'Active', 'preview-ai' );
+				$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
+			}
 		}
 
 		?>
@@ -90,16 +98,16 @@ class PREVIEW_AI_Admin_Product {
 						<?php echo esc_html( $status_text ); ?>
 					</span>
 				</div>
-				<label class="preview-ai-switch">
-					<input type="checkbox" 
-						   id="_preview_ai_enabled" 
-						   name="_preview_ai_enabled" 
-						   value="yes" 
-						   <?php checked( $is_enabled ); ?> 
-						   <?php disabled( ! $has_image ); ?>
-					/>
-					<span class="preview-ai-switch__track"></span>
-				</label>
+			<label class="preview-ai-switch">
+				<input type="checkbox" 
+					   id="_preview_ai_enabled" 
+					   name="_preview_ai_enabled" 
+					   value="yes" 
+					   <?php checked( $is_enabled ); ?> 
+					   <?php disabled( ! $has_image || 'no' === $supported ); ?>
+				/>
+				<span class="preview-ai-switch__track"></span>
+			</label>
 			</div>
 
 			<?php
@@ -144,53 +152,39 @@ class PREVIEW_AI_Admin_Product {
 		$enabled = isset( $_POST['_preview_ai_enabled'] ) ? 'yes' : 'no';
 		$product = wc_get_product( $post_id );
 
+		if ( ! $product ) {
+			return;
+		}
+
 		// Can't enable if product has no image.
-		if ( 'yes' === $enabled && $product && ! $product->get_image_id() ) {
+		if ( 'yes' === $enabled && ! $product->get_image_id() ) {
 			$enabled = 'no';
 		}
 
-		// Check if product needs analysis (enabling and not yet analyzed).
-		$was_analyzed = get_post_meta( $post_id, '_preview_ai_supported', true );
+		// Check analysis status.
+		$supported = get_post_meta( $post_id, '_preview_ai_supported', true );
 
-		// Can't enable if product was already analyzed and is not supported.
-		if ( 'yes' === $enabled && 'no' === $was_analyzed ) {
-			$enabled = 'no';
-		}
-
-		if ( 'yes' === $enabled && empty( $was_analyzed ) && $product ) {
-			// Analyze product via backend API.
+		// If enabling and not yet analyzed, trigger analysis now.
+		if ( 'yes' === $enabled && '' === $supported ) {
 			$analysis_result = $this->analyze_single_product( $product );
 
 			if ( ! is_wp_error( $analysis_result ) ) {
+				// We need to save the classifications first so we can check if it's supported.
 				if ( isset( $analysis_result['classifications'] ) ) {
-					// Use Catalog helper if available.
 					$catalog = new PREVIEW_AI_Admin_Catalog();
 					$catalog->save_catalog_classifications( $analysis_result );
-
-					// Check parent product support status.
-					$parent_classification = null;
-					foreach ( $analysis_result['classifications'] as $classification ) {
-						if ( absint( $classification['id'] ) === $post_id && empty( $classification['variation_id'] ) ) {
-							$parent_classification = $classification;
-							break;
-						}
-					}
-
-					if ( $parent_classification ) {
-						$is_supported = isset( $parent_classification['supported'] ) && $parent_classification['supported'];
-						if ( ! $is_supported ) {
-							$enabled = 'no';
-						}
-					}
 				} else {
 					$this->save_single_product_classification( $post_id, $analysis_result );
-
-					$is_supported = isset( $analysis_result['supported'] ) && $analysis_result['supported'];
-					if ( ! $is_supported ) {
-						$enabled = 'no';
-					}
 				}
+
+				// Re-fetch support status after analysis.
+				$supported = get_post_meta( $post_id, '_preview_ai_supported', true );
 			}
+		}
+
+		// Final check: can't be enabled if analysis says it's not supported.
+		if ( 'yes' === $enabled && 'no' === $supported ) {
+			$enabled = 'no';
 		}
 
 		update_post_meta( $post_id, '_preview_ai_enabled', $enabled );
@@ -229,6 +223,13 @@ class PREVIEW_AI_Admin_Product {
 			foreach ( $variation_ids as $variation_id ) {
 				$variation = wc_get_product( $variation_id );
 				if ( ! $variation ) continue;
+
+				// Skip out of stock variations.
+				if ( ! $variation->is_in_stock() ) continue;
+
+				// Skip already analyzed variations.
+				$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
+				if ( ! empty( $var_analysis ) ) continue;
 
 				$var_image_id = $variation->get_image_id();
 				if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
@@ -316,29 +317,45 @@ class PREVIEW_AI_Admin_Product {
 	public function render_product_column( $column, $post_id ) {
 		if ( 'preview_ai' !== $column ) return;
 
-		$subtype   = get_post_meta( $post_id, '_preview_ai_recommended_subtype', true );
-		$enabled   = get_post_meta( $post_id, '_preview_ai_enabled', true );
-		$supported = get_post_meta( $post_id, '_preview_ai_supported', true );
+		$enabled        = get_post_meta( $post_id, '_preview_ai_enabled', true );
+		$supported      = get_post_meta( $post_id, '_preview_ai_supported', true );
+		$was_analyzed   = '' !== $supported;
+		$global_enabled = get_option( 'preview_ai_enabled', 0 );
 
-		if ( 'no' === $supported ) {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Product type not supported yet (V1 supports tops and pants only)', 'preview-ai' ) . '">';
-			echo esc_html__( 'Not supported', 'preview-ai' );
+		// Product hasn't been analyzed yet.
+		if ( ! $was_analyzed ) {
+			echo '<span class="preview-ai-col preview-ai-col--pending" title="' . esc_attr__( 'Not analyzed yet - run Learn Catalog', 'preview-ai' ) . '">';
+			echo '<span class="dashicons dashicons-clock"></span> ';
+			echo esc_html__( 'Not Analyzed', 'preview-ai' );
 			echo '</span>';
 			return;
 		}
 
-		if ( 'no' === $enabled ) {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
+		// Product analyzed but not supported.
+		if ( 'no' === $supported ) {
+			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Product type not supported yet (V1 supports tops and pants only)', 'preview-ai' ) . '">';
+			echo esc_html__( 'Not Supported', 'preview-ai' );
+			echo '</span>';
 			return;
 		}
 
-		if ( ! empty( $subtype ) ) {
+		// Product is supported - check if enabled.
+		$is_enabled = false;
+		if ( 'yes' === $enabled ) {
+			$is_enabled = true;
+		} elseif ( 'no' === $enabled ) {
+			$is_enabled = false;
+		} else {
+			$is_enabled = (bool) $global_enabled;
+		}
+
+		if ( $is_enabled ) {
 			echo '<span class="preview-ai-col preview-ai-col--active" title="' . esc_attr__( 'Preview AI active on this product', 'preview-ai' ) . '">';
 			echo '<span class="dashicons dashicons-visibility"></span> ';
 			echo esc_html__( 'Active', 'preview-ai' );
 			echo '</span>';
 		} else {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Not analyzed yet - run Learn Catalog', 'preview-ai' ) . '">—</span>';
+			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
 		}
 	}
 }

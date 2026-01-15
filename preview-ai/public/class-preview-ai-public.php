@@ -292,6 +292,9 @@ class PREVIEW_AI_Public {
 		// Button height.
 		$button_height = ! empty( $widget_settings['button_height'] ) ? absint( $widget_settings['button_height'] ) : 38;
 
+		// Button full width.
+		$button_full_width = ! empty( $widget_settings['button_full_width'] ) ? (int) $widget_settings['button_full_width'] : 0;
+
 		// Get clothing subtype and tips for this product.
 		$clothing_subtype  = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
 		$clothing_subtypes = PREVIEW_AI_Admin::get_clothing_subtypes();
@@ -317,9 +320,16 @@ class PREVIEW_AI_Public {
 	 * @return bool
 	 */
 	public static function is_enabled_for_product( $product_id ) {
+		// If `_preview_ai_supported` is empty, the product hasn't been processed yet.
+		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
+
+		// Product hasn't been analyzed yet - don't show widget.
+		if ( '' === $supported ) {
+			return false;
+		}
+
 		// V1: Check if product type is supported (upper_body, lower_body and full_body).
 		// Products with footwear, accessories, etc. are not supported yet.
-		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
 		if ( 'no' === $supported ) {
 			return false;
 		}
