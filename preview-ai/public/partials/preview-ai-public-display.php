@@ -112,6 +112,17 @@ $inline_style   = $height_style . $width_style;
 				<span class="preview-ai-tryons-empty-icon">👕</span>
 				<p><?php esc_html_e( 'No looks yet. Generate your first preview!', 'preview-ai' ); ?></p>
 			</div>
+			<?php if ( ! isset( $show_branding ) || $show_branding ) : ?>
+				<div class="preview-ai-powered-by">
+					<?php 
+					printf(
+						/* translators: %s: Link to Preview AI website */
+						esc_html__( 'Powered by %s', 'preview-ai' ),
+						'<a href="https://previewai.app" target="_blank" rel="noopener noreferrer">Preview AI</a>'
+					); 
+					?>
+				</div>
+			<?php endif; ?>
 		</div>
 
 		<!-- Instructions -->

@@ -20,6 +20,14 @@ class PREVIEW_AI_Admin_Catalog {
 	const CATALOG_BATCH_SIZE = 50;
 
 	/**
+	 * Free tier limits.
+	 * - MAX_PRODUCTS: Maximum products to send to backend for analysis.
+	 * - MAX_ANALYZE: Maximum products the backend will classify/analyze.
+	 */
+	const FREE_TIER_MAX_PRODUCTS = 300;
+	const FREE_TIER_MAX_ANALYZE  = 20;
+
+	/**
 	 * Check if current account is on free trial.
 	 */
 	private function is_free_tier() {
@@ -62,9 +70,8 @@ class PREVIEW_AI_Admin_Catalog {
 			) );
 		}
 
-		// 4. If compatible, filter by relevant categories if available.
-		$relevant_categories = isset( $preflight['relevant_categories'] ) ? $preflight['relevant_categories'] : array();
-		$products_data       = $this->get_catalog_products_data( $relevant_categories );
+		// 4. If compatible, get all products for classification (no category filtering).
+		$products_data = $this->get_catalog_products_data();
 
 		if ( empty( $products_data ) ) {
 			wp_send_json_success(
@@ -126,11 +133,6 @@ class PREVIEW_AI_Admin_Catalog {
 		$try_product_url = '';
 		if ( ! empty( $stats['configured_ids'] ) ) {
 			$try_product_url = add_query_arg( 'demo', 'yes', get_permalink( $stats['configured_ids'][0] ) );
-		}
-
-		$warning = '';
-		if ( $analysis_errors >= 3 ) {
-			$warning = __( 'Some product images could not be analyzed. If this persists, please contact support.', 'preview-ai' );
 		}
 
 		wp_send_json_success(
@@ -256,11 +258,6 @@ class PREVIEW_AI_Admin_Catalog {
 				$try_product_url = add_query_arg( 'demo', 'yes', get_permalink( $progress['configured_ids'][0] ) );
 			}
 
-			$warning = '';
-			if ( isset( $progress['analysis_errors'] ) && $progress['analysis_errors'] >= 3 ) {
-				$warning = __( 'Some product images could not be analyzed. If this persists, please contact support.', 'preview-ai' );
-			}
-
 			$response['configured']      = $progress['configured'];
 			$response['needs_review']    = $progress['needs_review'];
 			$response['images_analyzed'] = $progress['images_analyzed'];
@@ -371,14 +368,16 @@ class PREVIEW_AI_Admin_Catalog {
 	}
 
 	/**
-	 * Get catalog products data.
+	 * Get catalog products data for analysis.
 	 *
-	 * @param array $relevant_categories Optional names of categories to filter by.
+	 * @return array Products with nested variations.
 	 */
-	public function get_catalog_products_data( $relevant_categories = array() ) {
+	public function get_catalog_products_data() {
+		$is_free_tier = $this->is_free_tier();
+
 		$args = array(
 			'status'       => 'publish',
-			'limit'        => -1,
+			'limit'        => $is_free_tier ? self::FREE_TIER_MAX_PRODUCTS : -1,
 			'type'         => array( 'simple', 'variable' ),
 			'stock_status' => 'instock',
 			'meta_query'   => array(
@@ -389,63 +388,68 @@ class PREVIEW_AI_Admin_Catalog {
 			),
 		);
 
-		if ( ! empty( $relevant_categories ) ) {
-			$args['category'] = $relevant_categories;
-		}
-
 		$products = wc_get_products( $args );
 
 		$products_data = array();
 		foreach ( $products as $product ) {
-			$product_id = $product->get_id();
-			$categories = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
+			$product_id     = $product->get_id();
+			$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
 			$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
-			$tags = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
-			$tags_str = is_array( $tags ) ? implode( ', ', $tags ) : '';
-			$thumbnail_id  = $product->get_image_id();
-			$thumbnail_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
+			$tags           = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
+			$tags_str       = is_array( $tags ) ? implode( ', ', $tags ) : '';
+			$thumbnail_id   = $product->get_image_id();
+			$thumbnail_url  = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
 
-			$products_data[] = array(
+			$product_data = array(
 				'id'            => $product_id,
 				'title'         => $product->get_name(),
 				'categories'    => $categories_str,
 				'tags'          => $tags_str,
 				'thumbnail_url' => $thumbnail_url,
-				'variation_id'  => null,
+				'variations'    => array(),
 			);
 
+			// Add variations with different images.
 			if ( $product->is_type( 'variable' ) ) {
 				$variation_ids = $product->get_children();
 				foreach ( $variation_ids as $variation_id ) {
 					$variation = wc_get_product( $variation_id );
-					if ( ! $variation ) continue;
+					if ( ! $variation ) {
+						continue;
+					}
 
 					// Skip out of stock variations.
-					if ( ! $variation->is_in_stock() ) continue;
+					if ( ! $variation->is_in_stock() ) {
+						continue;
+					}
 
+					// Skip already analyzed variations.
 					$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
-					if ( ! empty( $var_analysis ) ) continue;
+					if ( ! empty( $var_analysis ) ) {
+						continue;
+					}
 
 					$var_image_id = $variation->get_image_id();
 					if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
-						$var_thumbnail_url = wp_get_attachment_url( $var_image_id );
-						$products_data[] = array(
-							'id'            => $product_id,
-							'title'         => $product->get_name(),
-							'categories'    => $categories_str,
-							'tags'          => $tags_str,
-							'thumbnail_url' => $var_thumbnail_url,
+						$var_thumbnail_url              = wp_get_attachment_url( $var_image_id );
+						$product_data['variations'][] = array(
 							'variation_id'  => $variation_id,
+							'thumbnail_url' => $var_thumbnail_url,
 						);
 					}
 				}
 			}
+
+			$products_data[] = $product_data;
 		}
+
 		return $products_data;
 	}
 
 	/**
-	 * Save catalog classifications.
+	 * Save catalog classifications from backend response.
+	 *
+	 * Structure: 1 product with nested variations.
 	 */
 	public function save_catalog_classifications( $result ) {
 		$stats = array(
@@ -461,65 +465,87 @@ class PREVIEW_AI_Admin_Catalog {
 		}
 
 		$valid_subtypes = array_keys( PREVIEW_AI_Admin_Settings::get_clothing_subtypes() );
-		$processed_parents = array();
 
 		foreach ( $result['classifications'] as $classification ) {
-			if ( empty( $classification['id'] ) ) continue;
+			if ( empty( $classification['id'] ) ) {
+				continue;
+			}
 
 			$product_id   = absint( $classification['id'] );
-			$variation_id = isset( $classification['variation_id'] ) ? absint( $classification['variation_id'] ) : null;
 			$subtype      = isset( $classification['subtype'] ) ? sanitize_key( $classification['subtype'] ) : '';
 			$garment_type = isset( $classification['garment_type'] ) ? sanitize_key( $classification['garment_type'] ) : '';
 			$is_supported = isset( $classification['supported'] ) ? (bool) $classification['supported'] : true;
 
-			if ( ! in_array( $product_id, $processed_parents, true ) ) {
-				$stats['total']++;
-				$processed_parents[] = $product_id;
+			// Count each product (1 product = 1 count, regardless of variations).
+			$stats['total']++;
 
-				update_post_meta( $product_id, '_preview_ai_supported', $is_supported ? 'yes' : 'no' );
+			// Save product classification.
+			update_post_meta( $product_id, '_preview_ai_supported', $is_supported ? 'yes' : 'no' );
 
-				if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
-					update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
-					if ( ! empty( $garment_type ) ) {
-						update_post_meta( $product_id, '_preview_ai_garment_type', $garment_type );
-					}
-					if ( $is_supported ) {
-						$stats['configured']++;
-						$stats['configured_ids'][] = $product_id;
-					} else {
-						update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
-						$stats['needs_review']++;
-					}
+			if ( ! empty( $subtype ) && in_array( $subtype, $valid_subtypes, true ) ) {
+				update_post_meta( $product_id, '_preview_ai_recommended_subtype', $subtype );
+				if ( ! empty( $garment_type ) ) {
+					update_post_meta( $product_id, '_preview_ai_garment_type', $garment_type );
+				}
+				if ( $is_supported ) {
+					$stats['configured']++;
+					$stats['configured_ids'][] = $product_id;
 				} else {
 					update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
 					$stats['needs_review']++;
 				}
+			} else {
+				update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
+				$stats['needs_review']++;
 			}
 
+			// Save parent product image analysis.
 			if ( ! empty( $classification['image_analysis'] ) ) {
-				$analysis = $classification['image_analysis'];
-				$detected_objects = array();
-				if ( ! empty( $analysis['detected_objects'] ) && is_array( $analysis['detected_objects'] ) ) {
-					$detected_objects = array_map( 'sanitize_text_field', $analysis['detected_objects'] );
-				}
-
-				$image_analysis = array(
-					'has_model'         => ! empty( $analysis['has_model'] ),
-					'shot_type'         => sanitize_key( $analysis['shot_type'] ?? 'unknown' ),
-					'framing'           => sanitize_key( $analysis['framing'] ?? 'unknown' ),
-					'multiple_garments' => ! empty( $analysis['multiple_garments'] ),
-					'detected_objects'  => $detected_objects,
-					'confidence'        => floatval( $analysis['confidence'] ?? 0.0 ),
-					'image_id'          => absint( $analysis['image_id'] ?? 0 ),
-					'updated_at'        => sanitize_text_field( $analysis['updated_at'] ?? current_time( 'Y-m-d' ) ),
-				);
-
-				$meta_target = $variation_id ? $variation_id : $product_id;
-				update_post_meta( $meta_target, '_preview_ai_image_analysis', $image_analysis );
+				$this->save_image_analysis( $product_id, $classification['image_analysis'] );
 				$stats['images_analyzed']++;
 			}
+
+			// Save variations image analysis.
+			if ( ! empty( $classification['variations'] ) && is_array( $classification['variations'] ) ) {
+				foreach ( $classification['variations'] as $variation_data ) {
+					if ( ! empty( $variation_data['variation_id'] ) && ! empty( $variation_data['image_analysis'] ) ) {
+						$this->save_image_analysis(
+							absint( $variation_data['variation_id'] ),
+							$variation_data['image_analysis']
+						);
+						$stats['images_analyzed']++;
+					}
+				}
+			}
 		}
+
 		return $stats;
+	}
+
+	/**
+	 * Save image analysis data to post meta.
+	 *
+	 * @param int   $post_id  Post ID (product or variation).
+	 * @param array $analysis Image analysis data from backend.
+	 */
+	private function save_image_analysis( $post_id, $analysis ) {
+		$detected_objects = array();
+		if ( ! empty( $analysis['detected_objects'] ) && is_array( $analysis['detected_objects'] ) ) {
+			$detected_objects = array_map( 'sanitize_text_field', $analysis['detected_objects'] );
+		}
+
+		$image_analysis = array(
+			'has_model'         => ! empty( $analysis['has_model'] ),
+			'shot_type'         => sanitize_key( $analysis['shot_type'] ?? 'unknown' ),
+			'framing'           => sanitize_key( $analysis['framing'] ?? 'unknown' ),
+			'multiple_garments' => ! empty( $analysis['multiple_garments'] ),
+			'detected_objects'  => $detected_objects,
+			'confidence'        => floatval( $analysis['confidence'] ?? 0.0 ),
+			'image_id'          => absint( $analysis['image_id'] ?? 0 ),
+			'updated_at'        => sanitize_text_field( $analysis['updated_at'] ?? current_time( 'Y-m-d' ) ),
+		);
+
+		update_post_meta( $post_id, '_preview_ai_image_analysis', $image_analysis );
 	}
 }
 

@@ -211,39 +211,86 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 					<!-- API Key -->
 					<tr>
 						<th scope="row">
-							<label for="preview_ai_api_key">
-								<?php esc_html_e( 'API Key', 'preview-ai' ); ?>
-							</label>
+							<?php esc_html_e( 'Subscription & Usage', 'preview-ai' ); ?>
 						</th>
 						<td>
-							<input type="text"
-								   id="preview_ai_api_key" 
-								   name="preview_ai_api_key" 
-								   value="<?php echo esc_attr( get_option( 'preview_ai_api_key', '' ) ); ?>" 
-								   class="regular-text" 
-							/>
-							<button type="button" id="preview_ai_verify_btn" class="button" style="margin-left: 8px;">
-								<?php esc_html_e( 'Verify', 'preview-ai' ); ?>
-							</button>
 							<?php
-							// Only show "Manage Subscription" for paid plans (not free_tier).
 							$status = PREVIEW_AI_Api::get_account_status();
-							$subscription_status = isset( $status['subscription_status'] ) ? $status['subscription_status'] : null;
+							$tokens_limit = isset( $status['tokens_limit'] ) ? (int) $status['tokens_limit'] : 0;
+							$tokens_used = isset( $status['tokens_used'] ) ? (int) $status['tokens_used'] : 0;
+							$tokens_remaining = max( 0, $tokens_limit - $tokens_used );
+							$usage_percentage = $tokens_limit > 0 ? min( 100, round( ( $tokens_used / $tokens_limit ) * 100 ) ) : 0;
+							
+							$subscription_status = isset( $status['subscription_status'] ) ? $status['subscription_status'] : 'free_trial';
 							$is_paid_plan = ( 'free_trial' !== $subscription_status && ! empty( $subscription_status ) );
+							$plan_label = $is_paid_plan ? __( 'Paid Plan', 'preview-ai' ) : __( 'Free Trial', 'preview-ai' );
+							$plan_class = $is_paid_plan ? 'is-paid' : 'is-free';
+
+							$renewal_date = isset( $status['current_period_end'] ) ? $status['current_period_end'] : null;
 							?>
-							<?php if ( $is_paid_plan ) : ?>
-								<a href="https://previewai.app/account/" 
-								   target="_blank" 
-								   class="button" 
-								   style="margin-left: 8px;"
-								   id="preview_ai_manage_subscription_btn">
-									<?php esc_html_e( 'Manage Subscription', 'preview-ai' ); ?>
-								</a>
-							<?php endif; ?>
-							<div id="preview_ai_verify_status"></div>
-							<p class="description">
-								<?php esc_html_e( 'Your API key for authentication.', 'preview-ai' ); ?>
-							</p>
+
+							<div class="preview-ai-account-card" style="background: #fff; border: 1px solid #c3c4c7; border-radius: 8px; padding: 24px; max-width: 600px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 10px;">
+								<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+									<div>
+										<span id="pai-plan-badge" class="preview-ai-plan-badge <?php echo esc_attr( $plan_class ); ?>" style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; <?php echo $is_paid_plan ? 'background: #e7f3ff; color: #2271b1; border: 1px solid #d0e7ff;' : 'background: #f0f0f1; color: #50575e; border: 1px solid #c3c4c7;'; ?>">
+											<?php echo esc_html( $plan_label ); ?>
+										</span>
+										<?php if ( ! empty( $status['email'] ) ) : ?>
+											<div style="margin-top: 8px; color: #50575e; font-size: 13px;">
+												<strong><?php esc_html_e( 'Account:', 'preview-ai' ); ?></strong> <span id="pai-account-email"><?php echo esc_html( $status['email'] ); ?></span>
+											</div>
+										<?php endif; ?>
+									</div>
+									
+									<div id="pai-manage-account-container">
+										<?php if ( $is_paid_plan ) : ?>
+											<a href="https://previewai.app/account/" target="_blank" class="button button-secondary" style="display: inline-flex; align-items: center; gap: 4px;">
+												<?php esc_html_e( 'Manage Account', 'preview-ai' ); ?>
+												<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span>
+											</a>
+										<?php endif; ?>
+									</div>
+								</div>
+
+								<div style="margin-bottom: 20px;">
+									<div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+										<span style="font-weight: 600; color: #1d2327;"><?php esc_html_e( 'Monthly Usage', 'preview-ai' ); ?></span>
+										<span style="color: #646970;">
+											<strong id="pai-tokens-used"><?php echo esc_html( number_format_i18n( $tokens_used ) ); ?></strong> / <span id="pai-tokens-limit"><?php echo esc_html( number_format_i18n( $tokens_limit ) ); ?></span> <?php esc_html_e( 'previews', 'preview-ai' ); ?>
+										</span>
+									</div>
+									<div style="background: #f0f0f1; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+										<div id="pai-usage-bar" style="background: #2271b1; width: <?php echo esc_attr( $usage_percentage ); ?>%; height: 100%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+									</div>
+									<div style="display: flex; justify-content: space-between; font-size: 12px; color: #787c82;">
+										<span><span id="pai-tokens-remaining-text"><?php printf( esc_html__( '%s remaining', 'preview-ai' ), '<strong>' . number_format_i18n( $tokens_remaining ) . '</strong>' ); ?></span></span>
+										<span id="pai-renewal-date-container">
+											<?php if ( $renewal_date ) : ?>
+												<?php 
+												printf( 
+													esc_html__( 'Resets on %s', 'preview-ai' ), 
+													'<strong id="pai-renewal-date">' . date_i18n( get_option( 'date_format' ), strtotime( $renewal_date ) ) . '</strong>' 
+												); 
+												?>
+											<?php endif; ?>
+										</span>
+									</div>
+								</div>
+
+								<div id="pai-verification-status" style="background: #f6f7f7; padding: 12px 16px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #dcdcde;">
+									<div style="display: flex; align-items: center; gap: 8px; color: #646970; font-family: monospace; font-size: 12px;">
+										<span class="dashicons dashicons-key" style="font-size: 16px; width: 16px; height: 16px; color: #8c8f94;"></span>
+										<span>pvai_••••••••••••<?php echo esc_html( substr( get_option( 'preview_ai_api_key' ), -6 ) ); ?></span>
+									</div>
+									<div id="pai-status-indicator" style="color: #00a32a; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+										<span class="dashicons dashicons-yes-alt" style="font-size: 18px; width: 18px; height: 18px;"></span>
+										<?php esc_html_e( 'Verified', 'preview-ai' ); ?>
+									</div>
+								</div>
+							</div>
+							
+							<input type="hidden" id="preview_ai_api_key" name="preview_ai_api_key" value="<?php echo esc_attr( get_option( 'preview_ai_api_key', '' ) ); ?>" />
+							
 						</td>
 					</tr>
 				</tbody>

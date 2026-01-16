@@ -306,6 +306,11 @@ class PREVIEW_AI_Public {
 
 		$tips = $clothing_subtypes[ $clothing_subtype ]['tips'];
 
+		// Check if branding should be shown (only for free_tier).
+		$account_status = PREVIEW_AI_Api::get_account_status();
+		$subscription_status = isset( $account_status['subscription_status'] ) ? $account_status['subscription_status'] : 'free_trial';
+		$show_branding = ( 'free_trial' === $subscription_status || empty( $subscription_status ) );
+
 		ob_start();
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-public-display.php';
 		return ob_get_clean();

@@ -114,7 +114,7 @@ class PREVIEW_AI_Admin_Onboarding {
 							var limitedNotice = '';
 							if (isLimited) {
 								limitedNotice = '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin-top:12px;">' +
-									'<p style="color:#92400e;margin:0;font-size:13px;">⚡ <?php echo esc_js( __( 'Free trial: Few random products were analyzed.', 'preview-ai' ) ); ?></p>' +
+									'<p style="color:#92400e;margin:0;font-size:13px;">⚡ <?php echo esc_js( __( 'Free trial: Up to 20 products were analyzed from your catalog.', 'preview-ai' ) ); ?></p>' +
 									'</div>';
 							}
 							

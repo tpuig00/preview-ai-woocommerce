@@ -13,58 +13,78 @@
 		} );
 
 		// Verify API Key functionality.
-		var $verifyBtn = $( '#preview_ai_verify_btn' );
-		var $verifyStatus = $( '#preview_ai_verify_status' );
 		var $apiKeyField = $( '#preview_ai_api_key' );
+		var $statusIndicator = $( '#pai-status-indicator' );
 
 		// Helper to render status message.
 		function renderStatus( res ) {
-			var html;
 			if ( res.success ) {
-				html = '<div style="margin-top:12px; padding:12px 16px; background:#f0fdf4; border-left:4px solid #22c55e; border-radius:4px;">';
-				html += '<div style="color:#15803d; font-weight:600; margin-bottom:4px;">✓ Plan active</div>';
-				html += '<div style="color:#166534;">' + res.data.tokens + ' previews remaining</div>';
-				if ( res.data.renew_date ) {
-					html += '<div style="color:#64748b; font-size:12px; margin-top:4px;">Renews on ' + res.data.renew_date + '</div>';
-				}
-				// Show upgrade link if free trial
-				if ( res.data.subscription_status === 'free_trial' ) {
-					html += '<div style="margin-top:8px;">';
-					html += '<a href="https://previewai.app/pricing" target="_blank" style="color:#2271b1; text-decoration:none; font-size:13px; font-weight:500;">';
-					html += '↑ Upgrade your subscription →</a>';
-					html += '</div>';
-				}
-				html += '</div>';
-				
-				// Show/hide "Manage Subscription" button based on subscription status.
-				var $manageBtn = $( '#preview_ai_manage_subscription_btn' );
-				var subscriptionStatus = res.data.subscription_status || '';
-				var isPaidPlan = ( subscriptionStatus !== 'free_trial' && subscriptionStatus !== '' );
-				
-				if ( isPaidPlan ) {
-					// Show button if hidden.
-					if ( ! $manageBtn.length ) {
-						$( '#preview_ai_verify_btn' ).after(
-							'<a href="https://previewai.app/account/" ' +
-							'target="_blank" class="button" style="margin-left: 8px;" ' +
-							'id="preview_ai_manage_subscription_btn">Manage Subscription</a>'
-						);
+				var data = res.data;
+				var tokensLimit = parseInt( data.tokens_limit || 0 );
+				var tokensUsed = parseInt( data.tokens_used || 0 );
+				var tokensRemaining = Math.max( 0, tokensLimit - tokensUsed );
+				var usagePercentage = tokensLimit > 0 ? Math.min( 100, Math.round( ( tokensUsed / tokensLimit ) * 100 ) ) : 0;
+				var isPaidPlan = ( data.subscription_status !== 'free_trial' && data.subscription_status !== '' );
+
+				// Update Card UI if elements exist
+				if ( $( '#pai-plan-badge' ).length ) {
+					var $badge = $( '#pai-plan-badge' );
+					var label = isPaidPlan ? 'Paid Plan' : 'Free Trial';
+					
+					$badge.text( label );
+					if ( isPaidPlan ) {
+						$badge.removeClass( 'is-free' ).addClass( 'is-paid' )
+							  .css( { 'background': '#e7f3ff', 'color': '#2271b1', 'border': '1px solid #d0e7ff' } );
+					} else {
+						$badge.removeClass( 'is-paid' ).addClass( 'is-free' )
+							  .css( { 'background': '#f0f0f1', 'color': '#50575e', 'border': '1px solid #c3c4c7' } );
 					}
-				} else {
-					// Hide button if shown.
-					$manageBtn.remove();
+
+					$( '#pai-tokens-used' ).text( tokensUsed.toLocaleString() );
+					$( '#pai-tokens-limit' ).text( tokensLimit.toLocaleString() );
+					$( '#pai-usage-bar' ).css( 'width', usagePercentage + '%' );
+					$( '#pai-tokens-remaining-text' ).html( '<strong>' + tokensRemaining.toLocaleString() + '</strong> remaining' );
+
+					if ( data.renew_date ) {
+						$( '#pai-renewal-date-container' ).html( 'Resets on <strong>' + data.renew_date + '</strong>' );
+					}
+
+					if ( data.email ) {
+						$( '#pai-account-email' ).text( data.email );
+					}
+
+					// Update Manage Account button
+					var $manageContainer = $( '#pai-manage-account-container' );
+					if ( isPaidPlan ) {
+						if ( ! $manageContainer.find( 'a' ).length ) {
+							$manageContainer.html( 
+								'<a href="https://previewai.app/account/" target="_blank" class="button button-secondary" style="display: inline-flex; align-items: center; gap: 4px;">' +
+								'Manage Account <span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span></a>'
+							);
+						}
+					} else {
+						$manageContainer.empty();
+					}
+
+					if ( $statusIndicator.length ) {
+						$statusIndicator.html( '<span class="dashicons dashicons-yes-alt" style="font-size: 18px; width: 18px; height: 18px;"></span> Verified' )
+										.css( 'color', '#00a32a' );
+					}
 				}
 			} else {
-				html = '<div style="margin-top:12px; padding:12px 16px; background:#fef2f2; border-left:4px solid #ef4444; border-radius:4px;">';
-				html += '<div style="color:#dc2626; font-weight:600;">✗ ' + ( res.data.message || 'Verification failed' ) + '</div>';
-				html += '</div>';
+				// Error handling for the new UI
+				if ( $statusIndicator.length ) {
+					$statusIndicator.html( '<span class="dashicons dashicons-warning" style="font-size: 18px; width: 18px; height: 18px;"></span> Error' )
+									.css( 'color', '#d63638' );
+				}
 			}
-			$verifyStatus.html( html );
 		}
 
 		// Auto-check status on page load (uses saved API key from DB).
 		if ( $apiKeyField.length && $apiKeyField.val() && typeof previewAiAdmin !== 'undefined' ) {
-			$verifyStatus.html( '<span style="color:#646970;">Checking...</span>' );
+			if ( $statusIndicator.length ) {
+				$statusIndicator.html( '<span style="color:#646970; font-weight:400;">Checking...</span>' );
+			}
 			$.ajax( {
 				url: previewAiAdmin.ajaxUrl,
 				type: 'POST',
@@ -72,49 +92,9 @@
 					action: 'preview_ai_verify_api_key',
 					nonce: previewAiAdmin.verifyNonce
 				},
-				success: renderStatus,
-				error: function() {
-					$verifyStatus.html( '' );
-				}
+				success: renderStatus
 			} );
 		}
-
-		// Manual verify button (uses API key from field).
-		$verifyBtn.on( 'click', function() {
-			var apiKey = $apiKeyField.val();
-
-			if ( ! apiKey ) {
-				var html = '<div style="margin-top:12px; padding:12px 16px; background:#fef2f2; border-left:4px solid #ef4444; border-radius:4px;">';
-				html += '<div style="color:#dc2626; font-weight:600;">✗ Enter an API key first</div>';
-				html += '</div>';
-				$verifyStatus.html( html );
-				return;
-			}
-
-			$verifyBtn.prop( 'disabled', true ).text( '...' );
-			$verifyStatus.html( '' );
-
-			$.ajax( {
-				url: previewAiAdmin.ajaxUrl,
-				type: 'POST',
-				data: {
-					action: 'preview_ai_verify_api_key',
-					nonce: previewAiAdmin.verifyNonce,
-					api_key: apiKey
-				},
-				success: function( res ) {
-					$verifyBtn.prop( 'disabled', false ).text( 'Verify' );
-					renderStatus( res );
-				},
-				error: function() {
-					$verifyBtn.prop( 'disabled', false ).text( 'Verify' );
-					var html = '<div style="margin-top:12px; padding:12px 16px; background:#fef2f2; border-left:4px solid #ef4444; border-radius:4px;">';
-					html += '<div style="color:#dc2626; font-weight:600;">✗ Connection error</div>';
-					html += '</div>';
-					$verifyStatus.html( html );
-				}
-			} );
-		} );
 
 		// Learn My Catalog functional with background processing support.
 		var learnBtn = document.getElementById( 'preview_ai_learn_catalog_btn' );

@@ -261,15 +261,21 @@ class PREVIEW_AI_Admin {
 			update_option( 'preview_ai_api_key', $api_key );
 		}
 
-		$tokens             = isset( $result['tokens_remaining'] ) ? intval( $result['tokens_remaining'] ) : 0;
-		$period_end         = isset( $result['current_period_end'] ) ? $result['current_period_end'] : null;
-		$renew_date         = $period_end ? date_i18n( 'F j, Y', strtotime( $period_end ) ) : '';
+		$tokens_limit        = isset( $result['tokens_limit'] ) ? intval( $result['tokens_limit'] ) : 0;
+		$tokens_used         = isset( $result['tokens_used'] ) ? intval( $result['tokens_used'] ) : 0;
+		$tokens_remaining    = isset( $result['tokens_remaining'] ) ? intval( $result['tokens_remaining'] ) : 0;
+		$period_end          = isset( $result['current_period_end'] ) ? $result['current_period_end'] : null;
+		$renew_date          = $period_end ? date_i18n( get_option( 'date_format' ), strtotime( $period_end ) ) : '';
 		$subscription_status = isset( $result['subscription_status'] ) ? sanitize_text_field( $result['subscription_status'] ) : null;
+		$email               = isset( $result['email'] ) ? sanitize_email( $result['email'] ) : null;
 
 		wp_send_json_success( array(
-			'tokens'             => $tokens,
-			'renew_date'         => $renew_date,
+			'tokens_limit'        => $tokens_limit,
+			'tokens_used'         => $tokens_used,
+			'tokens_remaining'    => $tokens_remaining,
+			'renew_date'          => $renew_date,
 			'subscription_status' => $subscription_status,
+			'email'               => $email,
 		) );
 	}
 }

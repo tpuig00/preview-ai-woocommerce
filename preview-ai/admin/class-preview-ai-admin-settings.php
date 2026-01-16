@@ -14,7 +14,6 @@ class PREVIEW_AI_Admin_Settings {
 	 */
 	public function register_settings() {
 		// General settings group.
-		register_setting( 'preview_ai_general_settings', 'preview_ai_api_endpoint', 'esc_url_raw' );
 		register_setting( 'preview_ai_general_settings', 'preview_ai_api_key', 'sanitize_text_field' );
 		register_setting( 'preview_ai_general_settings', 'preview_ai_enabled', 'absint' );
 

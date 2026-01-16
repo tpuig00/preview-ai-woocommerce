@@ -1239,6 +1239,29 @@ a.preview-ai-action-btn--secondary:hover {
 	color: var(--pai-text-muted) !important;
 }
 
+.preview-ai-powered-by {
+	margin-top: 1.5rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--pai-border);
+	font-size: 11px;
+	color: var(--pai-text-muted);
+	text-align: center;
+	font-weight: 500;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.preview-ai-powered-by a {
+	color: inherit !important;
+	text-decoration: none !important;
+	transition: color var(--pai-transition-fast) !important;
+}
+
+.preview-ai-powered-by a:hover {
+	color: var(--pai-accent) !important;
+	text-decoration: underline !important;
+}
+
 /* Look Card */
 .preview-ai-tryon-card {
 	display: block !important;
