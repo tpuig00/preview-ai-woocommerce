@@ -31,9 +31,7 @@ class PREVIEW_AI_Admin_Catalog {
 	 * Check if current account is on free trial.
 	 */
 	private function is_free_tier() {
-		$status = PREVIEW_AI_Api::get_account_status();
-		$subscription_status = isset( $status['subscription_status'] ) ? $status['subscription_status'] : 'free_trial';
-		return 'free_trial' === $subscription_status;
+		return PREVIEW_AI_Api::is_free_tier();
 	}
 
 	/**

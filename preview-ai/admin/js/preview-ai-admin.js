@@ -51,19 +51,29 @@
 
 					if ( data.email ) {
 						$( '#pai-account-email' ).text( data.email );
+						$( '#pai-status-email' ).text( data.email );
+					}
+					
+					if ( data.domain ) {
+						$( '#pai-status-domain' ).text( data.domain );
 					}
 
 					// Update Manage Account button
 					var $manageContainer = $( '#pai-manage-account-container' );
 					if ( isPaidPlan ) {
-						if ( ! $manageContainer.find( 'a' ).length ) {
+						if ( ! $manageContainer.find( 'a.button-secondary' ).length ) {
 							$manageContainer.html( 
 								'<a href="https://previewai.app/account/" target="_blank" class="button button-secondary" style="display: inline-flex; align-items: center; gap: 4px;">' +
 								'Manage Account <span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span></a>'
 							);
 						}
 					} else {
-						$manageContainer.empty();
+						if ( ! $manageContainer.find( 'a.button-primary' ).length ) {
+							$manageContainer.html( 
+								'<a href="https://previewai.app/pricing/" target="_blank" class="button button-primary" style="display: inline-flex; align-items: center; gap: 4px; background: #2271b1; border-color: #2271b1;">' +
+								'Upgrade Plan <span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span></a>'
+							);
+						}
 					}
 
 					if ( $statusIndicator.length ) {

@@ -235,17 +235,18 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 										<span id="pai-plan-badge" class="preview-ai-plan-badge <?php echo esc_attr( $plan_class ); ?>" style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; <?php echo $is_paid_plan ? 'background: #e7f3ff; color: #2271b1; border: 1px solid #d0e7ff;' : 'background: #f0f0f1; color: #50575e; border: 1px solid #c3c4c7;'; ?>">
 											<?php echo esc_html( $plan_label ); ?>
 										</span>
-										<?php if ( ! empty( $status['email'] ) ) : ?>
-											<div style="margin-top: 8px; color: #50575e; font-size: 13px;">
-												<strong><?php esc_html_e( 'Account:', 'preview-ai' ); ?></strong> <span id="pai-account-email"><?php echo esc_html( $status['email'] ); ?></span>
-											</div>
-										<?php endif; ?>
+
 									</div>
 									
 									<div id="pai-manage-account-container">
 										<?php if ( $is_paid_plan ) : ?>
 											<a href="https://previewai.app/account/" target="_blank" class="button button-secondary" style="display: inline-flex; align-items: center; gap: 4px;">
 												<?php esc_html_e( 'Manage Account', 'preview-ai' ); ?>
+												<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span>
+											</a>
+										<?php else : ?>
+											<a href="https://previewai.app/pricing/" target="_blank" class="button button-primary" style="display: inline-flex; align-items: center; gap: 4px; background: #2271b1; border-color: #2271b1;">
+												<?php esc_html_e( 'Upgrade Plan', 'preview-ai' ); ?>
 												<span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span>
 											</a>
 										<?php endif; ?>
@@ -277,14 +278,24 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 									</div>
 								</div>
 
-								<div id="pai-verification-status" style="background: #f6f7f7; padding: 12px 16px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #dcdcde;">
-									<div style="display: flex; align-items: center; gap: 8px; color: #646970; font-family: monospace; font-size: 12px;">
-										<span class="dashicons dashicons-key" style="font-size: 16px; width: 16px; height: 16px; color: #8c8f94;"></span>
-										<span>pvai_••••••••••••<?php echo esc_html( substr( get_option( 'preview_ai_api_key' ), -6 ) ); ?></span>
+								<div id="pai-verification-status" style="background: #f6f7f7; padding: 16px; border-radius: 6px; border: 1px solid #dcdcde;">
+									<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e4e7;">
+										<div style="display: flex; align-items: center; gap: 8px; color: #646970; font-family: monospace; font-size: 12px;">
+											<span class="dashicons dashicons-key" style="font-size: 16px; width: 16px; height: 16px; color: #8c8f94;"></span>
+											<span>pvai_••••••••••••<?php echo esc_html( substr( get_option( 'preview_ai_api_key' ), -6 ) ); ?></span>
+										</div>
+										<div id="pai-status-indicator" style="color: #00a32a; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+											<span class="dashicons dashicons-yes-alt" style="font-size: 18px; width: 18px; height: 18px;"></span>
+											<?php esc_html_e( 'Verified', 'preview-ai' ); ?>
+										</div>
 									</div>
-									<div id="pai-status-indicator" style="color: #00a32a; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-										<span class="dashicons dashicons-yes-alt" style="font-size: 18px; width: 18px; height: 18px;"></span>
-										<?php esc_html_e( 'Verified', 'preview-ai' ); ?>
+									
+									<div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 12px; color: #646970;">
+										<span style="font-weight: 600; color: #8c8f94;"><?php esc_html_e( 'Email:', 'preview-ai' ); ?></span>
+										<span id="pai-status-email"><?php echo esc_html( $status['email'] ?? '—' ); ?></span>
+										
+										<span style="font-weight: 600; color: #8c8f94;"><?php esc_html_e( 'Domain:', 'preview-ai' ); ?></span>
+										<span id="pai-status-domain"><?php echo esc_html( $status['domain'] ?? '—' ); ?></span>
 									</div>
 								</div>
 							</div>
@@ -307,6 +318,9 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			// Get compatibility status.
 			$preflight     = get_option( 'preview_ai_store_compatibility' );
 			$is_compatible = ! empty( $preflight ) ? $preflight['compatible'] : true;
+			
+			// Check free tier.
+			$is_free_tier = PREVIEW_AI_Api::is_free_tier();
 			?>
 			<div class="preview-ai-learn-catalog" style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
 				<h2 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #1d2327;">
@@ -333,35 +347,48 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 					</div>
 				<?php endif; ?>
 
-				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" style="display: inline-flex; align-items: center; gap: 8px;" <?php echo ( $is_processing || ! $is_compatible ) ? 'disabled' : ''; ?>>
-					<span class="dashicons dashicons-welcome-learn-more" style="font-size: 18px; width: 18px; height: 18px;"></span>
-					<?php esc_html_e( 'Analyze My Catalog', 'preview-ai' ); ?>
-				</button>
+				<?php if ( $is_free_tier ) : ?>
+					<div style="padding: 12px 16px; border-radius: 4px; background-color: #f0f6fc; border: 1px solid #2271b1; font-size: 13px;">
+						<span style="font-size: 16px; margin-right: 8px;">🚀</span>
+						<strong><?php esc_html_e( 'Free Trial', 'preview-ai' ); ?></strong> — 
+						<?php esc_html_e( 'Upgrade your plan to analyze and enable Preview AI on unlimited products.', 'preview-ai' ); ?>
+						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=general' ) ); ?>" style="margin-left: 8px; font-weight: 500;">
+							<?php esc_html_e( 'Upgrade Plan →', 'preview-ai' ); ?>
+						</a>
+					</div>
+				<?php else : ?>
+					<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" style="display: inline-flex; align-items: center; gap: 8px;" <?php echo ( $is_processing || ! $is_compatible ) ? 'disabled' : ''; ?>>
+						<span class="dashicons dashicons-welcome-learn-more" style="font-size: 18px; width: 18px; height: 18px;"></span>
+						<?php esc_html_e( 'Analyze My Catalog', 'preview-ai' ); ?>
+					</button>
 
-				<div id="preview_ai_learn_catalog_loading" style="<?php echo $is_processing ? '' : 'display: none;'; ?> margin-top: 16px;">
-					<span class="spinner" style="float: none; visibility: visible; margin: 0 8px 0 0;"></span>
-					<span id="preview_ai_learn_catalog_progress" style="color: #50575e;">
-						<?php
-						if ( $is_processing && ! empty( $progress ) ) {
-							printf(
-								/* translators: 1: processed count, 2: total count */
-								esc_html__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
-								absint( $progress['processed'] ),
-								absint( $progress['total'] )
-							);
-						} else {
-							esc_html_e( 'Analyzing your catalog...', 'preview-ai' );
-						}
-						?>
-					</span>
-				</div>
+					<div id="preview_ai_learn_catalog_loading" style="<?php echo $is_processing ? '' : 'display: none;'; ?> margin-top: 16px;">
+						<span class="spinner" style="float: none; visibility: visible; margin: 0 8px 0 0;"></span>
+						<span id="preview_ai_learn_catalog_progress" style="color: #50575e;">
+							<?php
+							if ( $is_processing && ! empty( $progress ) ) {
+								printf(
+									/* translators: 1: processed count, 2: total count */
+									esc_html__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
+									absint( $progress['processed'] ),
+									absint( $progress['total'] )
+								);
+							} else {
+								esc_html_e( 'Analyzing your catalog...', 'preview-ai' );
+							}
+							?>
+						</span>
+					</div>
 
-				<div id="preview_ai_learn_catalog_result" style="display: none; margin-top: 16px; padding: 12px 16px; border-radius: 4px;"></div>
+					<div id="preview_ai_learn_catalog_result" style="display: none; margin-top: 16px; padding: 12px 16px; border-radius: 4px;"></div>
+				<?php endif; ?>
 			</div>
+			<?php if ( ! $is_free_tier ) : ?>
 			<script>
 				// Pass initial status to JS.
 				window.previewAiCatalogStatus = <?php echo wp_json_encode( $catalog_status['status'] ); ?>;
 			</script>
+			<?php endif; ?>
 		</form>
 
 	<?php elseif ( 'widget' === $active_tab ) : ?>

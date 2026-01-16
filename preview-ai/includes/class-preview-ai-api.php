@@ -184,6 +184,17 @@ class PREVIEW_AI_Api {
 	}
 
 	/**
+	 * Check if current account is on free tier.
+	 *
+	 * @return bool True if free tier.
+	 */
+	public static function is_free_tier() {
+		$status              = self::get_account_status();
+		$subscription_status = isset( $status['subscription_status'] ) ? $status['subscription_status'] : 'free_trial';
+		return 'free_trial' === $subscription_status || empty( $subscription_status );
+	}
+
+	/**
 	 * Update account status in database (permanent, no expiry).
 	 *
 	 * @param array $status Status data from backend.

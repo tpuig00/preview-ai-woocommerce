@@ -29,6 +29,7 @@ class PREVIEW_AI_Admin_Product {
 		$supported      = get_post_meta( $post->ID, '_preview_ai_supported', true );
 		$global_enabled = get_option( 'preview_ai_enabled', 0 );
 		$was_analyzed   = '' !== $supported; // Product has been processed by catalog.
+		$is_free_tier   = PREVIEW_AI_Api::is_free_tier();
 
 		// Determine current state.
 		$is_enabled = false;
@@ -104,11 +105,24 @@ class PREVIEW_AI_Admin_Product {
 					   name="_preview_ai_enabled" 
 					   value="yes" 
 					   <?php checked( $is_enabled ); ?> 
-					   <?php disabled( ! $has_image || 'no' === $supported ); ?>
+					   <?php disabled( ! $has_image || 'no' === $supported || $is_free_tier ); ?>
 				/>
 				<span class="preview-ai-switch__track"></span>
 			</label>
 			</div>
+
+			<?php if ( $is_free_tier ) : ?>
+			<div class="preview-ai-notice" style="margin: 12px; background: #f0f6fc; border-left: 4px solid #2271b1;">
+				<span class="preview-ai-notice__icon">🚀</span>
+				<div class="preview-ai-notice__content">
+					<strong><?php esc_html_e( 'Free Trial', 'preview-ai' ); ?></strong><br>
+					<?php esc_html_e( 'Upgrade to enable Preview AI on unlimited products.', 'preview-ai' ); ?>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=general' ) ); ?>" style="display: inline-block; margin-top: 8px; font-weight: 500;">
+						<?php esc_html_e( 'Upgrade Plan →', 'preview-ai' ); ?>
+					</a>
+				</div>
+			</div>
+			<?php endif; ?>
 
 			<?php
 			// Check if product has variations without images.

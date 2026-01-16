@@ -268,6 +268,7 @@ class PREVIEW_AI_Admin {
 		$renew_date          = $period_end ? date_i18n( get_option( 'date_format' ), strtotime( $period_end ) ) : '';
 		$subscription_status = isset( $result['subscription_status'] ) ? sanitize_text_field( $result['subscription_status'] ) : null;
 		$email               = isset( $result['email'] ) ? sanitize_email( $result['email'] ) : null;
+		$domain              = isset( $result['domain'] ) ? sanitize_text_field( $result['domain'] ) : null;
 
 		wp_send_json_success( array(
 			'tokens_limit'        => $tokens_limit,
@@ -276,6 +277,7 @@ class PREVIEW_AI_Admin {
 			'renew_date'          => $renew_date,
 			'subscription_status' => $subscription_status,
 			'email'               => $email,
+			'domain'              => $domain,
 		) );
 	}
 }
