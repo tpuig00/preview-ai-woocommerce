@@ -262,7 +262,7 @@
 			}
 		} );
 
-		// Onboarding: Free trial registration form.
+		// Onboarding: activation form.
 		var $registerForm = $( '#preview-ai-register-form' );
 		
 		if ( $registerForm.length && typeof previewAiAdmin !== 'undefined' ) {

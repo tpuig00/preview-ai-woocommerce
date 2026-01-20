@@ -49,7 +49,7 @@ $inline_style   = $height_style . $width_style;
 <!-- Action Chip Container -->
 <div class="preview-ai-chip-wrapper <?php echo esc_attr( $position_class ); ?>">
 	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $shape_class ); ?>" <?php echo $inline_style ? 'style="' . esc_attr( $inline_style ) . '"' : ''; ?>>
-		<span class="preview-ai-chip-icon"><?php echo $button_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+		<span class="preview-ai-chip-icon"><?php echo PREVIEW_AI_Admin::kses_svg( $button_svg ); ?></span>
 		<span class="preview-ai-chip-text"><?php echo esc_html( $button_text ); ?></span>
 	</button>
 </div>
@@ -112,17 +112,6 @@ $inline_style   = $height_style . $width_style;
 				<span class="preview-ai-tryons-empty-icon">👕</span>
 				<p><?php esc_html_e( 'No looks yet. Generate your first preview!', 'preview-ai' ); ?></p>
 			</div>
-			<?php if ( ! isset( $show_branding ) || $show_branding ) : ?>
-				<div class="preview-ai-powered-by">
-					<?php 
-					printf(
-						/* translators: %s: Link to Preview AI website */
-						esc_html__( 'Powered by %s', 'preview-ai' ),
-						'<a href="https://previewai.app" target="_blank" rel="noopener noreferrer">Preview AI</a>'
-					); 
-					?>
-				</div>
-			<?php endif; ?>
 		</div>
 
 		<!-- Instructions -->

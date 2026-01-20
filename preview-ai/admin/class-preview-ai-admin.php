@@ -111,6 +111,10 @@ class PREVIEW_AI_Admin {
 		return PREVIEW_AI_Admin_Settings::get_clothing_subtypes();
 	}
 
+	public static function kses_svg( $svg ) {
+		return PREVIEW_AI_Admin_Settings::kses_svg( $svg );
+	}
+
 	public function add_product_data_tab( $tabs ) {
 		return $this->product->add_product_data_tab( $tabs );
 	}

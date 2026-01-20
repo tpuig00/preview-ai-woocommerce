@@ -127,6 +127,46 @@ class PREVIEW_AI_Public {
 			true
 		);
 
+		// Register demo tour scripts and styles.
+		wp_register_style(
+			'preview-ai-demo-tour',
+			plugin_dir_url( __FILE__ ) . 'css/preview-ai-demo-tour.css',
+			array(),
+			$this->version,
+			'all'
+		);
+
+		wp_register_script(
+			'preview-ai-demo-tour',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-demo-tour.js',
+			array( 'jquery' ),
+			$this->version,
+			true
+		);
+
+		wp_localize_script(
+			'preview-ai-demo-tour',
+			'previewAiDemo',
+			array(
+				'i18n' => array(
+					'demoTour'        => __( 'Demo Tour', 'preview-ai' ),
+					'skip'            => __( 'Skip', 'preview-ai' ),
+					'next'            => __( 'Next', 'preview-ai' ),
+					'tryItNow'        => __( 'Try it now!', 'preview-ai' ),
+					'step1Title'      => __( '🎨 Preview AI Understands Your Catalog', 'preview-ai' ),
+					'step1Text'       => __( 'Our AI analyzes your <strong>product images</strong>, including all <strong>variations and color options</strong>. If you have photos for each variant, Preview AI will use them for more accurate try-ons.', 'preview-ai' ),
+					'autoDetection'   => __( 'Auto-detection', 'preview-ai' ),
+					'realTime'        => __( 'Real-time', 'preview-ai' ),
+					'allColors'       => __( 'All colors', 'preview-ai' ),
+					'step2Title'      => __( '✨ Your Customers See This', 'preview-ai' ),
+					'step2Text'       => __( 'This widget is <strong>fully customizable</strong> and adapts to your store\'s design. Customers click here to instantly try on your products using their own photo.', 'preview-ai' ),
+					'customizable'    => __( 'Customizable', 'preview-ai' ),
+					'responsive'      => __( 'Responsive', 'preview-ai' ),
+					'oneClick'        => __( 'One-click', 'preview-ai' ),
+				),
+			)
+		);
+
 	}
 
 	/**
@@ -305,11 +345,6 @@ class PREVIEW_AI_Public {
 		}
 
 		$tips = $clothing_subtypes[ $clothing_subtype ]['tips'];
-
-		// Check if branding should be shown (only for free_tier).
-		$account_status = PREVIEW_AI_Api::get_account_status();
-		$subscription_status = isset( $account_status['subscription_status'] ) ? $account_status['subscription_status'] : 'free_trial';
-		$show_branding = ( 'free_trial' === $subscription_status || empty( $subscription_status ) );
 
 		ob_start();
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-public-display.php';

@@ -72,9 +72,6 @@ class PREVIEW_AI_Admin_Notices {
 				<p>
 					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
 					<?php esc_html_e( '⚠️ Your tokens have run out. The widget has been automatically disabled and your customers cannot preview products.', 'preview-ai' ); ?>
-					<a href="https://previewai.app/pricing" target="_blank" style="font-weight: bold;">
-						<?php esc_html_e( 'Upgrade your plan →', 'preview-ai' ); ?>
-					</a>
 				</p>
 			</div>
 			<?php
@@ -107,9 +104,6 @@ class PREVIEW_AI_Admin_Notices {
 					/* translators: %d: remaining tokens */
 					printf( esc_html__( 'You have only %d tokens remaining this month.', 'preview-ai' ), intval( $status['tokens_remaining'] ) );
 					?>
-					<a href="https://previewai.app/pricing" target="_blank">
-						<?php esc_html_e( 'Upgrade your plan', 'preview-ai' ); ?>
-					</a>
 				</p>
 			</div>
 			<?php

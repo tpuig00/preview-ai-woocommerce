@@ -20,21 +20,6 @@ class PREVIEW_AI_Admin_Catalog {
 	const CATALOG_BATCH_SIZE = 50;
 
 	/**
-	 * Free tier limits.
-	 * - MAX_PRODUCTS: Maximum products to send to backend for analysis.
-	 * - MAX_ANALYZE: Maximum products the backend will classify/analyze.
-	 */
-	const FREE_TIER_MAX_PRODUCTS = 300;
-	const FREE_TIER_MAX_ANALYZE  = 20;
-
-	/**
-	 * Check if current account is on free trial.
-	 */
-	private function is_free_tier() {
-		return PREVIEW_AI_Api::is_free_tier();
-	}
-
-	/**
 	 * Handle AJAX request for Learn My Catalog feature.
 	 */
 	public function handle_learn_catalog() {
@@ -87,11 +72,6 @@ class PREVIEW_AI_Admin_Catalog {
 
 		$total_products = count( $products_data );
 
-		if ( $this->is_free_tier() ) {
-			$this->process_catalog_sync( $products_data );
-			return;
-		}
-
 		if ( $total_products <= self::CATALOG_BATCH_SIZE ) {
 			$this->process_catalog_sync( $products_data );
 			return;
@@ -143,7 +123,6 @@ class PREVIEW_AI_Admin_Catalog {
 				'is_limited'      => $is_limited,
 				'analysis_errors' => $analysis_errors,
 				'try_product_url' => $try_product_url,
-				'warning'         => $warning,
 				'message'         => sprintf(
 					/* translators: 1: number of configured products, 2: number of products needing review, 3: number of images analyzed */
 					__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
@@ -261,7 +240,6 @@ class PREVIEW_AI_Admin_Catalog {
 			$response['images_analyzed'] = $progress['images_analyzed'];
 			$response['analysis_errors'] = $progress['analysis_errors'];
 			$response['try_product_url'] = $try_product_url;
-			$response['warning']         = $warning;
 			$response['message']         = sprintf(
 				/* translators: 1: number of configured products, 2: number of products needing review, 3: number of images analyzed */
 				__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
@@ -371,11 +349,9 @@ class PREVIEW_AI_Admin_Catalog {
 	 * @return array Products with nested variations.
 	 */
 	public function get_catalog_products_data() {
-		$is_free_tier = $this->is_free_tier();
-
 		$args = array(
 			'status'       => 'publish',
-			'limit'        => $is_free_tier ? self::FREE_TIER_MAX_PRODUCTS : -1,
+			'limit'        => -1,
 			'type'         => array( 'simple', 'variable' ),
 			'stock_status' => 'instock',
 			'meta_query'   => array(
