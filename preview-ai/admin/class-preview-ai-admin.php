@@ -264,10 +264,11 @@ class PREVIEW_AI_Admin {
 			)
 		);
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking URL params to determine which scripts to load, no data processing.
 		$is_settings_page = ( 'product_page_preview-ai' === $hook || ( isset( $_GET['page'] ) && 'preview-ai' === $_GET['page'] ) );
 		$is_product_page  = ( 'post.php' === $hook || 'post-new.php' === $hook );
-		$is_onboarding    = isset( $_GET['onboarding'] ) && 'complete' === $_GET['onboarding'];
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking URL param to conditionally enqueue script, no data processing.
+		$is_onboarding    = isset( $_GET['onboarding'] ) && 'complete' === sanitize_key( $_GET['onboarding'] );
 
 		if ( $is_onboarding ) {
 			wp_enqueue_script( 'preview-ai-onboarding' );

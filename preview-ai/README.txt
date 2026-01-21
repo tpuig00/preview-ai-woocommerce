@@ -1,7 +1,7 @@
 === Preview AI ===
 Contributors: previewai
 Donate link: https://previewai.app/
-Tags: ai, image generation, virtual try-on, woocommerce, fashion, shopping
+Tags: virtual try-on, woocommerce, ai, fashion, ecommerce
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
@@ -11,7 +11,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Preview AI is a SaaS-integrated plugin that allows your customers to preview clothing items in real-time using advanced AI image generation. This plugin acts as a client for the Preview AI service, providing a seamless virtual try-on experience directly within your WooCommerce store.
+AI virtual try-on for WooCommerce. Let customers see themselves wearing your products before buying.
 
 == Description ==
 

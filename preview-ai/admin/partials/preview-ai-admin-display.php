@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-$active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+$preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 ?>
 
 <div class="wrap">
@@ -22,15 +22,15 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 
 	<nav class="nav-tab-wrapper">
 		<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=general' ) ); ?>" 
-		   class="nav-tab <?php echo 'general' === $active_tab ? 'nav-tab-active' : ''; ?>">
+		   class="nav-tab <?php echo 'general' === $preview_ai_active_tab ? 'nav-tab-active' : ''; ?>">
 			<?php esc_html_e( 'General', 'preview-ai' ); ?>
 		</a>
 		<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=widget' ) ); ?>" 
-		   class="nav-tab <?php echo 'widget' === $active_tab ? 'nav-tab-active' : ''; ?>">
+		   class="nav-tab <?php echo 'widget' === $preview_ai_active_tab ? 'nav-tab-active' : ''; ?>">
 			<?php esc_html_e( 'Widget', 'preview-ai' ); ?>
 		</a>
 		<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats' ) ); ?>" 
-		   class="nav-tab <?php echo 'stats' === $active_tab ? 'nav-tab-active' : ''; ?>">
+		   class="nav-tab <?php echo 'stats' === $preview_ai_active_tab ? 'nav-tab-active' : ''; ?>">
 			<?php esc_html_e( 'Statistics', 'preview-ai' ); ?>
 		</a>
 
@@ -40,27 +40,27 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		</a>
 	</nav>
 
-	<?php if ( 'stats' === $active_tab ) : ?>
+	<?php if ( 'stats' === $preview_ai_active_tab ) : ?>
 		<!-- Statistics Tab -->
 		<?php
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$period = isset( $_GET['period'] ) ? sanitize_key( $_GET['period'] ) : '30days';
-		$stats  = PREVIEW_AI_Tracking::get_detailed_stats( $period );
+		$preview_ai_period = isset( $_GET['period'] ) ? sanitize_key( $_GET['period'] ) : '30days';
+		$preview_ai_stats  = PREVIEW_AI_Tracking::get_detailed_stats( $preview_ai_period );
 		?>
 		
 		<div class="preview-ai-stats-header">
 			<label for="preview_ai_period"><?php esc_html_e( 'Period:', 'preview-ai' ); ?></label>
 			<select id="preview_ai_period" onchange="window.location.href=this.value;">
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=today' ) ); ?>" <?php selected( $period, 'today' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=today' ) ); ?>" <?php selected( $preview_ai_period, 'today' ); ?>>
 					<?php esc_html_e( 'Today', 'preview-ai' ); ?>
 				</option>
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=7days' ) ); ?>" <?php selected( $period, '7days' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=7days' ) ); ?>" <?php selected( $preview_ai_period, '7days' ); ?>>
 					<?php esc_html_e( 'Last 7 days', 'preview-ai' ); ?>
 				</option>
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=30days' ) ); ?>" <?php selected( $period, '30days' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=30days' ) ); ?>" <?php selected( $preview_ai_period, '30days' ); ?>>
 					<?php esc_html_e( 'Last 30 days', 'preview-ai' ); ?>
 				</option>
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=all' ) ); ?>" <?php selected( $period, 'all' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=all' ) ); ?>" <?php selected( $preview_ai_period, 'all' ); ?>>
 					<?php esc_html_e( 'All time', 'preview-ai' ); ?>
 				</option>
 			</select>
@@ -69,35 +69,35 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		<!-- Primary Stats Cards -->
 		<div class="preview-ai-stats-grid">
 			<div class="preview-ai-stat-card">
-				<div class="preview-ai-stat-value preview-ai-stat-value--blue"><?php echo esc_html( number_format_i18n( $stats['users_tried'] ) ); ?></div>
+				<div class="preview-ai-stat-value preview-ai-stat-value--blue"><?php echo esc_html( number_format_i18n( $preview_ai_stats['users_tried'] ) ); ?></div>
 				<div class="preview-ai-stat-label"><?php esc_html_e( 'Customers Used Preview AI', 'preview-ai' ); ?></div>
 			</div>
 			<div class="preview-ai-stat-card">
-				<div class="preview-ai-stat-value preview-ai-stat-value--green"><?php echo esc_html( number_format_i18n( $stats['orders_influenced'] ) ); ?></div>
+				<div class="preview-ai-stat-value preview-ai-stat-value--green"><?php echo esc_html( number_format_i18n( $preview_ai_stats['orders_influenced'] ) ); ?></div>
 				<div class="preview-ai-stat-label"><?php esc_html_e( 'Orders Influenced', 'preview-ai' ); ?></div>
 			</div>
 			<div class="preview-ai-stat-card">
-				<div class="preview-ai-stat-value preview-ai-stat-value--amber"><?php echo esc_html( $stats['user_conversion_rate'] ); ?>%</div>
+				<div class="preview-ai-stat-value preview-ai-stat-value--amber"><?php echo esc_html( $preview_ai_stats['user_conversion_rate'] ); ?>%</div>
 				<div class="preview-ai-stat-label"><?php esc_html_e( 'User Conversion Rate', 'preview-ai' ); ?></div>
 			</div>
 			<div class="preview-ai-stat-card">
-				<div class="preview-ai-stat-value preview-ai-stat-value--navy"><?php echo wp_kses_post( wc_price( $stats['influenced_revenue'] ) ); ?></div>
+				<div class="preview-ai-stat-value preview-ai-stat-value--navy"><?php echo wp_kses_post( wc_price( $preview_ai_stats['influenced_revenue'] ) ); ?></div>
 				<div class="preview-ai-stat-label"><?php esc_html_e( 'Revenue Influenced', 'preview-ai' ); ?></div>
 			</div>
 		</div>
 
 		<!-- Secondary Stats -->
-		<?php if ( $stats['avg_order_value'] > 0 || $stats['orders_refunded'] > 0 ) : ?>
+		<?php if ( $preview_ai_stats['avg_order_value'] > 0 || $preview_ai_stats['orders_refunded'] > 0 ) : ?>
 		<div class="preview-ai-stats-secondary">
-			<?php if ( $stats['avg_order_value'] > 0 ) : ?>
+			<?php if ( $preview_ai_stats['avg_order_value'] > 0 ) : ?>
 			<div class="preview-ai-secondary-stat">
-				<div class="preview-ai-secondary-value"><?php echo wp_kses_post( wc_price( $stats['avg_order_value'] ) ); ?></div>
+				<div class="preview-ai-secondary-value"><?php echo wp_kses_post( wc_price( $preview_ai_stats['avg_order_value'] ) ); ?></div>
 				<div class="preview-ai-secondary-label"><?php esc_html_e( 'Avg. Order Value', 'preview-ai' ); ?></div>
 			</div>
 			<?php endif; ?>
-			<?php if ( $stats['orders_refunded'] > 0 ) : ?>
+			<?php if ( $preview_ai_stats['orders_refunded'] > 0 ) : ?>
 			<div class="preview-ai-secondary-stat">
-				<div class="preview-ai-secondary-value preview-ai-secondary-value--red"><?php echo esc_html( number_format_i18n( $stats['orders_refunded'] ) ); ?></div>
+				<div class="preview-ai-secondary-value preview-ai-secondary-value--red"><?php echo esc_html( number_format_i18n( $preview_ai_stats['orders_refunded'] ) ); ?></div>
 				<div class="preview-ai-secondary-label"><?php esc_html_e( 'Orders Refunded', 'preview-ai' ); ?></div>
 			</div>
 			<?php endif; ?>
@@ -109,8 +109,8 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			<div class="preview-ai-top-products">
 				<h3 class="preview-ai-footer-title"><?php esc_html_e( 'Top Converting Products', 'preview-ai' ); ?></h3>
 				<?php
-				$top_products = PREVIEW_AI_Tracking::get_top_products( 5 );
-				if ( empty( $top_products ) ) :
+				$preview_ai_top_products = PREVIEW_AI_Tracking::get_top_products( 5 );
+				if ( empty( $preview_ai_top_products ) ) :
 					?>
 					<p class="preview-ai-empty-stats"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
 				<?php else : ?>
@@ -124,16 +124,16 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ( $top_products as $product ) : ?>
+							<?php foreach ( $preview_ai_top_products as $preview_ai_product ) : ?>
 								<tr>
 									<td>
-										<a href="<?php echo esc_url( get_edit_post_link( $product['product_id'] ) ); ?>">
-											<?php echo esc_html( $product['product_name'] ); ?>
+										<a href="<?php echo esc_url( get_edit_post_link( $preview_ai_product['product_id'] ) ); ?>">
+											<?php echo esc_html( $preview_ai_product['product_name'] ); ?>
 										</a>
 									</td>
-									<td class="preview-ai-text-center"><?php echo esc_html( $product['previews'] ); ?></td>
-									<td class="preview-ai-text-center"><?php echo esc_html( $product['conversions'] ); ?></td>
-									<td class="preview-ai-text-center"><?php echo esc_html( $product['conversion_rate'] ); ?>%</td>
+									<td class="preview-ai-text-center"><?php echo esc_html( $preview_ai_product['previews'] ); ?></td>
+									<td class="preview-ai-text-center"><?php echo esc_html( $preview_ai_product['conversions'] ); ?></td>
+									<td class="preview-ai-text-center"><?php echo esc_html( $preview_ai_product['conversion_rate'] ); ?>%</td>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -145,8 +145,8 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			<div class="preview-ai-recent-conversions">
 				<h3 class="preview-ai-footer-title"><?php esc_html_e( 'Recent Conversions', 'preview-ai' ); ?></h3>
 				<?php
-				$recent = PREVIEW_AI_Tracking::get_recent_conversions( 5 );
-				if ( empty( $recent ) ) :
+				$preview_ai_recent = PREVIEW_AI_Tracking::get_recent_conversions( 5 );
+				if ( empty( $preview_ai_recent ) ) :
 					?>
 					<p class="preview-ai-empty-stats"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
 				<?php else : ?>
@@ -159,16 +159,16 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ( $recent as $conv ) : ?>
+							<?php foreach ( $preview_ai_recent as $preview_ai_conv ) : ?>
 								<tr>
 									<td>
-										<?php echo esc_html( $conv['customer_name'] ); ?>
+										<?php echo esc_html( $preview_ai_conv['customer_name'] ); ?>
 									</td>
 									<td>
-										<?php echo esc_html( $conv['product_name'] ); ?>
+										<?php echo esc_html( $preview_ai_conv['product_name'] ); ?>
 									</td>
 									<td class="preview-ai-text-right">
-										<?php echo wp_kses_post( wc_price( $conv['order_total'] ) ); ?>
+										<?php echo wp_kses_post( wc_price( $preview_ai_conv['order_total'] ) ); ?>
 									</td>
 								</tr>
 							<?php endforeach; ?>
@@ -178,7 +178,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			</div>
 		</div>
 
-	<?php elseif ( 'general' === $active_tab ) : ?>
+	<?php elseif ( 'general' === $preview_ai_active_tab ) : ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'preview_ai_general_settings' ); ?>
 			<!-- General Tab -->
@@ -215,13 +215,13 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</th>
 						<td>
 							<?php
-							$status = PREVIEW_AI_Api::get_account_status();
-							$tokens_limit = isset( $status['tokens_limit'] ) ? (int) $status['tokens_limit'] : 0;
-							$tokens_used = isset( $status['tokens_used'] ) ? (int) $status['tokens_used'] : 0;
-							$tokens_remaining = max( 0, $tokens_limit - $tokens_used );
-							$usage_percentage = $tokens_limit > 0 ? min( 100, round( ( $tokens_used / $tokens_limit ) * 100 ) ) : 0;
+							$preview_ai_status = PREVIEW_AI_Api::get_account_status();
+							$preview_ai_tokens_limit = isset( $preview_ai_status['tokens_limit'] ) ? (int) $preview_ai_status['tokens_limit'] : 0;
+							$preview_ai_tokens_used = isset( $preview_ai_status['tokens_used'] ) ? (int) $preview_ai_status['tokens_used'] : 0;
+							$preview_ai_tokens_remaining = max( 0, $preview_ai_tokens_limit - $preview_ai_tokens_used );
+							$preview_ai_usage_percentage = $preview_ai_tokens_limit > 0 ? min( 100, round( ( $preview_ai_tokens_used / $preview_ai_tokens_limit ) * 100 ) ) : 0;
 							
-							$renewal_date = isset( $status['current_period_end'] ) ? $status['current_period_end'] : null;
+							$preview_ai_renewal_date = isset( $preview_ai_status['current_period_end'] ) ? $preview_ai_status['current_period_end'] : null;
 							?>
 
 							<div class="preview-ai-account-card">
@@ -229,21 +229,25 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 									<div class="preview-ai-usage-header">
 										<span class="preview-ai-usage-title"><?php esc_html_e( 'Monthly Usage', 'preview-ai' ); ?></span>
 										<span class="preview-ai-usage-numbers">
-											<strong id="pai-tokens-used"><?php echo esc_html( number_format_i18n( $tokens_used ) ); ?></strong> / <span id="pai-tokens-limit"><?php echo esc_html( number_format_i18n( $tokens_limit ) ); ?></span> <?php esc_html_e( 'previews', 'preview-ai' ); ?>
+											<strong id="pai-tokens-used"><?php echo esc_html( number_format_i18n( $preview_ai_tokens_used ) ); ?></strong> / <span id="pai-tokens-limit"><?php echo esc_html( number_format_i18n( $preview_ai_tokens_limit ) ); ?></span> <?php esc_html_e( 'previews', 'preview-ai' ); ?>
 										</span>
 									</div>
 									<div class="preview-ai-usage-bar-container">
-										<div id="pai-usage-bar" style="width: <?php echo esc_attr( $usage_percentage ); ?>%;"></div>
+										<div id="pai-usage-bar" style="width: <?php echo esc_attr( $preview_ai_usage_percentage ); ?>%;"></div>
 									</div>
 									<div class="preview-ai-usage-footer">
-										<span><span id="pai-tokens-remaining-text"><?php printf( esc_html__( '%s remaining', 'preview-ai' ), '<strong>' . number_format_i18n( $tokens_remaining ) . '</strong>' ); ?></span></span>
+										<span><span id="pai-tokens-remaining-text"><?php
+											/* translators: %s: number of remaining previews */
+											printf( esc_html__( '%s remaining', 'preview-ai' ), '<strong>' . esc_html( number_format_i18n( $preview_ai_tokens_remaining ) ) . '</strong>' );
+											?></span></span>
 										<span id="pai-renewal-date-container">
-											<?php if ( $renewal_date ) : ?>
-												<?php 
-												printf( 
-													esc_html__( 'Resets on %s', 'preview-ai' ), 
-													'<strong id="pai-renewal-date">' . date_i18n( get_option( 'date_format' ), strtotime( $renewal_date ) ) . '</strong>' 
-												); 
+											<?php if ( $preview_ai_renewal_date ) : ?>
+												<?php
+												printf(
+													/* translators: %s: renewal date */
+													esc_html__( 'Resets on %s', 'preview-ai' ),
+													'<strong id="pai-renewal-date">' . esc_html( date_i18n( get_option( 'date_format' ), strtotime( $preview_ai_renewal_date ) ) ) . '</strong>'
+												);
 												?>
 											<?php endif; ?>
 										</span>
@@ -264,10 +268,10 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 									
 									<div class="pai-account-details">
 										<span class="pai-detail-label"><?php esc_html_e( 'Email:', 'preview-ai' ); ?></span>
-										<span id="pai-status-email"><?php echo esc_html( $status['email'] ?? '—' ); ?></span>
+										<span id="pai-status-email"><?php echo esc_html( $preview_ai_status['email'] ?? '—' ); ?></span>
 										
 										<span class="pai-detail-label"><?php esc_html_e( 'Domain:', 'preview-ai' ); ?></span>
-										<span id="pai-status-domain"><?php echo esc_html( $status['domain'] ?? '—' ); ?></span>
+										<span id="pai-status-domain"><?php echo esc_html( $preview_ai_status['domain'] ?? '—' ); ?></span>
 									</div>
 								</div>
 							</div>
@@ -283,13 +287,13 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 
 			<!-- Learn My Catalog Section -->
 			<?php
-			$catalog_status = PREVIEW_AI_Admin::get_catalog_analysis_status();
-			$is_processing  = 'processing' === $catalog_status['status'];
-			$progress       = $catalog_status['progress'];
+			$preview_ai_catalog_status = PREVIEW_AI_Admin::get_catalog_analysis_status();
+			$preview_ai_is_processing  = 'processing' === $preview_ai_catalog_status['status'];
+			$preview_ai_progress       = $preview_ai_catalog_status['progress'];
 
 			// Get compatibility status.
-			$preflight     = get_option( 'preview_ai_store_compatibility' );
-			$is_compatible = ! empty( $preflight ) ? $preflight['compatible'] : true;
+			$preview_ai_preflight     = get_option( 'preview_ai_store_compatibility' );
+			$preview_ai_is_compatible = ! empty( $preview_ai_preflight ) ? $preview_ai_preflight['compatible'] : true;
 			?>
 			<div class="preview-ai-learn-catalog">
 				<h2 class="preview-ai-catalog-title">
@@ -304,10 +308,10 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 					<?php esc_html_e( 'Nothing will be modified in your store. Only recommendations will be assigned.', 'preview-ai' ); ?>
 				</p>
 				
-				<?php if ( ! $is_compatible ) : ?>
+				<?php if ( ! $preview_ai_is_compatible ) : ?>
 					<div id="preview_ai_compatibility_error" class="preview-ai-comp-error">
 						<span class="dashicons dashicons-warning"></span>
-						<?php echo esc_html( $preflight['message'] ); ?>
+						<?php echo esc_html( $preview_ai_preflight['message'] ); ?>
 						<p class="preview-ai-reverify-para">
 							<a href="#" id="preview_ai_reverify_compatibility">
 								<?php esc_html_e( 'Re-verify compatibility', 'preview-ai' ); ?>
@@ -316,21 +320,21 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 					</div>
 				<?php endif; ?>
 
-				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" <?php echo ( $is_processing || ! $is_compatible ) ? 'disabled' : ''; ?>>
+				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" <?php echo ( $preview_ai_is_processing || ! $preview_ai_is_compatible ) ? 'disabled' : ''; ?>>
 					<span class="dashicons dashicons-welcome-learn-more"></span>
 					<?php esc_html_e( 'Analyze My Catalog', 'preview-ai' ); ?>
 				</button>
 
-				<div id="preview_ai_learn_catalog_loading" style="<?php echo $is_processing ? '' : 'display: none;'; ?>">
+				<div id="preview_ai_learn_catalog_loading" style="<?php echo $preview_ai_is_processing ? '' : 'display: none;'; ?>">
 					<span class="spinner"></span>
 					<span id="preview_ai_learn_catalog_progress">
 						<?php
-						if ( $is_processing && ! empty( $progress ) ) {
+						if ( $preview_ai_is_processing && ! empty( $preview_ai_progress ) ) {
 							printf(
 								/* translators: 1: processed count, 2: total count */
 								esc_html__( 'Processing... %1$d of %2$d products analyzed.', 'preview-ai' ),
-								absint( $progress['processed'] ),
-								absint( $progress['total'] )
+								absint( $preview_ai_progress['processed'] ),
+								absint( $preview_ai_progress['total'] )
 							);
 						} else {
 							esc_html_e( 'Analyzing your catalog...', 'preview-ai' );
@@ -343,13 +347,13 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			</div>
 		</form>
 
-	<?php elseif ( 'widget' === $active_tab ) : ?>
+	<?php elseif ( 'widget' === $preview_ai_active_tab ) : ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'preview_ai_widget_settings' ); ?>
 			<!-- Widget Tab -->
 			<?php
-			$widget_settings = PREVIEW_AI_Admin::get_widget_settings();
-			$button_icons    = PREVIEW_AI_Admin::get_button_icons();
+			$preview_ai_widget_settings = PREVIEW_AI_Admin::get_widget_settings();
+			$preview_ai_button_icons    = PREVIEW_AI_Admin::get_button_icons();
 			?>
 			<table class="form-table" role="presentation">
 				<tbody>
@@ -386,7 +390,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							<input type="text"
 								   id="preview_ai_button_text" 
 								   name="preview_ai_button_text" 
-								   value="<?php echo esc_attr( $widget_settings['button_text'] ); ?>" 
+								   value="<?php echo esc_attr( $preview_ai_widget_settings['button_text'] ); ?>" 
 								   class="regular-text" 
 								   placeholder="<?php esc_attr_e( 'See it on you', 'preview-ai' ); ?>"
 							/>
@@ -403,17 +407,17 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</th>
 						<td>
 							<div class="preview-ai-icon-selector">
-								<?php foreach ( $button_icons as $key => $icon ) : ?>
-									<label class="preview-ai-icon-option <?php echo $widget_settings['button_icon'] === $key ? 'is-selected' : ''; ?>">
+								<?php foreach ( $preview_ai_button_icons as $preview_ai_key => $preview_ai_icon ) : ?>
+									<label class="preview-ai-icon-option <?php echo $preview_ai_widget_settings['button_icon'] === $preview_ai_key ? 'is-selected' : ''; ?>">
 										<input type="radio" 
 											   name="preview_ai_button_icon" 
-											   value="<?php echo esc_attr( $key ); ?>"
-											   <?php checked( $widget_settings['button_icon'], $key ); ?>
+											   value="<?php echo esc_attr( $preview_ai_key ); ?>"
+											   <?php checked( $preview_ai_widget_settings['button_icon'], $preview_ai_key ); ?>
 										/>
 										<span class="preview-ai-icon-preview">
-											<?php echo PREVIEW_AI_Admin::kses_svg( $icon['svg'] ); ?>
+											<?php echo PREVIEW_AI_Admin::kses_svg( $preview_ai_icon['svg'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG sanitized by kses_svg method ?>
 										</span>
-										<span class="preview-ai-icon-label"><?php echo esc_html( $icon['label'] ); ?></span>
+										<span class="preview-ai-icon-label"><?php echo esc_html( $preview_ai_icon['label'] ); ?></span>
 									</label>
 								<?php endforeach; ?>
 							</div>
@@ -429,13 +433,13 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</th>
 						<td>
 							<select id="preview_ai_button_position" name="preview_ai_button_position">
-								<option value="left" <?php selected( $widget_settings['button_position'], 'left' ); ?>>
+								<option value="left" <?php selected( $preview_ai_widget_settings['button_position'], 'left' ); ?>>
 									<?php esc_html_e( 'Left', 'preview-ai' ); ?>
 								</option>
-								<option value="center" <?php selected( $widget_settings['button_position'], 'center' ); ?>>
+								<option value="center" <?php selected( $preview_ai_widget_settings['button_position'], 'center' ); ?>>
 									<?php esc_html_e( 'Center', 'preview-ai' ); ?>
 								</option>
-								<option value="right" <?php selected( $widget_settings['button_position'], 'right' ); ?>>
+								<option value="right" <?php selected( $preview_ai_widget_settings['button_position'], 'right' ); ?>>
 									<?php esc_html_e( 'Right', 'preview-ai' ); ?>
 								</option>
 							</select>
@@ -451,13 +455,13 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 						</th>
 						<td>
 							<select id="preview_ai_button_shape" name="preview_ai_button_shape">
-								<option value="pill" <?php selected( $widget_settings['button_shape'], 'pill' ); ?>>
+								<option value="pill" <?php selected( $preview_ai_widget_settings['button_shape'], 'pill' ); ?>>
 									<?php esc_html_e( 'Pill (Rounded)', 'preview-ai' ); ?>
 								</option>
-								<option value="squared" <?php selected( $widget_settings['button_shape'], 'squared' ); ?>>
+								<option value="squared" <?php selected( $preview_ai_widget_settings['button_shape'], 'squared' ); ?>>
 									<?php esc_html_e( 'Rounded Corners', 'preview-ai' ); ?>
 								</option>
-								<option value="sharp" <?php selected( $widget_settings['button_shape'], 'sharp' ); ?>>
+								<option value="sharp" <?php selected( $preview_ai_widget_settings['button_shape'], 'sharp' ); ?>>
 									<?php esc_html_e( 'Squared (Sharp)', 'preview-ai' ); ?>
 								</option>
 							</select>
@@ -475,7 +479,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							<input type="number"
 								   id="preview_ai_button_height"
 								   name="preview_ai_button_height"
-								   value="<?php echo esc_attr( $widget_settings['button_height'] ); ?>"
+								   value="<?php echo esc_attr( $preview_ai_widget_settings['button_height'] ); ?>"
 								   min="24"
 								   max="80"
 								   step="1"
@@ -501,7 +505,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 									   id="preview_ai_button_full_width" 
 									   name="preview_ai_button_full_width" 
 									   value="1" 
-									   <?php checked( 1, $widget_settings['button_full_width'] ); ?> 
+									   <?php checked( 1, $preview_ai_widget_settings['button_full_width'] ); ?> 
 								/>
 								<span class="preview-ai-toggle__slider"></span>
 							</label>
@@ -522,7 +526,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							<input type="text"
 								   id="preview_ai_accent_color" 
 								   name="preview_ai_accent_color" 
-								   value="<?php echo esc_attr( $widget_settings['accent_color'] ); ?>" 
+								   value="<?php echo esc_attr( $preview_ai_widget_settings['accent_color'] ); ?>" 
 								   class="preview-ai-color-picker"
 								   data-default-color="#3b82f6"
 							/>

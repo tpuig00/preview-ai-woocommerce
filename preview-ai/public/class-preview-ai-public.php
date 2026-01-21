@@ -346,6 +346,17 @@ class PREVIEW_AI_Public {
 
 		$tips = $clothing_subtypes[ $clothing_subtype ]['tips'];
 
+		// Prepare variables for the partial.
+		$preview_ai_product_id        = $product_id;
+		$preview_ai_button_text       = $button_text;
+		$preview_ai_button_svg        = $button_svg;
+		$preview_ai_button_position   = $button_position;
+		$preview_ai_button_shape      = $button_shape;
+		$preview_ai_button_height     = $button_height;
+		$preview_ai_button_full_width = $button_full_width;
+		$preview_ai_clothing_subtype  = $clothing_subtype;
+		$preview_ai_tips              = $tips;
+
 		ob_start();
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-public-display.php';
 		return ob_get_clean();

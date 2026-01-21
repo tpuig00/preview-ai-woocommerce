@@ -12,8 +12,27 @@
 
 class PREVIEW_AI_Tracking {
 
-	const DB_VERSION = '1.0';
+	const DB_VERSION        = '1.0';
 	const DB_VERSION_OPTION = 'preview_ai_tracking_db_version';
+	const CACHE_GROUP       = 'preview_ai_tracking';
+
+	/**
+	 * Clear all tracking caches.
+	 * Called when events are recorded to ensure fresh data.
+	 */
+	private static function clear_cache() {
+		// Clear stats caches for all periods.
+		wp_cache_delete( 'detailed_stats_today', self::CACHE_GROUP );
+		wp_cache_delete( 'detailed_stats_7days', self::CACHE_GROUP );
+		wp_cache_delete( 'detailed_stats_30days', self::CACHE_GROUP );
+		wp_cache_delete( 'detailed_stats_all', self::CACHE_GROUP );
+
+		// Clear products and conversions caches (common limits).
+		foreach ( array( 5, 10 ) as $limit ) {
+			wp_cache_delete( 'top_products_' . $limit, self::CACHE_GROUP );
+			wp_cache_delete( 'recent_conversions_' . $limit, self::CACHE_GROUP );
+		}
+	}
 
 	/**
 	 * Get table name.
@@ -129,11 +148,15 @@ class PREVIEW_AI_Tracking {
 			'created_at'   => current_time( 'mysql' ),
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom plugin table, no WordPress API available.
 		$result = $wpdb->insert( self::get_table_name(), $data );
 
 		if ( false === $result ) {
 			return false;
 		}
+
+		// Clear cached stats when new events are recorded.
+		self::clear_cache();
 
 		return $wpdb->insert_id;
 	}
@@ -233,10 +256,10 @@ class PREVIEW_AI_Tracking {
 		$where_clauses[] = '(' . implode( ' OR ', $user_where ) . ')';
 		$where_str       = implode( ' AND ', $where_clauses );
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table, $table is from get_table_name(), $where_str built with prepare().
 		$previewed = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT DISTINCT product_id, variation_id FROM $table WHERE $where_str",
+				"SELECT DISTINCT product_id, variation_id FROM {$table} WHERE {$where_str}", // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic WHERE clause.
 				...$params
 			),
 			ARRAY_A
@@ -309,10 +332,10 @@ class PREVIEW_AI_Tracking {
 		// Find conversion events for this order and mark as refunded.
 		$table = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table, $table is from get_table_name().
 		$conversions = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT product_id, variation_id, order_total FROM $table 
+				"SELECT product_id, variation_id, order_total FROM {$table} 
 				WHERE order_id = %d AND event_type = 'conversion'",
 				$order_id
 			),
@@ -361,9 +384,16 @@ class PREVIEW_AI_Tracking {
 	public static function get_detailed_stats( $period = '30days' ) {
 		global $wpdb;
 
+		// Try to get from cache first.
+		$cache_key = 'detailed_stats_' . $period;
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
 		$table = self::get_table_name();
 
-		// Date filter.
+		// Date filter - built safely with prepare().
 		$date_filter = '';
 		switch ( $period ) {
 			case 'today':
@@ -377,15 +407,15 @@ class PREVIEW_AI_Tracking {
 				break;
 		}
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom plugin table; $table from get_table_name(), $date_filter built with prepare().
 		$counts = $wpdb->get_row(
 			"SELECT 
 				COUNT(DISTINCT CASE WHEN event_type = 'preview' THEN COALESCE(user_id, session_id) END) as users_tried,
 				COUNT(DISTINCT CASE WHEN event_type = 'conversion' THEN order_id END) as orders_influenced,
 				COUNT(DISTINCT CASE WHEN event_type = 'conversion' THEN COALESCE(user_id, session_id) END) as users_converted,
 				COUNT(DISTINCT CASE WHEN event_type = 'refund' THEN order_id END) as orders_refunded
-			FROM $table
-			WHERE 1=1 $date_filter",
+			FROM {$table}
+			WHERE 1=1 {$date_filter}",
 			ARRAY_A
 		);
 
@@ -395,8 +425,7 @@ class PREVIEW_AI_Tracking {
 		$orders_refunded   = (int) ( $counts['orders_refunded'] ?? 0 );
 
 		// Get total revenue from influenced orders (full order value).
-		// We use a subquery to get the total of each unique order influenced.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom plugin table; $table from get_table_name(), $date_filter built with prepare().
 		$revenue_data = $wpdb->get_row(
 			"SELECT 
 				SUM(CASE WHEN event_type = 'conversion' THEN order_total ELSE 0 END) as influenced_revenue,
@@ -404,8 +433,8 @@ class PREVIEW_AI_Tracking {
 				AVG(CASE WHEN event_type = 'conversion' THEN order_total END) as avg_order_value
 			FROM (
 				SELECT DISTINCT order_id, order_total, event_type
-				FROM $table 
-				WHERE event_type IN ('conversion', 'refund') AND order_id IS NOT NULL $date_filter
+				FROM {$table} 
+				WHERE event_type IN ('conversion', 'refund') AND order_id IS NOT NULL {$date_filter}
 			) as unique_orders",
 			ARRAY_A
 		);
@@ -418,7 +447,7 @@ class PREVIEW_AI_Tracking {
 		// User conversion rate (users who tried AND bought).
 		$user_conversion_rate = $users_tried > 0 ? round( ( $users_converted / $users_tried ) * 100, 1 ) : 0;
 
-		return array(
+		$result = array(
 			// Primary metrics.
 			'users_tried'          => $users_tried,
 			'orders_influenced'    => $orders_influenced,
@@ -439,6 +468,11 @@ class PREVIEW_AI_Tracking {
 			'revenue'              => $influenced_revenue,
 			'unique_users'         => $users_tried,
 		);
+
+		// Cache for 5 minutes.
+		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, 5 * MINUTE_IN_SECONDS );
+
+		return $result;
 	}
 
 	/**
@@ -450,9 +484,16 @@ class PREVIEW_AI_Tracking {
 	public static function get_top_products( $limit = 5 ) {
 		global $wpdb;
 
+		// Try to get from cache first.
+		$cache_key = 'top_products_' . $limit;
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
 		$table = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom plugin table; $table from get_table_name().
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT 
@@ -460,7 +501,7 @@ class PREVIEW_AI_Tracking {
 					SUM(CASE WHEN event_type = 'preview' THEN 1 ELSE 0 END) as previews,
 					SUM(CASE WHEN event_type = 'conversion' THEN 1 ELSE 0 END) as conversions,
 					SUM(CASE WHEN event_type = 'conversion' THEN order_total ELSE 0 END) as revenue
-				FROM $table
+				FROM {$table}
 				WHERE product_id > 0
 				GROUP BY product_id
 				HAVING conversions > 0
@@ -477,6 +518,9 @@ class PREVIEW_AI_Tracking {
 			$row['conversion_rate'] = $row['previews'] > 0 ? round( ( $row['conversions'] / $row['previews'] ) * 100, 1 ) : 0;
 		}
 
+		// Cache for 5 minutes.
+		wp_cache_set( $cache_key, $results, self::CACHE_GROUP, 5 * MINUTE_IN_SECONDS );
+
 		return $results;
 	}
 
@@ -489,13 +533,20 @@ class PREVIEW_AI_Tracking {
 	public static function get_recent_conversions( $limit = 10 ) {
 		global $wpdb;
 
+		// Try to get from cache first.
+		$cache_key = 'recent_conversions_' . $limit;
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
 		$table = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom plugin table; $table from get_table_name().
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT e.*, u.display_name, u.user_email
-				FROM $table e
+				FROM {$table} e
 				LEFT JOIN {$wpdb->users} u ON e.user_id = u.ID
 				WHERE e.event_type = 'conversion'
 				ORDER BY e.created_at DESC
@@ -511,6 +562,9 @@ class PREVIEW_AI_Tracking {
 			$row['customer_name'] = $row['display_name'] ? $row['display_name'] : __( 'Guest', 'preview-ai' );
 		}
 
+		// Cache for 5 minutes.
+		wp_cache_set( $cache_key, $results, self::CACHE_GROUP, 5 * MINUTE_IN_SECONDS );
+
 		return $results;
 	}
 
@@ -523,26 +577,38 @@ class PREVIEW_AI_Tracking {
 	public static function get_user_stats( $user_id ) {
 		global $wpdb;
 
+		// Try to get from cache first.
+		$cache_key = 'user_stats_' . $user_id;
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
 		$table = self::get_table_name();
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom plugin table; $table from get_table_name().
 		$stats = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT 
 					SUM(CASE WHEN event_type = 'preview' THEN 1 ELSE 0 END) as previews,
 					SUM(CASE WHEN event_type = 'conversion' THEN 1 ELSE 0 END) as conversions,
 					SUM(CASE WHEN event_type = 'conversion' THEN order_total ELSE 0 END) as total_spent
-				FROM $table
+				FROM {$table}
 				WHERE user_id = %d",
 				$user_id
 			),
 			ARRAY_A
 		);
 
-		return array(
+		$result = array(
 			'previews'    => (int) ( $stats['previews'] ?? 0 ),
 			'conversions' => (int) ( $stats['conversions'] ?? 0 ),
 			'total_spent' => (float) ( $stats['total_spent'] ?? 0 ),
 		);
+
+		// Cache for 5 minutes.
+		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, 5 * MINUTE_IN_SECONDS );
+
+		return $result;
 	}
 }

@@ -92,6 +92,7 @@ class PREVIEW_AI_Admin_Notices {
 				'post_type'      => 'product',
 				'post_status'    => 'publish',
 				'posts_per_page' => 1,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required to find products with AI configuration, only fetches 1 result.
 				'meta_query'     => array(
 					array(
 						'key'     => '_preview_ai_recommended_subtype',

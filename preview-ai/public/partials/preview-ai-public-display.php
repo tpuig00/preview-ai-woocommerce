@@ -14,43 +14,43 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get product_id from calling context.
-if ( ! isset( $product_id ) ) {
+if ( ! isset( $preview_ai_product_id ) ) {
 	global $product;
-	$product_id = $product ? $product->get_id() : 0;
+	$preview_ai_product_id = $product ? $product->get_id() : 0;
 }
 
 // Set defaults if not provided by render_widget_output.
-if ( ! isset( $button_text ) ) {
-	$button_text = __( 'See it on you', 'preview-ai' );
+if ( ! isset( $preview_ai_button_text ) ) {
+	$preview_ai_button_text = __( 'See it on you', 'preview-ai' );
 }
-if ( ! isset( $button_svg ) ) {
-	$button_svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>';
+if ( ! isset( $preview_ai_button_svg ) ) {
+	$preview_ai_button_svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>';
 }
-if ( ! isset( $button_position ) ) {
-	$button_position = 'center';
+if ( ! isset( $preview_ai_button_position ) ) {
+	$preview_ai_button_position = 'center';
 }
-if ( ! isset( $button_shape ) ) {
-	$button_shape = 'pill';
+if ( ! isset( $preview_ai_button_shape ) ) {
+	$preview_ai_button_shape = 'pill';
 }
-if ( ! isset( $button_height ) ) {
-	$button_height = 38;
+if ( ! isset( $preview_ai_button_height ) ) {
+	$preview_ai_button_height = 38;
 }
-if ( ! isset( $button_full_width ) ) {
-	$button_full_width = 0;
+if ( ! isset( $preview_ai_button_full_width ) ) {
+	$preview_ai_button_full_width = 0;
 }
 
-$position_class = 'preview-ai-position-' . esc_attr( $button_position );
-$shape_class    = 'preview-ai-shape-' . esc_attr( $button_shape );
-$height_style   = ( 38 !== (int) $button_height ) ? 'height:' . absint( $button_height ) . 'px !important;' : '';
-$width_style    = ( ! empty( $button_full_width ) ) ? 'width: 100% !important; justify-content: center !important;' : '';
-$inline_style   = $height_style . $width_style;
+$preview_ai_position_class = 'preview-ai-position-' . esc_attr( $preview_ai_button_position );
+$preview_ai_shape_class    = 'preview-ai-shape-' . esc_attr( $preview_ai_button_shape );
+$preview_ai_height_style   = ( 38 !== (int) $preview_ai_button_height ) ? 'height:' . absint( $preview_ai_button_height ) . 'px !important;' : '';
+$preview_ai_width_style    = ( ! empty( $preview_ai_button_full_width ) ) ? 'width: 100% !important; justify-content: center !important;' : '';
+$preview_ai_inline_style   = $preview_ai_height_style . $preview_ai_width_style;
 ?>
 
 <!-- Action Chip Container -->
-<div class="preview-ai-chip-wrapper <?php echo esc_attr( $position_class ); ?>">
-	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $shape_class ); ?>" <?php echo $inline_style ? 'style="' . esc_attr( $inline_style ) . '"' : ''; ?>>
-		<span class="preview-ai-chip-icon"><?php echo PREVIEW_AI_Admin::kses_svg( $button_svg ); ?></span>
-		<span class="preview-ai-chip-text"><?php echo esc_html( $button_text ); ?></span>
+<div class="preview-ai-chip-wrapper <?php echo esc_attr( $preview_ai_position_class ); ?>">
+	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $preview_ai_shape_class ); ?>" <?php echo $preview_ai_inline_style ? 'style="' . esc_attr( $preview_ai_inline_style ) . '"' : ''; ?>>
+		<span class="preview-ai-chip-icon"><?php echo PREVIEW_AI_Admin::kses_svg( $preview_ai_button_svg ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG sanitized by kses_svg method ?></span>
+		<span class="preview-ai-chip-text"><?php echo esc_html( $preview_ai_button_text ); ?></span>
 	</button>
 </div>
 
@@ -122,45 +122,45 @@ $inline_style   = $height_style . $width_style;
 			</div>
 
 			<?php
-			// `$clothing_subtype` is set by `PREVIEW_AI_Public::render_widget_output()`.
-			$clothing_subtype = isset( $clothing_subtype ) ? sanitize_key( $clothing_subtype ) : 'mixed';
+			// `$preview_ai_clothing_subtype` is set by `PREVIEW_AI_Public::render_widget_output()`.
+			$preview_ai_clothing_subtype = isset( $preview_ai_clothing_subtype ) ? sanitize_key( $preview_ai_clothing_subtype ) : 'mixed';
 
 			// For now, we only show examples for: full_body, upper_body, lower_body (legs).
-			$ui_subtype = $clothing_subtype;
-			if ( 'lower_body' === $ui_subtype ) {
-				$ui_subtype = 'legs';
+			$preview_ai_ui_subtype = $preview_ai_clothing_subtype;
+			if ( 'lower_body' === $preview_ai_ui_subtype ) {
+				$preview_ai_ui_subtype = 'legs';
 			}
-			if ( ! in_array( $ui_subtype, array( 'full_body', 'upper_body', 'legs' ), true ) ) {
-				$ui_subtype = 'full_body';
+			if ( ! in_array( $preview_ai_ui_subtype, array( 'full_body', 'upper_body', 'legs' ), true ) ) {
+				$preview_ai_ui_subtype = 'full_body';
 			}
 
-			$subtype_class = 'pai-subtype-' . sanitize_html_class( $ui_subtype );
-			$label         = __( 'Upload a Full Body Image', 'preview-ai' );
+			$preview_ai_subtype_class = 'pai-subtype-' . sanitize_html_class( $preview_ai_ui_subtype );
+			$preview_ai_label         = __( 'Upload a Full Body Image', 'preview-ai' );
 
-			$img_base = plugin_dir_url( __FILE__ ) . '../images/';
-			$img_good = $img_base . 'example_good.png';
-			$img_bad  = $img_base . 'example_bad.png';
+			$preview_ai_img_base = plugin_dir_url( __FILE__ ) . '../images/';
+			$preview_ai_img_good = $preview_ai_img_base . 'example_good.png';
+			$preview_ai_img_bad  = $preview_ai_img_base . 'example_bad.png';
 			?>
 
 			<div class="preview-ai-illustration">
-				<div class="pai-examples <?php echo esc_attr( $subtype_class ); ?>" aria-hidden="true">
+				<div class="pai-examples <?php echo esc_attr( $preview_ai_subtype_class ); ?>" aria-hidden="true">
 					<div class="pai-examples__stage">
 						<figure class="pai-example pai-example--good">
-							<img src="<?php echo esc_url( $img_good ); ?>" alt="<?php esc_attr_e( 'Good example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
+							<img src="<?php echo esc_url( $preview_ai_img_good ); ?>" alt="<?php esc_attr_e( 'Good example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
 						</figure>
 						<figure class="pai-example pai-example--bad">
-							<img src="<?php echo esc_url( $img_bad ); ?>" alt="<?php esc_attr_e( 'Bad example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
+							<img src="<?php echo esc_url( $preview_ai_img_bad ); ?>" alt="<?php esc_attr_e( 'Bad example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
 						</figure>
 					</div>
-					<div class="pai-examples__label"><?php echo esc_html( $label ); ?></div>
+					<div class="pai-examples__label"><?php echo esc_html( $preview_ai_label ); ?></div>
 				</div>
 			</div>
 
 			<div class="preview-ai-tips">
 				<p class="preview-ai-tips-title"><?php esc_html_e( 'For best results', 'preview-ai' ); ?></p>
 				<ul>
-					<?php foreach ( $tips as $tip ) : ?>
-						<li><?php echo esc_html( $tip ); ?></li>
+					<?php foreach ( $preview_ai_tips as $preview_ai_tip ) : ?>
+						<li><?php echo esc_html( $preview_ai_tip ); ?></li>
 					<?php endforeach; ?>
 				</ul>
 				<p class="preview-ai-tips-pro"><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></p>

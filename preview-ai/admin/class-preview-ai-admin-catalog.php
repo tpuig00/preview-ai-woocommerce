@@ -352,6 +352,7 @@ class PREVIEW_AI_Admin_Catalog {
 			'limit'        => -1,
 			'type'         => array( 'simple', 'variable' ),
 			'stock_status' => 'instock',
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required to find unprocessed products for catalog analysis.
 			'meta_query'   => array(
 				array(
 					'key'     => '_preview_ai_supported',

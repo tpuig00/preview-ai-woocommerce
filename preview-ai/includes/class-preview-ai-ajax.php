@@ -49,7 +49,8 @@ class PREVIEW_AI_Ajax {
 		}
 
 		// Process image to base64.
-		$image_file = isset( $_FILES['image'] ) ? $_FILES['image'] : null;
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via sanitize_uploaded_file() below.
+		$image_file = isset( $_FILES['image'] ) ? $this->sanitize_uploaded_file( $_FILES['image'] ) : null;
 
 		// Validate upload structure and safety.
 		$validation = $this->validate_upload_file( $image_file );
@@ -98,7 +99,8 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Preview AI not enabled for this product', 'preview-ai' ) ) );
 		}
 
-		$image_file = isset( $_FILES['image'] ) ? $_FILES['image'] : null;
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via sanitize_uploaded_file() below.
+		$image_file = isset( $_FILES['image'] ) ? $this->sanitize_uploaded_file( $_FILES['image'] ) : null;
 		$validation = $this->validate_upload_file( $image_file );
 		if ( is_wp_error( $validation ) ) {
 			wp_send_json_error( array( 'message' => $validation->get_error_message() ) );
@@ -175,9 +177,29 @@ class PREVIEW_AI_Ajax {
 	}
 
 	/**
+	 * Sanitize uploaded file data from $_FILES.
+	 *
+	 * @param array|null $file Raw $_FILES element.
+	 * @return array|null Sanitized file array or null if invalid.
+	 */
+	private function sanitize_uploaded_file( $file ) {
+		if ( empty( $file ) || ! is_array( $file ) ) {
+			return null;
+		}
+
+		return array(
+			'name'     => isset( $file['name'] ) ? sanitize_file_name( wp_unslash( $file['name'] ) ) : '',
+			'type'     => isset( $file['type'] ) ? sanitize_mime_type( wp_unslash( $file['type'] ) ) : '',
+			'tmp_name' => isset( $file['tmp_name'] ) ? sanitize_text_field( $file['tmp_name'] ) : '',
+			'error'    => isset( $file['error'] ) ? absint( $file['error'] ) : UPLOAD_ERR_NO_FILE,
+			'size'     => isset( $file['size'] ) ? absint( $file['size'] ) : 0,
+		);
+	}
+
+	/**
 	 * Validate user upload file (type/size/readability).
 	 *
-	 * @param array $file $_FILES element.
+	 * @param array $file Sanitized $_FILES element.
 	 * @return true|WP_Error
 	 */
 	private function validate_upload_file( $file ) {
