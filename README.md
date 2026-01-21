@@ -15,7 +15,7 @@ Preview AI is a powerful WooCommerce plugin that allows your customers to previe
 
 1. Upload the `preview-ai` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Follow the onboarding wizard to activate your free trial and analyze your product catalog.
+3. Follow the onboarding wizard to activate the service and analyze your product catalog.
 
 ## 📖 Technical Overview
 

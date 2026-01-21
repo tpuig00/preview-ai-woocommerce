@@ -135,6 +135,10 @@ class PREVIEW_AI_Admin {
 		$this->product->render_product_column( $column, $post_id );
 	}
 
+	public function handle_toggle_product() {
+		$this->product->handle_toggle_product();
+	}
+
 	public function handle_learn_catalog() {
 		$this->catalog->handle_learn_catalog();
 	}
@@ -219,25 +223,73 @@ class PREVIEW_AI_Admin {
 			true
 		);
 
+		// Register onboarding wizard script.
+		wp_register_script(
+			'preview-ai-onboarding',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-onboarding-wizard.js',
+			array( 'jquery' ),
+			$this->version,
+			true
+		);
+
+		wp_localize_script(
+			'preview-ai-onboarding',
+			'previewAiOnboarding',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'preview_ai_learn_catalog' ),
+				'i18n'    => array(
+					'configuring'          => __( 'Configuring products...', 'preview-ai' ),
+					'customTemplate'       => __( 'Using a custom product template?', 'preview-ai' ),
+					'manualAdd'            => __( 'If the widget does not appear automatically, you can add it manually:', 'preview-ai' ),
+					'manualAddNow'         => __( 'You can add the widget manually:', 'preview-ai' ),
+					'elementorSearch'      => __( 'Search for "Preview AI" widget', 'preview-ai' ),
+					'configureIn'          => __( 'Configure in: Products → Preview AI → Widget tab', 'preview-ai' ),
+					'analyzingBackground'  => __( 'Analyzing in background', 'preview-ai' ),
+					'productsAnalyzed'     => __( 'products are being analyzed. This may take a few minutes.', 'preview-ai' ),
+					'closeAndCheck'        => __( 'You can close this window and check progress in Preview AI settings.', 'preview-ai' ),
+					'closeAndContinue'     => __( 'Close & Continue', 'preview-ai' ),
+					'tryNow'               => __( 'Try Preview AI Now', 'preview-ai' ),
+					'experienceMagic'      => __( 'See how your customers will experience the magic!', 'preview-ai' ),
+					'closeAndConfigure'    => __( 'Close & Configure Products', 'preview-ai' ),
+					'catalogConfigured'    => __( 'Catalog configured!', 'preview-ai' ),
+					'productsReady'        => __( 'products ready for preview', 'preview-ai' ),
+					'couldNotAnalyze'      => __( 'Could not analyze catalog', 'preview-ai' ),
+					'manualConfig'         => __( 'You can configure products manually.', 'preview-ai' ),
+					'continueToSettings'   => __( 'Continue to Settings', 'preview-ai' ),
+					'couldNotConnect'      => __( 'Could not connect to server', 'preview-ai' ),
+					'analyzeLater'         => __( 'You can analyze your catalog later from settings.', 'preview-ai' ),
+					'continue'             => __( 'Continue', 'preview-ai' ),
+				),
+			)
+		);
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$is_settings_page = ( 'product_page_preview-ai' === $hook || ( isset( $_GET['page'] ) && 'preview-ai' === $_GET['page'] ) );
 		$is_product_page  = ( 'post.php' === $hook || 'post-new.php' === $hook );
+		$is_onboarding    = isset( $_GET['onboarding'] ) && 'complete' === $_GET['onboarding'];
+
+		if ( $is_onboarding ) {
+			wp_enqueue_script( 'preview-ai-onboarding' );
+		}
 
 		wp_localize_script(
 			$this->plugin_name,
 			'previewAiAdmin',
 			array(
-				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'preview_ai_learn_catalog' ),
-				'verifyNonce'   => wp_create_nonce( 'preview_ai_verify_api_key' ),
-				'dismissNonce'  => wp_create_nonce( 'preview_ai_dismiss_notice' ),
-				'registerNonce' => wp_create_nonce( 'preview_ai_register_site' ),
-				'i18n'          => array(
+				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
+				'nonce'              => wp_create_nonce( 'preview_ai_learn_catalog' ),
+				'verifyNonce'        => wp_create_nonce( 'preview_ai_verify_api_key' ),
+				'dismissNonce'       => wp_create_nonce( 'preview_ai_dismiss_notice' ),
+				'registerNonce'      => wp_create_nonce( 'preview_ai_register_site' ),
+				'toggleProductNonce' => wp_create_nonce( 'preview_ai_toggle_product' ),
+				'i18n'               => array(
 					'error'        => __( 'An error occurred.', 'preview-ai' ),
 					'apiPending'   => __( '(API integration pending)', 'preview-ai' ),
 					'activating'   => __( 'Activating...', 'preview-ai' ),
 					'activated'    => __( 'Preview AI activated! Redirecting...', 'preview-ai' ),
 					'analyzing'    => __( 'Analyzing your catalog...', 'preview-ai' ),
+					'catalogStatus' => PREVIEW_AI_Admin::get_catalog_analysis_status()['status'],
 				),
 			)
 		);
@@ -261,18 +313,17 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		if ( $api_key ) {
-			update_option( 'preview_ai_api_key', $api_key );
-		}
+		// Always return the latest status from DB to ensure consistency.
+		$status = PREVIEW_AI_Api::get_account_status();
 
-		$tokens_limit        = isset( $result['tokens_limit'] ) ? intval( $result['tokens_limit'] ) : 0;
-		$tokens_used         = isset( $result['tokens_used'] ) ? intval( $result['tokens_used'] ) : 0;
-		$tokens_remaining    = isset( $result['tokens_remaining'] ) ? intval( $result['tokens_remaining'] ) : 0;
-		$period_end          = isset( $result['current_period_end'] ) ? $result['current_period_end'] : null;
+		$tokens_limit        = isset( $status['tokens_limit'] ) ? intval( $status['tokens_limit'] ) : 0;
+		$tokens_used         = isset( $status['tokens_used'] ) ? intval( $status['tokens_used'] ) : 0;
+		$tokens_remaining    = isset( $status['tokens_remaining'] ) ? intval( $status['tokens_remaining'] ) : max( 0, $tokens_limit - $tokens_used );
+		$period_end          = isset( $status['current_period_end'] ) ? $status['current_period_end'] : null;
 		$renew_date          = $period_end ? date_i18n( get_option( 'date_format' ), strtotime( $period_end ) ) : '';
-		$subscription_status = isset( $result['subscription_status'] ) ? sanitize_text_field( $result['subscription_status'] ) : null;
-		$email               = isset( $result['email'] ) ? sanitize_email( $result['email'] ) : null;
-		$domain              = isset( $result['domain'] ) ? sanitize_text_field( $result['domain'] ) : null;
+		$subscription_status = isset( $status['subscription_status'] ) ? sanitize_text_field( $status['subscription_status'] ) : '';
+		$email               = isset( $status['email'] ) ? sanitize_email( $status['email'] ) : '';
+		$domain              = isset( $status['domain'] ) ? sanitize_text_field( $status['domain'] ) : '';
 
 		wp_send_json_success( array(
 			'tokens_limit'        => $tokens_limit,

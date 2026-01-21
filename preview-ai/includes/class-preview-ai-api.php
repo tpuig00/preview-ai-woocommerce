@@ -141,7 +141,7 @@ class PREVIEW_AI_Api {
 
 	/**
 	 * Check if widget can be displayed.
-	 * Returns false if no API key, deactivated, or no tokens.
+	 * Returns false if no API key or deactivated.
 	 *
 	 * @return bool
 	 */
@@ -156,17 +156,7 @@ class PREVIEW_AI_Api {
 		// Check account status.
 		$status = self::get_account_status();
 
-		// No status yet = first time, allow widget (will update after first request).
-		if ( empty( $status ) ) {
-			return true;
-		}
-
-		// No tokens left.
-		if ( isset( $status['tokens_remaining'] ) && $status['tokens_remaining'] <= 0 ) {
-			return false;
-		}
-
-		// Account deactivated.
+		// Account deactivated by the service.
 		if ( isset( $status['active'] ) && ! $status['active'] ) {
 			return false;
 		}
@@ -265,7 +255,7 @@ class PREVIEW_AI_Api {
 	 * @param array $product_data Product data with id, title, categories, tags, thumbnail_url, variation_id.
 	 * @return array|WP_Error     Response data with classification or error.
 	 */
-	public function analyze_product( $product_data ) {
+	public function analyze_product( $product_data, $single_product = false ) {
 		PREVIEW_AI_Logger::debug( 'Starting single product analysis', array(
 			'product_id' => $product_data['id'],
 		) );
@@ -340,7 +330,7 @@ class PREVIEW_AI_Api {
 	}
 
 	/**
-	 * Register site for free trial (auto-provisioning).
+	 * Register site for Preview AI service (auto-provisioning).
 	 *
 	 * This creates a free-tier API key automatically when user
 	 * provides their email during plugin activation.

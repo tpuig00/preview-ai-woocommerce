@@ -105,7 +105,6 @@ class PREVIEW_AI_Admin_Catalog {
 
 		$stats = $this->save_catalog_classifications( $result );
 
-		$is_limited      = isset( $result['is_limited'] ) && $result['is_limited'];
 		$analysis_errors = isset( $result['analysis_errors'] ) ? intval( $result['analysis_errors'] ) : 0;
 
 		$try_product_url = '';
@@ -120,7 +119,6 @@ class PREVIEW_AI_Admin_Catalog {
 				'configured'      => $stats['configured'],
 				'needs_review'    => $stats['needs_review'],
 				'images_analyzed' => $stats['images_analyzed'],
-				'is_limited'      => $is_limited,
 				'analysis_errors' => $analysis_errors,
 				'try_product_url' => $try_product_url,
 				'message'         => sprintf(

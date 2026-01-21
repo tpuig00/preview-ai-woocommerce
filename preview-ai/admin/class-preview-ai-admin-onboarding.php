@@ -11,16 +11,13 @@ class PREVIEW_AI_Admin_Onboarding {
 	public function render_onboarding_wizard() {
 		// Mark that user needs to try the widget (only during initial onboarding).
 		update_option( 'preview_ai_needs_first_try', true );
-		
-		// Enqueue scripts and styles.
-		wp_enqueue_script( 'preview-ai-onboarding' );
 		?>
-		<div id="preview-ai-onboarding-wizard" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100000;display:flex;align-items:center;justify-content:center;">
-			<div style="background:#fff;border-radius:16px;padding:48px;max-width:520px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.3);position:relative;">
-				<button type="button" id="preview-ai-onboarding-close" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;padding:8px;border-radius:50%;transition:background 0.2s;" title="<?php esc_attr_e( 'Close', 'preview-ai' ); ?>">
+		<div id="preview-ai-onboarding-wizard">
+			<div id="preview-ai-onboarding-wizard-content">
+				<button type="button" id="preview-ai-onboarding-close" title="<?php esc_attr_e( 'Close', 'preview-ai' ); ?>">
 					<svg width="20" height="20" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
 				</button>
-				<div style="width:72px;height:72px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(34,197,94,0.3);">
+				<div class="onboarding-success-icon" style="width:72px;height:72px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(34,197,94,0.3);">
 					<svg width="36" height="36" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
 				</div>
 				<h2 style="margin:0 0 8px;font-size:26px;color:#1e293b;font-weight:700;">🎉 <?php esc_html_e( 'Preview AI Activated!', 'preview-ai' ); ?></h2>
@@ -40,7 +37,7 @@ class PREVIEW_AI_Admin_Onboarding {
 	}
 
 	/**
-	 * Handle AJAX request to register site for free trial.
+	 * Handle AJAX request to register site for Preview AI service.
 	 */
 	public function handle_register_site() {
 		check_ajax_referer( 'preview_ai_register_site', 'nonce' );
@@ -125,67 +122,6 @@ class PREVIEW_AI_Admin_Onboarding {
 				<span class="preview-ai-onboarding__success-text"></span>
 			</div>
 		</div>
-		<style>
-			.preview-ai-onboarding-notice {
-				padding: 16px 20px;
-				border-left-color: #6366f1;
-			}
-			.preview-ai-onboarding__content {
-				display: flex;
-				align-items: center;
-				gap: 16px;
-				flex-wrap: wrap;
-			}
-			.preview-ai-onboarding__icon {
-				flex-shrink: 0;
-				width: 48px;
-				height: 48px;
-				background: linear-gradient(135deg, #6366f1, #8b5cf6);
-				border-radius: 12px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-			}
-			.preview-ai-onboarding__icon svg {
-				width: 24px;
-				height: 24px;
-				stroke: white;
-			}
-			.preview-ai-onboarding__text {
-				flex: 1;
-				min-width: 200px;
-			}
-			.preview-ai-onboarding__text h3 {
-				margin: 0 0 4px;
-				font-size: 15px;
-			}
-			.preview-ai-onboarding__text p {
-				margin: 0;
-				color: #646970;
-			}
-			.preview-ai-onboarding__form {
-				display: flex;
-				gap: 8px;
-				flex-wrap: wrap;
-			}
-			.preview-ai-onboarding__form input[type="email"] {
-				width: 280px;
-				max-width: 100%;
-			}
-			.preview-ai-onboarding__success {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				color: #00a32a;
-				font-weight: 500;
-			}
-			.preview-ai-onboarding__success .dashicons {
-				color: #00a32a;
-				font-size: 24px;
-				width: 24px;
-				height: 24px;
-			}
-		</style>
 		<?php
 	}
 }

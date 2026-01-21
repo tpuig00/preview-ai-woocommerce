@@ -19,67 +19,32 @@
 		// Helper to render status message.
 		function renderStatus( res ) {
 			if ( res.success ) {
-				var data = res.data;
-				var tokensLimit = parseInt( data.tokens_limit || 0 );
-				var tokensUsed = parseInt( data.tokens_used || 0 );
+				var data = res.data || {};
+				var tokensLimit = parseInt( data.tokens_limit || 0, 10 );
+				var tokensUsed = parseInt( data.tokens_used || 0, 10 );
 				var tokensRemaining = Math.max( 0, tokensLimit - tokensUsed );
 				var usagePercentage = tokensLimit > 0 ? Math.min( 100, Math.round( ( tokensUsed / tokensLimit ) * 100 ) ) : 0;
-				var isPaidPlan = ( data.subscription_status !== 'free_trial' && data.subscription_status !== '' );
 
-				// Update Card UI if elements exist
-				if ( $( '#pai-plan-badge' ).length ) {
-					var $badge = $( '#pai-plan-badge' );
-					var label = isPaidPlan ? 'Paid Plan' : 'Free Trial';
-					
-					$badge.text( label );
-					if ( isPaidPlan ) {
-						$badge.removeClass( 'is-free' ).addClass( 'is-paid' )
-							  .css( { 'background': '#e7f3ff', 'color': '#2271b1', 'border': '1px solid #d0e7ff' } );
-					} else {
-						$badge.removeClass( 'is-paid' ).addClass( 'is-free' )
-							  .css( { 'background': '#f0f0f1', 'color': '#50575e', 'border': '1px solid #c3c4c7' } );
-					}
+				$( '#pai-tokens-used' ).text( tokensUsed.toLocaleString() );
+				$( '#pai-tokens-limit' ).text( tokensLimit.toLocaleString() );
+				$( '#pai-usage-bar' ).css( 'width', usagePercentage + '%' );
+				$( '#pai-tokens-remaining-text' ).html( '<strong>' + tokensRemaining.toLocaleString() + '</strong> remaining' );
 
-					$( '#pai-tokens-used' ).text( tokensUsed.toLocaleString() );
-					$( '#pai-tokens-limit' ).text( tokensLimit.toLocaleString() );
-					$( '#pai-usage-bar' ).css( 'width', usagePercentage + '%' );
-					$( '#pai-tokens-remaining-text' ).html( '<strong>' + tokensRemaining.toLocaleString() + '</strong> remaining' );
+				if ( data.renew_date ) {
+					$( '#pai-renewal-date-container' ).html( 'Resets on <strong>' + data.renew_date + '</strong>' );
+				} else {
+					$( '#pai-renewal-date-container' ).empty();
+				}
 
-					if ( data.renew_date ) {
-						$( '#pai-renewal-date-container' ).html( 'Resets on <strong>' + data.renew_date + '</strong>' );
-					}
+				var emailText = data.email || '—';
+				var domainText = data.domain || '—';
 
-					if ( data.email ) {
-						$( '#pai-account-email' ).text( data.email );
-						$( '#pai-status-email' ).text( data.email );
-					}
-					
-					if ( data.domain ) {
-						$( '#pai-status-domain' ).text( data.domain );
-					}
+				$( '#pai-status-email' ).text( emailText );
+				$( '#pai-status-domain' ).text( domainText );
 
-					// Update Manage Account button
-					var $manageContainer = $( '#pai-manage-account-container' );
-					if ( isPaidPlan ) {
-						if ( ! $manageContainer.find( 'a.button-secondary' ).length ) {
-							$manageContainer.html( 
-								'<a href="https://previewai.app/account/" target="_blank" class="button button-secondary" style="display: inline-flex; align-items: center; gap: 4px;">' +
-								'Manage Account <span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span></a>'
-							);
-						}
-					} else {
-						if ( ! $manageContainer.find( 'a.button-primary' ).length ) {
-							$manageContainer.html( 
-								'<a href="https://previewai.app/pricing/" target="_blank" class="button button-primary" style="display: inline-flex; align-items: center; gap: 4px; background: #2271b1; border-color: #2271b1;">' +
-								'Upgrade Plan <span class="dashicons dashicons-external" style="font-size: 14px; width: 14px; height: 14px; margin-top: 2px;"></span></a>'
-							);
-						}
-					}
-
-					if ( $statusIndicator.length ) {
-						$statusIndicator.html( '<span class="dashicons dashicons-yes-alt" style="font-size: 18px; width: 18px; height: 18px;"></span> Verified' )
-										.css( 'color', '#00a32a' );
-					}
+				if ( $statusIndicator.length ) {
+					$statusIndicator.html( '<span class="dashicons dashicons-yes-alt" style="font-size: 18px; width: 18px; height: 18px;"></span> Verified' )
+									.css( 'color', '#00a32a' );
 				}
 			} else {
 				// Error handling for the new UI
@@ -261,6 +226,51 @@
 				} );
 			}
 		} );
+
+		// Handle toggle for Preview AI metabox via AJAX.
+		var $productToggle = $( '#_preview_ai_enabled[data-product-id]' );
+
+		if ( $productToggle.length && typeof previewAiAdmin !== 'undefined' ) {
+			$productToggle.on( 'change', function() {
+				var $input = $( this );
+				var previousChecked = ! $input.is( ':checked' );
+				var desiredState = $input.is( ':checked' ) ? 'yes' : 'no';
+				var productId = $input.data( 'product-id' );
+				var $status = $input.closest( '.preview-ai-metabox-header' ).find( '.preview-ai-col' );
+
+				$input.prop( 'disabled', true );
+
+				$.ajax({
+					url: previewAiAdmin.ajaxUrl,
+					type: 'POST',
+					data: {
+						action: 'preview_ai_toggle_product',
+						nonce: previewAiAdmin.toggleProductNonce,
+						product_id: productId,
+						enabled: desiredState
+					},
+					success: function( response ) {
+						if ( ! response.success ) {
+							alert( response.data && response.data.message ? response.data.message : previewAiAdmin.i18n.error );
+							$input.prop( 'checked', previousChecked );
+							$input.prop( 'disabled', false );
+							return;
+						}
+
+						var status = response.data;
+						$status.attr( 'class', 'preview-ai-col ' + ( status.status_class || 'preview-ai-col--disabled' ) );
+						$status.html( ( status.status_icon || '' ) + ' ' + ( status.status_text || '' ) );
+						$input.prop( 'checked', !! status.is_enabled );
+						$input.prop( 'disabled', !! status.toggle_disabled );
+					},
+					error: function() {
+						alert( previewAiAdmin.i18n.error );
+						$input.prop( 'checked', previousChecked );
+						$input.prop( 'disabled', false );
+					}
+				});
+			});
+		}
 
 		// Onboarding: activation form.
 		var $registerForm = $( '#preview-ai-register-form' );

@@ -94,20 +94,21 @@ class PREVIEW_AI_Admin_Product {
 				<div class="preview-ai-metabox-header__left">
 					<span class="preview-ai-metabox-header__title"><?php esc_html_e( 'Preview AI', 'preview-ai' ); ?></span>
 					<span class="preview-ai-col <?php echo esc_attr( $status_class ); ?>">
-						<?php echo $status_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> 
+						<?php echo wp_kses_post( $status_icon ); ?> 
 						<?php echo esc_html( $status_text ); ?>
 					</span>
 				</div>
-			<label class="preview-ai-switch">
-				<input type="checkbox" 
-					   id="_preview_ai_enabled" 
-					   name="_preview_ai_enabled" 
-					   value="yes" 
-					   <?php checked( $is_enabled ); ?> 
-					   <?php disabled( ! $has_image || 'no' === $supported ); ?>
-				/>
-				<span class="preview-ai-switch__track"></span>
-			</label>
+		<label class="preview-ai-switch">
+			<input type="checkbox" 
+				   id="_preview_ai_enabled" 
+				   name="_preview_ai_enabled" 
+				   value="yes" 
+				   data-product-id="<?php echo esc_attr( $post->ID ); ?>"
+				   <?php checked( $is_enabled ); ?> 
+				   <?php disabled( ! $has_image || 'no' === $supported ); ?>
+			/>
+			<span class="preview-ai-switch__track"></span>
+		</label>
 			</div>
 
 			<?php
@@ -203,12 +204,13 @@ class PREVIEW_AI_Admin_Product {
 		$thumbnail_url  = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
 
 		$product_data = array(
-			'id'            => $product_id,
-			'title'         => $product->get_name(),
-			'categories'    => $categories_str,
-			'tags'          => $tags_str,
-			'thumbnail_url' => $thumbnail_url,
-			'variations'    => array(),
+			'id'                    => $product_id,
+			'title'                 => $product->get_name(),
+			'categories'            => $categories_str,
+			'tags'                  => $tags_str,
+			'thumbnail_url'         => $thumbnail_url,
+			'variations'            => array(),
+			'single_product'        => true
 		);
 
 		// Add variations with different images.
@@ -308,6 +310,111 @@ class PREVIEW_AI_Admin_Product {
 		);
 
 		update_post_meta( $post_id, '_preview_ai_image_analysis', $image_analysis );
+	}
+
+	/**
+	 * Handle AJAX toggle product request.
+	 */
+	public function handle_toggle_product() {
+		check_ajax_referer( 'preview_ai_toggle_product', 'nonce' );
+
+		if ( ! current_user_can( 'edit_products' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
+		}
+
+		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$enabled    = isset( $_POST['enabled'] ) && 'yes' === sanitize_key( $_POST['enabled'] );
+
+		if ( ! $product_id ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid product ID.', 'preview-ai' ) ) );
+		}
+
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			wp_send_json_error( array( 'message' => __( 'Product not found.', 'preview-ai' ) ) );
+		}
+
+		// Can't enable if product has no image.
+		if ( $enabled && ! $product->get_image_id() ) {
+			wp_send_json_error( array( 'message' => __( 'Product has no image.', 'preview-ai' ) ) );
+		}
+
+		// If disabling, just save and return.
+		if ( ! $enabled ) {
+			update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
+			wp_send_json_success( $this->get_product_status( $product_id ) );
+		}
+
+		// If enabling, call backend for classification and analysis.
+		$result = $this->analyze_single_product( $product );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		// Save classification.
+		$this->save_single_product_classification( $product_id, $result );
+
+		// Check if supported.
+		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
+		if ( 'no' === $supported ) {
+			wp_send_json_error( array( 'message' => __( 'Product type not supported.', 'preview-ai' ) ) );
+		}
+
+		// Enable the product.
+		update_post_meta( $product_id, '_preview_ai_enabled', 'yes' );
+
+		wp_send_json_success( $this->get_product_status( $product_id ) );
+	}
+
+	/**
+	 * Get product status data for UI update.
+	 */
+	private function get_product_status( $product_id ) {
+		$product        = wc_get_product( $product_id );
+		$has_image      = $product && $product->get_image_id();
+		$enabled        = get_post_meta( $product_id, '_preview_ai_enabled', true );
+		$supported      = get_post_meta( $product_id, '_preview_ai_supported', true );
+		$global_enabled = get_option( 'preview_ai_enabled', 0 );
+		$was_analyzed   = '' !== $supported;
+
+		$is_enabled = false;
+		if ( $was_analyzed && 'yes' === $supported && $has_image ) {
+			if ( 'yes' === $enabled ) {
+				$is_enabled = true;
+			} elseif ( 'no' === $enabled ) {
+				$is_enabled = false;
+			} else {
+				$is_enabled = (bool) $global_enabled;
+			}
+		}
+
+		// Determine status.
+		if ( ! $has_image ) {
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'No Image', 'preview-ai' );
+			$status_icon  = '—';
+		} elseif ( 'no' === $supported ) {
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'Not Supported', 'preview-ai' );
+			$status_icon  = '<span class="dashicons dashicons-warning"></span>';
+		} elseif ( ! $is_enabled ) {
+			$status_class = 'preview-ai-col--disabled';
+			$status_text  = __( 'Disabled', 'preview-ai' );
+			$status_icon  = '—';
+		} else {
+			$status_class = 'preview-ai-col--active';
+			$status_text  = __( 'Active', 'preview-ai' );
+			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
+		}
+
+		return array(
+			'is_enabled'      => $is_enabled,
+			'status_class'    => $status_class,
+			'status_text'     => $status_text,
+			'status_icon'     => $status_icon,
+			'toggle_disabled' => ! $has_image || 'no' === $supported,
+		);
 	}
 
 	/**

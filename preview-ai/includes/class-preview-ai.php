@@ -223,6 +223,7 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_preview_ai_register_site', $plugin_admin, 'handle_register_site' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_catalog_status', $plugin_admin, 'handle_catalog_status' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_reverify_compatibility', $plugin_admin, 'handle_reverify_compatibility' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_toggle_product', $plugin_admin, 'handle_toggle_product' );
 
 		// Action Scheduler hook for background catalog processing.
 		$this->loader->add_action( 'preview_ai_process_catalog_batch', $plugin_admin, 'process_catalog_batch' );

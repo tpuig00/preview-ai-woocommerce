@@ -48,8 +48,8 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		$stats  = PREVIEW_AI_Tracking::get_detailed_stats( $period );
 		?>
 		
-		<div class="preview-ai-stats-header" style="margin: 20px 0; display: flex; align-items: center; gap: 16px;">
-			<label for="preview_ai_period" style="font-weight: 500;"><?php esc_html_e( 'Period:', 'preview-ai' ); ?></label>
+		<div class="preview-ai-stats-header">
+			<label for="preview_ai_period"><?php esc_html_e( 'Period:', 'preview-ai' ); ?></label>
 			<select id="preview_ai_period" onchange="window.location.href=this.value;">
 				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=today' ) ); ?>" <?php selected( $period, 'today' ); ?>>
 					<?php esc_html_e( 'Today', 'preview-ai' ); ?>
@@ -67,73 +67,73 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		</div>
 
 		<!-- Primary Stats Cards -->
-		<div class="preview-ai-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px;">
-			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
-				<div style="font-size: 32px; font-weight: 600; color: #2271b1;"><?php echo esc_html( number_format_i18n( $stats['users_tried'] ) ); ?></div>
-				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'Customers Used Preview AI', 'preview-ai' ); ?></div>
+		<div class="preview-ai-stats-grid">
+			<div class="preview-ai-stat-card">
+				<div class="preview-ai-stat-value preview-ai-stat-value--blue"><?php echo esc_html( number_format_i18n( $stats['users_tried'] ) ); ?></div>
+				<div class="preview-ai-stat-label"><?php esc_html_e( 'Customers Used Preview AI', 'preview-ai' ); ?></div>
 			</div>
-			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
-				<div style="font-size: 32px; font-weight: 600; color: #00a32a;"><?php echo esc_html( number_format_i18n( $stats['orders_influenced'] ) ); ?></div>
-				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'Orders Influenced', 'preview-ai' ); ?></div>
+			<div class="preview-ai-stat-card">
+				<div class="preview-ai-stat-value preview-ai-stat-value--green"><?php echo esc_html( number_format_i18n( $stats['orders_influenced'] ) ); ?></div>
+				<div class="preview-ai-stat-label"><?php esc_html_e( 'Orders Influenced', 'preview-ai' ); ?></div>
 			</div>
-			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
-				<div style="font-size: 32px; font-weight: 600; color: #dba617;"><?php echo esc_html( $stats['user_conversion_rate'] ); ?>%</div>
-				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'User Conversion Rate', 'preview-ai' ); ?></div>
+			<div class="preview-ai-stat-card">
+				<div class="preview-ai-stat-value preview-ai-stat-value--amber"><?php echo esc_html( $stats['user_conversion_rate'] ); ?>%</div>
+				<div class="preview-ai-stat-label"><?php esc_html_e( 'User Conversion Rate', 'preview-ai' ); ?></div>
 			</div>
-			<div class="preview-ai-stat-card" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
-				<div style="font-size: 32px; font-weight: 600; color: #135e96;"><?php echo wp_kses_post( wc_price( $stats['influenced_revenue'] ) ); ?></div>
-				<div style="color: #50575e; margin-top: 4px;"><?php esc_html_e( 'Revenue Influenced', 'preview-ai' ); ?></div>
+			<div class="preview-ai-stat-card">
+				<div class="preview-ai-stat-value preview-ai-stat-value--navy"><?php echo wp_kses_post( wc_price( $stats['influenced_revenue'] ) ); ?></div>
+				<div class="preview-ai-stat-label"><?php esc_html_e( 'Revenue Influenced', 'preview-ai' ); ?></div>
 			</div>
 		</div>
 
 		<!-- Secondary Stats -->
 		<?php if ( $stats['avg_order_value'] > 0 || $stats['orders_refunded'] > 0 ) : ?>
-		<div class="preview-ai-stats-secondary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 30px;">
+		<div class="preview-ai-stats-secondary">
 			<?php if ( $stats['avg_order_value'] > 0 ) : ?>
-			<div style="background: #f6f7f7; padding: 16px; border-radius: 4px; text-align: center;">
-				<div style="font-size: 24px; font-weight: 500;"><?php echo wp_kses_post( wc_price( $stats['avg_order_value'] ) ); ?></div>
-				<div style="color: #787c82; font-size: 13px;"><?php esc_html_e( 'Avg. Order Value', 'preview-ai' ); ?></div>
+			<div class="preview-ai-secondary-stat">
+				<div class="preview-ai-secondary-value"><?php echo wp_kses_post( wc_price( $stats['avg_order_value'] ) ); ?></div>
+				<div class="preview-ai-secondary-label"><?php esc_html_e( 'Avg. Order Value', 'preview-ai' ); ?></div>
 			</div>
 			<?php endif; ?>
 			<?php if ( $stats['orders_refunded'] > 0 ) : ?>
-			<div style="background: #f6f7f7; padding: 16px; border-radius: 4px; text-align: center;">
-				<div style="font-size: 24px; font-weight: 500; color: #d63638;"><?php echo esc_html( number_format_i18n( $stats['orders_refunded'] ) ); ?></div>
-				<div style="color: #787c82; font-size: 13px;"><?php esc_html_e( 'Orders Refunded', 'preview-ai' ); ?></div>
+			<div class="preview-ai-secondary-stat">
+				<div class="preview-ai-secondary-value preview-ai-secondary-value--red"><?php echo esc_html( number_format_i18n( $stats['orders_refunded'] ) ); ?></div>
+				<div class="preview-ai-secondary-label"><?php esc_html_e( 'Orders Refunded', 'preview-ai' ); ?></div>
 			</div>
 			<?php endif; ?>
 		</div>
 		<?php endif; ?>
 
-		<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+		<div class="preview-ai-stats-footer">
 			<!-- Top Products -->
-			<div class="preview-ai-top-products" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
-				<h3 style="margin: 0 0 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e( 'Top Converting Products', 'preview-ai' ); ?></h3>
+			<div class="preview-ai-top-products">
+				<h3 class="preview-ai-footer-title"><?php esc_html_e( 'Top Converting Products', 'preview-ai' ); ?></h3>
 				<?php
 				$top_products = PREVIEW_AI_Tracking::get_top_products( 5 );
 				if ( empty( $top_products ) ) :
 					?>
-					<p style="color: #787c82; font-style: italic;"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
+					<p class="preview-ai-empty-stats"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
 				<?php else : ?>
-					<table class="widefat" style="border: none;">
+					<table class="widefat preview-ai-stats-table">
 						<thead>
 							<tr>
-								<th style="padding: 8px 0;"><?php esc_html_e( 'Product', 'preview-ai' ); ?></th>
-								<th style="padding: 8px 0; text-align: center;"><?php esc_html_e( 'Previews', 'preview-ai' ); ?></th>
-								<th style="padding: 8px 0; text-align: center;"><?php esc_html_e( 'Conv.', 'preview-ai' ); ?></th>
-								<th style="padding: 8px 0; text-align: center;"><?php esc_html_e( 'Rate', 'preview-ai' ); ?></th>
+								<th><?php esc_html_e( 'Product', 'preview-ai' ); ?></th>
+								<th class="preview-ai-text-center"><?php esc_html_e( 'Previews', 'preview-ai' ); ?></th>
+								<th class="preview-ai-text-center"><?php esc_html_e( 'Conv.', 'preview-ai' ); ?></th>
+								<th class="preview-ai-text-center"><?php esc_html_e( 'Rate', 'preview-ai' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php foreach ( $top_products as $product ) : ?>
 								<tr>
-									<td style="padding: 8px 0;">
+									<td>
 										<a href="<?php echo esc_url( get_edit_post_link( $product['product_id'] ) ); ?>">
 											<?php echo esc_html( $product['product_name'] ); ?>
 										</a>
 									</td>
-									<td style="padding: 8px 0; text-align: center;"><?php echo esc_html( $product['previews'] ); ?></td>
-									<td style="padding: 8px 0; text-align: center;"><?php echo esc_html( $product['conversions'] ); ?></td>
-									<td style="padding: 8px 0; text-align: center;"><?php echo esc_html( $product['conversion_rate'] ); ?>%</td>
+									<td class="preview-ai-text-center"><?php echo esc_html( $product['previews'] ); ?></td>
+									<td class="preview-ai-text-center"><?php echo esc_html( $product['conversions'] ); ?></td>
+									<td class="preview-ai-text-center"><?php echo esc_html( $product['conversion_rate'] ); ?>%</td>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -142,32 +142,32 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			</div>
 
 			<!-- Recent Conversions -->
-			<div class="preview-ai-recent-conversions" style="background: #fff; padding: 20px; border: 1px solid #c3c4c7; border-radius: 4px;">
-				<h3 style="margin: 0 0 16px; font-size: 14px; font-weight: 600;"><?php esc_html_e( 'Recent Conversions', 'preview-ai' ); ?></h3>
+			<div class="preview-ai-recent-conversions">
+				<h3 class="preview-ai-footer-title"><?php esc_html_e( 'Recent Conversions', 'preview-ai' ); ?></h3>
 				<?php
 				$recent = PREVIEW_AI_Tracking::get_recent_conversions( 5 );
 				if ( empty( $recent ) ) :
 					?>
-					<p style="color: #787c82; font-style: italic;"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
+					<p class="preview-ai-empty-stats"><?php esc_html_e( 'No conversions yet.', 'preview-ai' ); ?></p>
 				<?php else : ?>
-					<table class="widefat" style="border: none;">
+					<table class="widefat preview-ai-stats-table">
 						<thead>
 							<tr>
-								<th style="padding: 8px 0;"><?php esc_html_e( 'Customer', 'preview-ai' ); ?></th>
-								<th style="padding: 8px 0;"><?php esc_html_e( 'Product', 'preview-ai' ); ?></th>
-								<th style="padding: 8px 0; text-align: right;"><?php esc_html_e( 'Amount', 'preview-ai' ); ?></th>
+								<th><?php esc_html_e( 'Customer', 'preview-ai' ); ?></th>
+								<th><?php esc_html_e( 'Product', 'preview-ai' ); ?></th>
+								<th class="preview-ai-text-right"><?php esc_html_e( 'Amount', 'preview-ai' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php foreach ( $recent as $conv ) : ?>
 								<tr>
-									<td style="padding: 8px 0;">
+									<td>
 										<?php echo esc_html( $conv['customer_name'] ); ?>
 									</td>
-									<td style="padding: 8px 0;">
+									<td>
 										<?php echo esc_html( $conv['product_name'] ); ?>
 									</td>
-									<td style="padding: 8px 0; text-align: right;">
+									<td class="preview-ai-text-right">
 										<?php echo wp_kses_post( wc_price( $conv['order_total'] ) ); ?>
 									</td>
 								</tr>
@@ -224,18 +224,18 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 							$renewal_date = isset( $status['current_period_end'] ) ? $status['current_period_end'] : null;
 							?>
 
-							<div class="preview-ai-account-card" style="background: #fff; border: 1px solid #c3c4c7; border-radius: 8px; padding: 24px; max-width: 600px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 10px;">
-								<div style="margin-bottom: 20px;">
-									<div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-										<span style="font-weight: 600; color: #1d2327;"><?php esc_html_e( 'Monthly Usage', 'preview-ai' ); ?></span>
-										<span style="color: #646970;">
+							<div class="preview-ai-account-card">
+								<div class="preview-ai-usage-section">
+									<div class="preview-ai-usage-header">
+										<span class="preview-ai-usage-title"><?php esc_html_e( 'Monthly Usage', 'preview-ai' ); ?></span>
+										<span class="preview-ai-usage-numbers">
 											<strong id="pai-tokens-used"><?php echo esc_html( number_format_i18n( $tokens_used ) ); ?></strong> / <span id="pai-tokens-limit"><?php echo esc_html( number_format_i18n( $tokens_limit ) ); ?></span> <?php esc_html_e( 'previews', 'preview-ai' ); ?>
 										</span>
 									</div>
-									<div style="background: #f0f0f1; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
-										<div id="pai-usage-bar" style="background: #2271b1; width: <?php echo esc_attr( $usage_percentage ); ?>%; height: 100%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+									<div class="preview-ai-usage-bar-container">
+										<div id="pai-usage-bar" style="width: <?php echo esc_attr( $usage_percentage ); ?>%;"></div>
 									</div>
-									<div style="display: flex; justify-content: space-between; font-size: 12px; color: #787c82;">
+									<div class="preview-ai-usage-footer">
 										<span><span id="pai-tokens-remaining-text"><?php printf( esc_html__( '%s remaining', 'preview-ai' ), '<strong>' . number_format_i18n( $tokens_remaining ) . '</strong>' ); ?></span></span>
 										<span id="pai-renewal-date-container">
 											<?php if ( $renewal_date ) : ?>
@@ -250,23 +250,23 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 									</div>
 								</div>
 
-								<div id="pai-verification-status" style="background: #f6f7f7; padding: 16px; border-radius: 6px; border: 1px solid #dcdcde;">
-									<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e4e7;">
-										<div style="display: flex; align-items: center; gap: 8px; color: #646970; font-family: monospace; font-size: 12px;">
-											<span class="dashicons dashicons-key" style="font-size: 16px; width: 16px; height: 16px; color: #8c8f94;"></span>
+								<div id="pai-verification-status">
+									<div class="pai-verification-header">
+										<div class="pai-api-key-preview">
+											<span class="dashicons dashicons-key"></span>
 											<span>pvai_••••••••••••<?php echo esc_html( substr( get_option( 'preview_ai_api_key' ), -6 ) ); ?></span>
 										</div>
-										<div id="pai-status-indicator" style="color: #00a32a; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-											<span class="dashicons dashicons-yes-alt" style="font-size: 18px; width: 18px; height: 18px;"></span>
+										<div id="pai-status-indicator">
+											<span class="dashicons dashicons-yes-alt"></span>
 											<?php esc_html_e( 'Verified', 'preview-ai' ); ?>
 										</div>
 									</div>
 									
-									<div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 12px; color: #646970;">
-										<span style="font-weight: 600; color: #8c8f94;"><?php esc_html_e( 'Email:', 'preview-ai' ); ?></span>
+									<div class="pai-account-details">
+										<span class="pai-detail-label"><?php esc_html_e( 'Email:', 'preview-ai' ); ?></span>
 										<span id="pai-status-email"><?php echo esc_html( $status['email'] ?? '—' ); ?></span>
 										
-										<span style="font-weight: 600; color: #8c8f94;"><?php esc_html_e( 'Domain:', 'preview-ai' ); ?></span>
+										<span class="pai-detail-label"><?php esc_html_e( 'Domain:', 'preview-ai' ); ?></span>
 										<span id="pai-status-domain"><?php echo esc_html( $status['domain'] ?? '—' ); ?></span>
 									</div>
 								</div>
@@ -291,39 +291,39 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 			$preflight     = get_option( 'preview_ai_store_compatibility' );
 			$is_compatible = ! empty( $preflight ) ? $preflight['compatible'] : true;
 			?>
-			<div class="preview-ai-learn-catalog" style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
-				<h2 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #1d2327;">
+			<div class="preview-ai-learn-catalog">
+				<h2 class="preview-ai-catalog-title">
 					🧠 <?php esc_html_e( 'Learn My Catalog (AI)', 'preview-ai' ); ?>
 				</h2>
-				<p style="margin-bottom: 16px; color: #50575e; font-size: 14px; line-height: 1.5;">
+				<p class="preview-ai-catalog-desc">
 					<?php esc_html_e( 'Preview AI will automatically detect what type of product each one is (t-shirts, dresses, belts, earrings, fanny packs…).', 'preview-ai' ); ?>
 					<br><strong>
 					<?php esc_html_e( 'This helps generate much more precise previews without manual configuration.', 'preview-ai' ); ?></strong>
 				</p>
-				<p style="margin-bottom: 16px; color: #787c82; font-size: 13px; font-style: italic;">
+				<p class="preview-ai-catalog-note">
 					<?php esc_html_e( 'Nothing will be modified in your store. Only recommendations will be assigned.', 'preview-ai' ); ?>
 				</p>
 				
 				<?php if ( ! $is_compatible ) : ?>
-					<div id="preview_ai_compatibility_error" style="margin-bottom: 16px; padding: 12px 16px; border-radius: 4px; background-color: #fcf0f1; border: 1px solid #d63638; color: #d63638; font-size: 13px;">
-						<span class="dashicons dashicons-warning" style="vertical-align: middle; margin-right: 8px; font-size: 18px; width: 18px; height: 18px;"></span>
+					<div id="preview_ai_compatibility_error" class="preview-ai-comp-error">
+						<span class="dashicons dashicons-warning"></span>
 						<?php echo esc_html( $preflight['message'] ); ?>
-						<p style="margin: 8px 0 0;">
-							<a href="#" id="preview_ai_reverify_compatibility" style="color: #d63638; text-decoration: underline;">
+						<p class="preview-ai-reverify-para">
+							<a href="#" id="preview_ai_reverify_compatibility">
 								<?php esc_html_e( 'Re-verify compatibility', 'preview-ai' ); ?>
 							</a>
 						</p>
 					</div>
 				<?php endif; ?>
 
-				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" style="display: inline-flex; align-items: center; gap: 8px;" <?php echo ( $is_processing || ! $is_compatible ) ? 'disabled' : ''; ?>>
-					<span class="dashicons dashicons-welcome-learn-more" style="font-size: 18px; width: 18px; height: 18px;"></span>
+				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" <?php echo ( $is_processing || ! $is_compatible ) ? 'disabled' : ''; ?>>
+					<span class="dashicons dashicons-welcome-learn-more"></span>
 					<?php esc_html_e( 'Analyze My Catalog', 'preview-ai' ); ?>
 				</button>
 
-				<div id="preview_ai_learn_catalog_loading" style="<?php echo $is_processing ? '' : 'display: none;'; ?> margin-top: 16px;">
-					<span class="spinner" style="float: none; visibility: visible; margin: 0 8px 0 0;"></span>
-					<span id="preview_ai_learn_catalog_progress" style="color: #50575e;">
+				<div id="preview_ai_learn_catalog_loading" style="<?php echo $is_processing ? '' : 'display: none;'; ?>">
+					<span class="spinner"></span>
+					<span id="preview_ai_learn_catalog_progress">
 						<?php
 						if ( $is_processing && ! empty( $progress ) ) {
 							printf(
@@ -339,12 +339,8 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 					</span>
 				</div>
 
-				<div id="preview_ai_learn_catalog_result" style="display: none; margin-top: 16px; padding: 12px 16px; border-radius: 4px;"></div>
+				<div id="preview_ai_learn_catalog_result" style="display: none;"></div>
 			</div>
-			<script>
-				// Pass initial status to JS.
-				window.previewAiCatalogStatus = <?php echo wp_json_encode( $catalog_status['status'] ); ?>;
-			</script>
 		</form>
 
 	<?php elseif ( 'widget' === $active_tab ) : ?>
@@ -551,13 +547,13 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		</form>
 	<?php endif; ?>
 
-	<div style="margin-top: 40px; padding: 24px; border: 1px dashed #c3c4c7; border-radius: 8px; background: #fff; text-align: center;">
-		<h3 style="margin: 0 0 8px; color: #1d2327;"><?php esc_html_e( 'Need help or have a suggestion?', 'preview-ai' ); ?></h3>
-		<p style="margin: 0 0 16px; color: #50575e;">
+	<div class="preview-ai-footer-help">
+		<h3><?php esc_html_e( 'Need help or have a suggestion?', 'preview-ai' ); ?></h3>
+		<p>
 			<?php esc_html_e( 'We are here to help you get the most out of Preview AI. Whether you have a technical issue or an idea to improve the plugin, we want to hear from you.', 'preview-ai' ); ?>
 		</p>
 		<a href="https://www.previewai.app/contact" target="_blank" class="button">
-			<span class="dashicons dashicons-external" style="font-size: 16px; vertical-align: middle; margin-right: 4px;"></span>
+			<span class="dashicons dashicons-external"></span>
 			<?php esc_html_e( 'Contact Support & Suggestions', 'preview-ai' ); ?>
 		</a>
 	</div>

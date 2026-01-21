@@ -199,5 +199,63 @@ class PREVIEW_AI_Admin_Settings {
 			),
 		);
 	}
+
+	/**
+	 * Sanitize SVG content using wp_kses.
+	 */
+	public static function kses_svg( $svg ) {
+		return wp_kses(
+			$svg,
+			array(
+				'svg'      => array(
+					'viewbox'         => true,
+					'fill'            => true,
+					'stroke'          => true,
+					'stroke-width'    => true,
+					'stroke-linecap'  => true,
+					'stroke-linejoin' => true,
+					'xmlns'           => true,
+					'width'           => true,
+					'height'          => true,
+					'class'           => true,
+					'style'           => true,
+				),
+				'path'     => array(
+					'd'               => true,
+					'fill'            => true,
+					'stroke'          => true,
+					'stroke-linecap'  => true,
+					'stroke-linejoin' => true,
+				),
+				'circle'   => array(
+					'cx'     => true,
+					'cy'     => true,
+					'r'      => true,
+					'fill'   => true,
+					'stroke' => true,
+				),
+				'rect'     => array(
+					'x'      => true,
+					'y'      => true,
+					'width'  => true,
+					'height' => true,
+					'rx'     => true,
+					'fill'   => true,
+				),
+				'line'     => array(
+					'x1'     => true,
+					'y1'     => true,
+					'x2'     => true,
+					'y2'     => true,
+					'stroke' => true,
+				),
+				'polyline' => array(
+					'points' => true,
+					'fill'   => true,
+					'stroke' => true,
+				),
+			)
+		);
+	}
 }
 

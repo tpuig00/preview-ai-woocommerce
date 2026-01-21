@@ -11,54 +11,53 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Preview AI allows your customers to preview your products in real-time using advanced AI image generation.
+Preview AI is a SaaS-integrated plugin that allows your customers to preview clothing items in real-time using advanced AI image generation. This plugin acts as a client for the Preview AI service, providing a seamless virtual try-on experience directly within your WooCommerce store.
 
 == Description ==
 
-Preview AI is a powerful WooCommerce plugin that allows your customers to preview your products (especially clothing) in real-time using advanced AI image generation. Enhance your store's user experience and reduce returns by letting users see how they would look with your products.
+Preview AI is a powerful WooCommerce extension that enhances your store's user experience by letting customers see how they would look with your products. By using our specialized AI infrastructure, users can upload a photo and instantly see a high-quality preview of themselves wearing the selected garment.
 
-Our AI technology analyzes the user's photo and the product image to generate a high-quality preview of the user wearing the item.
+This plugin is a "Serviceware" integration. It performs the heavy AI processing on our secure external servers (previewai.app) to ensure your WordPress site remains fast and performant. The virtual try-on functionality requires an active connection to our API.
+
+**Service Requirements:**
+This plugin connects to the Preview AI external service to perform AI image analysis and generation. 
+* **Service Provider:** [Preview AI](https://previewai.app)
+* **Terms of Service:** [https://www.previewai.app/terms/terms-and-conditions](https://www.previewai.app/terms/terms-and-conditions)
+* **Privacy Policy:** [https://www.previewai.app/terms/privacy-policy](https://www.previewai.app/terms/privacy-policy)
+
+The plugin includes a free tier for the Preview AI service, ensuring it is fully functional upon activation.
 
 = Compatibility =
 * **Elementor:** Fully compatible with a dedicated widget for your custom templates.
-* **Translation Plugins:** Ready for WPML, Loco Translate, and Polylang.
-* **Themes:** Compatible with most modern WordPress themes (Astra, Botiga, Hello Elementor, OceanWP, etc.).
 * **WooCommerce:** Optimized for the latest versions of WooCommerce.
+* **Themes:** Compatible with Astra, Hello Elementor, OceanWP, and more.
 
 = Features =
-* AI-powered virtual try-on for clothing.
-* Easy integration with WooCommerce.
-* Real-time image generation.
-* Automatic product classification and analysis.
-* Customizable preview widget (button text, icons, colors).
-* Elementor integration.
-* Conversion tracking and statistics.
+* AI-powered virtual try-on for tops, pants, and full-body clothing.
+* Seamless WooCommerce integration.
+* Secure image processing via Preview AI API.
+* Automatic product classification.
+* Fully customizable widget (text, icons, colors).
 
 == Installation ==
 
 1. Upload the `preview-ai` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Follow the onboarding notice to activate your free trial and analyze your catalog.
+3. Use the onboarding wizard to connect your store to the Preview AI service and analyze your catalog.
 
 == Frequently Asked Questions ==
 
 = Is it free? =
-We offer a free trial with 20 monthly previews. After that, you can choose a plan that fits your needs on our website.
+The plugin is free to use and includes a free tier for the Preview AI service. For high-volume stores, additional service plans are available on our website. All plugin features remain fully accessible regardless of your service plan level.
 
-= Does it support all products? =
-Currently, we support upper body, lower body, and full body clothing. Our AI is optimized for these categories. More product types are coming soon!
-
-= Does it work with Elementor? =
-Yes, we have a dedicated Elementor widget for the Preview AI button, allowing you to place it anywhere on your product pages. It also works via shortcode [preview_ai].
-
-= Is it compatible with WPML or Loco Translate? =
-Absolutely. The plugin is fully internationalized and compatible with WPML, Loco Translate, and other translation plugins.
-
-= Does it work with my theme? =
-Preview AI is designed to be theme-agnostic. It works perfectly with popular themes like Botiga, Astra, and Hello Elementor. If you use a custom theme, you can use our widget or shortcode.
+= Why does it use an external service? =
+Generating high-quality AI try-ons requires significant GPU computing power that isn't available on standard web hosting. By offloading this to Preview AI's specialized servers, we provide a fast experience without slowing down your store.
 
 = Does it store user photos? =
-User photos are processed by our AI backend to generate the preview and are not stored permanently unless required for the generation process. We respect user privacy.
+We take privacy seriously. User photos are processed in real-time by the Preview AI API to generate the preview. Images are not stored permanently on our servers unless required for the specific generation request.
+
+= Does it support all products? =
+Currently, the AI is optimized for clothing (upper body, lower body, and full body). Support for accessories and other categories is planned for future updates.
 
 == Screenshots ==
 

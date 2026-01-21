@@ -50,6 +50,8 @@ class PREVIEW_AI_Ajax {
 
 		// Process image to base64.
 		$image_file = isset( $_FILES['image'] ) ? $_FILES['image'] : null;
+
+		// Validate upload structure and safety.
 		$validation = $this->validate_upload_file( $image_file );
 		if ( is_wp_error( $validation ) ) {
 			wp_send_json_error( array( 'message' => $validation->get_error_message() ) );
@@ -179,7 +181,7 @@ class PREVIEW_AI_Ajax {
 	 * @return true|WP_Error
 	 */
 	private function validate_upload_file( $file ) {
-		if ( empty( $file ) || ! is_array( $file ) ) {
+		if ( empty( $file ) || ! is_array( $file ) || empty( $file['name'] ) || empty( $file['tmp_name'] ) ) {
 			return new WP_Error( 'invalid_file', __( 'No file provided', 'preview-ai' ) );
 		}
 
@@ -187,24 +189,26 @@ class PREVIEW_AI_Ajax {
 			return new WP_Error( 'upload_error', __( 'Upload error.', 'preview-ai' ) );
 		}
 
-		if ( empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) {
+		if ( ! is_uploaded_file( $file['tmp_name'] ) ) {
 			return new WP_Error( 'invalid_upload', __( 'Invalid file upload', 'preview-ai' ) );
+		}
+
+		// Verify it's an actual image.
+		$check = getimagesize( $file['tmp_name'] );
+		if ( false === $check ) {
+			return new WP_Error( 'invalid_image', __( 'File is not a valid image.', 'preview-ai' ) );
 		}
 
 		$allowed_mimes = array( 'image/jpeg', 'image/png', 'image/webp' );
 		$file_info     = wp_check_filetype( $file['name'] );
 		
-		if ( ! in_array( $file_info['type'], $allowed_mimes, true ) ) {
+		if ( ! in_array( $file_info['type'], $allowed_mimes, true ) || ! in_array( $check['mime'], $allowed_mimes, true ) ) {
 			return new WP_Error( 'invalid_type', __( 'Invalid image type. Use JPG, PNG or WebP.', 'preview-ai' ) );
 		}
 
 		$max_size = 5 * 1024 * 1024; // 5MB.
 		if ( ! empty( $file['size'] ) && $file['size'] > $max_size ) {
 			return new WP_Error( 'file_too_large', __( 'Image too large. Max 5MB.', 'preview-ai' ) );
-		}
-
-		if ( ! file_exists( $file['tmp_name'] ) ) {
-			return new WP_Error( 'read_error', __( 'Could not read image file.', 'preview-ai' ) );
 		}
 
 		return true;
