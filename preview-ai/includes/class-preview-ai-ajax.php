@@ -37,8 +37,8 @@ class PREVIEW_AI_Ajax {
 		}
 
 		// Validate product.
-		$product_id   = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
-		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+		$product_id   = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( wp_unslash( $_POST['variation_id'] ) ) : 0;
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid product', 'preview-ai' ) ) );
 		}
@@ -48,9 +48,25 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Preview AI not enabled for this product', 'preview-ai' ) ) );
 		}
 
-		// Process image to base64.
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via sanitize_uploaded_file() below.
-		$image_file = isset( $_FILES['image'] ) ? $this->sanitize_uploaded_file( $_FILES['image'] ) : null;
+		// Process image.
+		$image_file = null;
+		if (
+			isset( $_FILES['image'] ) &&
+			is_array( $_FILES['image'] ) &&
+			isset( $_FILES['image']['name'] ) &&
+			isset( $_FILES['image']['type'] ) &&
+			isset( $_FILES['image']['tmp_name'] ) &&
+			isset( $_FILES['image']['error'] ) &&
+			isset( $_FILES['image']['size'] )
+		) {
+			$image_file = array(
+				'name'     => sanitize_file_name( wp_unslash( $_FILES['image']['name'] ) ),
+				'type'     => sanitize_mime_type( wp_unslash( $_FILES['image']['type'] ) ),
+				'tmp_name' => sanitize_text_field( wp_unslash( $_FILES['image']['tmp_name'] ) ),
+				'error'    => absint( $_FILES['image']['error'] ),
+				'size'     => absint( $_FILES['image']['size'] ),
+			);
+		}
 
 		// Validate upload structure and safety.
 		$validation = $this->validate_upload_file( $image_file );
@@ -89,8 +105,8 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'No image provided', 'preview-ai' ) ) );
 		}
 
-		$product_id   = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
-		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+		$product_id   = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( wp_unslash( $_POST['variation_id'] ) ) : 0;
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid product', 'preview-ai' ) ) );
 		}
@@ -99,8 +115,24 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Preview AI not enabled for this product', 'preview-ai' ) ) );
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via sanitize_uploaded_file() below.
-		$image_file = isset( $_FILES['image'] ) ? $this->sanitize_uploaded_file( $_FILES['image'] ) : null;
+		$image_file = null;
+		if (
+			isset( $_FILES['image'] ) &&
+			is_array( $_FILES['image'] ) &&
+			isset( $_FILES['image']['name'] ) &&
+			isset( $_FILES['image']['type'] ) &&
+			isset( $_FILES['image']['tmp_name'] ) &&
+			isset( $_FILES['image']['error'] ) &&
+			isset( $_FILES['image']['size'] )
+		) {
+			$image_file = array(
+				'name'     => sanitize_file_name( wp_unslash( $_FILES['image']['name'] ) ),
+				'type'     => sanitize_mime_type( wp_unslash( $_FILES['image']['type'] ) ),
+				'tmp_name' => sanitize_text_field( wp_unslash( $_FILES['image']['tmp_name'] ) ),
+				'error'    => absint( $_FILES['image']['error'] ),
+				'size'     => absint( $_FILES['image']['size'] ),
+			);
+		}
 		$validation = $this->validate_upload_file( $image_file );
 		if ( is_wp_error( $validation ) ) {
 			wp_send_json_error( array( 'message' => $validation->get_error_message() ) );
@@ -162,10 +194,13 @@ class PREVIEW_AI_Ajax {
 	private function upload_image( $file ) {
 		// Validations already handled by validate_upload_file.
 		
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$image_data = file_get_contents( $file['tmp_name'] );
-		if ( false === $image_data ) {
+		if ( ! is_readable( $file['tmp_name'] ) ) {
 			return new WP_Error( 'read_error', __( 'Could not read image file.', 'preview-ai' ) );
+		}
+
+		$image_data = file_get_contents( $file['tmp_name'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading local temp file validated by is_uploaded_file(); WP_Filesystem is unnecessary overhead for $_FILES.
+		if ( false === $image_data ) {
+			return new WP_Error( 'read_error', __( 'Could not read image file content.', 'preview-ai' ) );
 		}
 
 		$file_info = wp_check_filetype( $file['name'] );
@@ -173,26 +208,6 @@ class PREVIEW_AI_Ajax {
 		return array(
 			'base64'    => base64_encode( $image_data ),
 			'mime_type' => $file_info['type'] ? $file_info['type'] : 'image/jpeg',
-		);
-	}
-
-	/**
-	 * Sanitize uploaded file data from $_FILES.
-	 *
-	 * @param array|null $file Raw $_FILES element.
-	 * @return array|null Sanitized file array or null if invalid.
-	 */
-	private function sanitize_uploaded_file( $file ) {
-		if ( empty( $file ) || ! is_array( $file ) ) {
-			return null;
-		}
-
-		return array(
-			'name'     => isset( $file['name'] ) ? sanitize_file_name( wp_unslash( $file['name'] ) ) : '',
-			'type'     => isset( $file['type'] ) ? sanitize_mime_type( wp_unslash( $file['type'] ) ) : '',
-			'tmp_name' => isset( $file['tmp_name'] ) ? sanitize_text_field( $file['tmp_name'] ) : '',
-			'error'    => isset( $file['error'] ) ? absint( $file['error'] ) : UPLOAD_ERR_NO_FILE,
-			'size'     => isset( $file['size'] ) ? absint( $file['size'] ) : 0,
 		);
 	}
 
@@ -345,8 +360,11 @@ class PREVIEW_AI_Ajax {
 			return null;
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$image_data = file_get_contents( $file_path );
+		if ( ! is_readable( $file_path ) ) {
+			return null;
+		}
+
+		$image_data = file_get_contents( $file_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local attachment file from get_attached_file(); WP_Filesystem adds unnecessary overhead.
 		if ( false === $image_data ) {
 			return null;
 		}

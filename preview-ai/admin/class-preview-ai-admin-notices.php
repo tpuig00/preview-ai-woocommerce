@@ -92,7 +92,7 @@ class PREVIEW_AI_Admin_Notices {
 				'post_type'      => 'product',
 				'post_status'    => 'publish',
 				'posts_per_page' => 1,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required to find products with AI configuration, only fetches 1 result.
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Necessary to find first configured product; limited to 1 result for minimal performance impact.
 				'meta_query'     => array(
 					array(
 						'key'     => '_preview_ai_recommended_subtype',
@@ -116,6 +116,11 @@ class PREVIEW_AI_Admin_Notices {
 	 */
 	public function handle_dismiss_notice() {
 		check_ajax_referer( 'preview_ai_dismiss_notice', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'preview-ai' ) ) );
+		}
+
 		wp_send_json_success();
 	}
 
@@ -124,6 +129,11 @@ class PREVIEW_AI_Admin_Notices {
 	 */
 	public function handle_dismiss_try_notice() {
 		check_ajax_referer( 'preview_ai_dismiss_notice', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'preview-ai' ) ) );
+		}
+
 		delete_option( 'preview_ai_needs_first_try' );
 		wp_send_json_success();
 	}

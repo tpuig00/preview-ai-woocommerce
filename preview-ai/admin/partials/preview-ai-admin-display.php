@@ -13,8 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-$preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; determines which settings tab to display, no data modification. Value sanitized with sanitize_key().
+$preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general';
 ?>
 
 <div class="wrap">
@@ -43,8 +43,8 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 
 	<?php if ( 'stats' === $preview_ai_active_tab ) : ?>
 		<!-- Statistics Tab -->
 		<?php
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$preview_ai_period = isset( $_GET['period'] ) ? sanitize_key( $_GET['period'] ) : '30days';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; determines stats period filter, no data modification. Value sanitized with sanitize_key().
+		$preview_ai_period = isset( $_GET['period'] ) ? sanitize_key( wp_unslash( $_GET['period'] ) ) : '30days';
 		$preview_ai_stats  = PREVIEW_AI_Tracking::get_detailed_stats( $preview_ai_period );
 		?>
 		
@@ -155,7 +155,7 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 
 							<tr>
 								<th><?php esc_html_e( 'Customer', 'preview-ai' ); ?></th>
 								<th><?php esc_html_e( 'Product', 'preview-ai' ); ?></th>
-								<th class="preview-ai-text-right"><?php esc_html_e( 'Amount', 'preview-ai' ); ?></th>
+								<th class="preview-ai-text-right"><?php esc_html_e( 'Order Total', 'preview-ai' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -302,7 +302,7 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 
 				<p class="preview-ai-catalog-desc">
 					<?php esc_html_e( 'Preview AI will automatically detect what type of product each one is (t-shirts, dresses, belts, earrings, fanny packs…).', 'preview-ai' ); ?>
 					<br><strong>
-					<?php esc_html_e( 'This helps generate much more precise previews without manual configuration.', 'preview-ai' ); ?></strong>
+					<?php esc_html_e( 'This is necessary to generate much more precise previews without manual configuration.', 'preview-ai' ); ?></strong>
 				</p>
 				<p class="preview-ai-catalog-note">
 					<?php esc_html_e( 'Nothing will be modified in your store. Only recommendations will be assigned.', 'preview-ai' ); ?>
@@ -415,7 +415,18 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 
 											   <?php checked( $preview_ai_widget_settings['button_icon'], $preview_ai_key ); ?>
 										/>
 										<span class="preview-ai-icon-preview">
-											<?php echo PREVIEW_AI_Admin::kses_svg( $preview_ai_icon['svg'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG sanitized by kses_svg method ?>
+											<?php
+															echo wp_kses(
+																$preview_ai_icon['svg'],
+																array(
+																	'svg'      => array( 'viewbox' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'xmlns' => true, 'class' => true ),
+																	'path'     => array( 'd' => true, 'fill' => true, 'stroke' => true ),
+																	'circle'   => array( 'cx' => true, 'cy' => true, 'r' => true, 'fill' => true ),
+																	'line'     => array( 'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'stroke' => true ),
+																	'polyline' => array( 'points' => true, 'fill' => true, 'stroke' => true ),
+																)
+															);
+															?>
 										</span>
 										<span class="preview-ai-icon-label"><?php echo esc_html( $preview_ai_icon['label'] ); ?></span>
 									</label>

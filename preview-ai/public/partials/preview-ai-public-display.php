@@ -49,7 +49,18 @@ $preview_ai_inline_style   = $preview_ai_height_style . $preview_ai_width_style;
 <!-- Action Chip Container -->
 <div class="preview-ai-chip-wrapper <?php echo esc_attr( $preview_ai_position_class ); ?>">
 	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $preview_ai_shape_class ); ?>" <?php echo $preview_ai_inline_style ? 'style="' . esc_attr( $preview_ai_inline_style ) . '"' : ''; ?>>
-		<span class="preview-ai-chip-icon"><?php echo PREVIEW_AI_Admin::kses_svg( $preview_ai_button_svg ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG sanitized by kses_svg method ?></span>
+		<span class="preview-ai-chip-icon"><?php
+			echo wp_kses(
+				$preview_ai_button_svg,
+				array(
+					'svg'      => array( 'viewbox' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'xmlns' => true, 'class' => true ),
+					'path'     => array( 'd' => true, 'fill' => true, 'stroke' => true ),
+					'circle'   => array( 'cx' => true, 'cy' => true, 'r' => true, 'fill' => true ),
+					'line'     => array( 'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'stroke' => true ),
+					'polyline' => array( 'points' => true, 'fill' => true, 'stroke' => true ),
+				)
+			);
+			?></span>
 		<span class="preview-ai-chip-text"><?php echo esc_html( $preview_ai_button_text ); ?></span>
 	</button>
 </div>
@@ -254,8 +265,8 @@ $preview_ai_inline_style   = $preview_ai_height_style . $preview_ai_width_style;
 
 <?php
 // Load demo tour only when ?demo=yes parameter is present.
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check for demo mode.
-if ( isset( $_GET['demo'] ) && 'yes' === $_GET['demo'] ) {
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; only loads demo tour JS if ?demo=yes is present, no data modification or user-specific content.
+if ( isset( $_GET['demo'] ) && 'yes' === sanitize_key( wp_unslash( $_GET['demo'] ) ) ) {
 	include __DIR__ . '/preview-ai-demo-tour.php';
 }
 ?>

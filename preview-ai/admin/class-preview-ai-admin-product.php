@@ -79,6 +79,7 @@ class PREVIEW_AI_Admin_Product {
 
 		?>
 		<div id="preview_ai_product_data" class="panel woocommerce_options_panel">
+			<?php wp_nonce_field( 'preview_ai_save_product_data', 'preview_ai_product_nonce' ); ?>
 
 			<?php if ( ! $has_image ) : ?>
 			<div class="preview-ai-notice" style="margin: 12px; background: #fff8e5; border-left: 4px solid #ffb900;">
@@ -149,7 +150,16 @@ class PREVIEW_AI_Admin_Product {
 	 * Save Preview AI product meta.
 	 */
 	public function save_product_data( $post_id ) {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce handles nonce.
+		// Verify nonce.
+		$nonce = '';
+		if ( isset( $_POST['preview_ai_product_nonce'] ) ) {
+			$nonce = sanitize_key( wp_unslash( $_POST['preview_ai_product_nonce'] ) );
+		}
+
+		if ( ! wp_verify_nonce( $nonce, 'preview_ai_save_product_data' ) ) {
+			return;
+		}
+
 		$enabled = isset( $_POST['_preview_ai_enabled'] ) ? 'yes' : 'no';
 		$product = wc_get_product( $post_id );
 
@@ -322,8 +332,8 @@ class PREVIEW_AI_Admin_Product {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
 		}
 
-		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
-		$enabled    = isset( $_POST['enabled'] ) && 'yes' === sanitize_key( $_POST['enabled'] );
+		$product_id = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$enabled    = isset( $_POST['enabled'] ) && 'yes' === sanitize_key( wp_unslash( $_POST['enabled'] ) );
 
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid product ID.', 'preview-ai' ) ) );
@@ -444,18 +454,21 @@ class PREVIEW_AI_Admin_Product {
 
 		// Product hasn't been analyzed yet.
 		if ( ! $was_analyzed ) {
-			echo '<span class="preview-ai-col preview-ai-col--pending" title="' . esc_attr__( 'Not analyzed yet - run Learn Catalog', 'preview-ai' ) . '">';
-			echo '<span class="dashicons dashicons-clock"></span> ';
-			echo esc_html__( 'Not Analyzed', 'preview-ai' );
-			echo '</span>';
+			printf(
+				'<span class="preview-ai-col preview-ai-col--pending" title="%s"><span class="dashicons dashicons-clock"></span> %s</span>',
+				esc_attr__( 'Not analyzed yet - run Learn Catalog', 'preview-ai' ),
+				esc_html__( 'Not Analyzed', 'preview-ai' )
+			);
 			return;
 		}
 
 		// Product analyzed but not supported.
 		if ( 'no' === $supported ) {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Product type not supported yet (V1 supports tops and pants only)', 'preview-ai' ) . '">';
-			echo esc_html__( 'Not Supported', 'preview-ai' );
-			echo '</span>';
+			printf(
+				'<span class="preview-ai-col preview-ai-col--disabled" title="%s">%s</span>',
+				esc_attr__( 'Product type not supported yet (V1 supports tops and pants only)', 'preview-ai' ),
+				esc_html__( 'Not Supported', 'preview-ai' )
+			);
 			return;
 		}
 
@@ -470,12 +483,16 @@ class PREVIEW_AI_Admin_Product {
 		}
 
 		if ( $is_enabled ) {
-			echo '<span class="preview-ai-col preview-ai-col--active" title="' . esc_attr__( 'Preview AI active on this product', 'preview-ai' ) . '">';
-			echo '<span class="dashicons dashicons-visibility"></span> ';
-			echo esc_html__( 'Active', 'preview-ai' );
-			echo '</span>';
+			printf(
+				'<span class="preview-ai-col preview-ai-col--active" title="%s"><span class="dashicons dashicons-visibility"></span> %s</span>',
+				esc_attr__( 'Preview AI active on this product', 'preview-ai' ),
+				esc_html__( 'Active', 'preview-ai' )
+			);
 		} else {
-			echo '<span class="preview-ai-col preview-ai-col--disabled" title="' . esc_attr__( 'Preview AI disabled for this product', 'preview-ai' ) . '">—</span>';
+			printf(
+				'<span class="preview-ai-col preview-ai-col--disabled" title="%s">—</span>',
+				esc_attr__( 'Preview AI disabled for this product', 'preview-ai' )
+			);
 		}
 	}
 }

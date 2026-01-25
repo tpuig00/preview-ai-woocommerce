@@ -111,9 +111,6 @@ class PREVIEW_AI_Admin {
 		return PREVIEW_AI_Admin_Settings::get_clothing_subtypes();
 	}
 
-	public static function kses_svg( $svg ) {
-		return PREVIEW_AI_Admin_Settings::kses_svg( $svg );
-	}
 
 	public function add_product_data_tab( $tabs ) {
 		return $this->product->add_product_data_tab( $tabs );
@@ -187,8 +184,8 @@ class PREVIEW_AI_Admin {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$is_onboarding = isset( $_GET['onboarding'] ) && 'complete' === $_GET['onboarding'];
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; only triggers onboarding wizard display, no data modification. Value sanitized with sanitize_key().
+		$is_onboarding = isset( $_GET['onboarding'] ) && 'complete' === sanitize_key( wp_unslash( $_GET['onboarding'] ) );
 
 		if ( $is_onboarding ) {
 			add_action( 'admin_footer', array( $this->onboarding, 'render_onboarding_wizard' ) );
@@ -264,11 +261,11 @@ class PREVIEW_AI_Admin {
 			)
 		);
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking URL params to determine which scripts to load, no data processing.
-		$is_settings_page = ( 'product_page_preview-ai' === $hook || ( isset( $_GET['page'] ) && 'preview-ai' === $_GET['page'] ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; determines which scripts to enqueue based on admin page. Values sanitized with sanitize_key().
+		$is_settings_page = ( 'product_page_preview-ai' === $hook || ( isset( $_GET['page'] ) && 'preview-ai' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) );
 		$is_product_page  = ( 'post.php' === $hook || 'post-new.php' === $hook );
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking URL param to conditionally enqueue script, no data processing.
-		$is_onboarding    = isset( $_GET['onboarding'] ) && 'complete' === sanitize_key( $_GET['onboarding'] );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; conditionally enqueues onboarding script. Value sanitized with sanitize_key().
+		$is_onboarding    = isset( $_GET['onboarding'] ) && 'complete' === sanitize_key( wp_unslash( $_GET['onboarding'] ) );
 
 		if ( $is_onboarding ) {
 			wp_enqueue_script( 'preview-ai-onboarding' );

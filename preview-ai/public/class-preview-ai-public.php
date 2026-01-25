@@ -200,7 +200,7 @@ class PREVIEW_AI_Public {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in render method.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML template output; all dynamic values escaped with esc_html/esc_attr/esc_url in preview-ai-public-display.php.
 		echo self::render_widget_output( $product->get_id() );
 	}
 
