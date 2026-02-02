@@ -59,6 +59,7 @@ foreach ( $preview_ai_options as $preview_ai_option ) {
  * 1.1. Delete product metadata related to the plugin.
  * This removes all _preview_ai_* meta keys from the postmeta table.
  */
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup; bulk delete of plugin postmeta is more efficient than individual delete_post_meta() calls.
 $wpdb->query(
 	"DELETE FROM {$wpdb->prefix}postmeta 
 	WHERE meta_key LIKE '_preview_ai_%'"
@@ -67,6 +68,7 @@ $wpdb->query(
 /**
  * 1.2. Delete user metadata related to the plugin.
  */
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup; bulk delete of plugin usermeta is more efficient than individual delete_user_meta() calls.
 $wpdb->query(
 	"DELETE FROM {$wpdb->prefix}usermeta 
 	WHERE meta_key LIKE 'preview_ai_%'"
@@ -86,23 +88,22 @@ if ( function_exists( 'as_unschedule_all_actions' ) ) {
 	as_unschedule_all_actions( 'preview_ai_process_catalog_batch' );
 } else {
 	// Fallback: delete directly from the database if Action Scheduler is not available.
-	$preview_ai_actions_table = $wpdb->prefix . 'actionscheduler_actions';
-	$preview_ai_logs_table    = $wpdb->prefix . 'actionscheduler_logs';
-
 	// First, delete the associated logs.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Fallback when Action Scheduler not loaded; cleans scheduled actions. Hook name sanitized via $wpdb->prepare().
 	$wpdb->query(
 		$wpdb->prepare(
-			"DELETE al FROM {$preview_ai_logs_table} al
-			INNER JOIN {$preview_ai_actions_table} aa ON al.action_id = aa.action_id
+			"DELETE al FROM {$wpdb->prefix}actionscheduler_logs al
+			INNER JOIN {$wpdb->prefix}actionscheduler_actions aa ON al.action_id = aa.action_id
 			WHERE aa.hook = %s",
 			'preview_ai_process_catalog_batch'
 		)
 	);
 
 	// Then, delete the actions.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Fallback when Action Scheduler not loaded; cleans scheduled actions. Hook name sanitized via $wpdb->prepare().
 	$wpdb->query(
 		$wpdb->prepare(
-			"DELETE FROM {$preview_ai_actions_table} WHERE hook = %s",
+			"DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook = %s",
 			'preview_ai_process_catalog_batch'
 		)
 	);
@@ -111,5 +112,5 @@ if ( function_exists( 'as_unschedule_all_actions' ) ) {
 /**
  * 3. Delete custom database table.
  */
-$preview_ai_events_table = $wpdb->prefix . 'preview_ai_events';
-$wpdb->query( "DROP TABLE IF EXISTS {$preview_ai_events_table}" );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Uninstall cleanup; removes custom plugin table. No WP API for DROP TABLE.
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}preview_ai_events" );

@@ -16,6 +16,15 @@ class PREVIEW_AI_Admin_Settings {
 		// General settings group.
 		register_setting( 'preview_ai_general_settings', 'preview_ai_api_key', 'sanitize_text_field' );
 		register_setting( 'preview_ai_general_settings', 'preview_ai_enabled', 'absint' );
+		register_setting(
+			'preview_ai_general_settings',
+			'preview_ai_max_previews_per_user_weekly',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+				'default'           => 8,
+			)
+		);
 
 		// Widget settings group.
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_display_mode', 'sanitize_key' );
@@ -72,6 +81,15 @@ class PREVIEW_AI_Admin_Settings {
 			'button_full_width' => get_option( 'preview_ai_button_full_width', 0 ),
 			'accent_color'    => get_option( 'preview_ai_accent_color', '#3b82f6' ),
 		);
+	}
+
+	/**
+	 * Get maximum previews allowed per user per week.
+	 *
+	 * @return int Maximum number of previews per user per week.
+	 */
+	public static function get_max_previews_per_user_weekly() {
+		return absint( get_option( 'preview_ai_max_previews_per_user_weekly', 8 ) );
 	}
 
 	/**

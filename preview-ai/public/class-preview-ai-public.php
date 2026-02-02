@@ -127,6 +127,46 @@ class PREVIEW_AI_Public {
 			true
 		);
 
+		// Register demo tour scripts and styles.
+		wp_register_style(
+			'preview-ai-demo-tour',
+			plugin_dir_url( __FILE__ ) . 'css/preview-ai-demo-tour.css',
+			array(),
+			$this->version,
+			'all'
+		);
+
+		wp_register_script(
+			'preview-ai-demo-tour',
+			plugin_dir_url( __FILE__ ) . 'js/preview-ai-demo-tour.js',
+			array( 'jquery' ),
+			$this->version,
+			true
+		);
+
+		wp_localize_script(
+			'preview-ai-demo-tour',
+			'previewAiDemo',
+			array(
+				'i18n' => array(
+					'demoTour'        => __( 'Demo Tour', 'preview-ai' ),
+					'skip'            => __( 'Skip', 'preview-ai' ),
+					'next'            => __( 'Next', 'preview-ai' ),
+					'tryItNow'        => __( 'Try it now!', 'preview-ai' ),
+					'step1Title'      => __( '🎨 Preview AI Understands Your Catalog', 'preview-ai' ),
+					'step1Text'       => __( 'Our AI analyzes your <strong>product images</strong>, including all <strong>variations and color options</strong>. If you have photos for each variant, Preview AI will use them for more accurate try-ons.', 'preview-ai' ),
+					'autoDetection'   => __( 'Auto-detection', 'preview-ai' ),
+					'realTime'        => __( 'Real-time', 'preview-ai' ),
+					'allColors'       => __( 'All colors', 'preview-ai' ),
+					'step2Title'      => __( '✨ Your Customers See This', 'preview-ai' ),
+					'step2Text'       => __( 'This widget is <strong>fully customizable</strong> and adapts to your store\'s design. Customers click here to instantly try on your products using their own photo.', 'preview-ai' ),
+					'customizable'    => __( 'Customizable', 'preview-ai' ),
+					'responsive'      => __( 'Responsive', 'preview-ai' ),
+					'oneClick'        => __( 'One-click', 'preview-ai' ),
+				),
+			)
+		);
+
 	}
 
 	/**
@@ -160,7 +200,7 @@ class PREVIEW_AI_Public {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in render method.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML template output; all dynamic values escaped with esc_html/esc_attr/esc_url in preview-ai-public-display.php.
 		echo self::render_widget_output( $product->get_id() );
 	}
 
@@ -203,21 +243,23 @@ class PREVIEW_AI_Public {
 			'preview-ai',
 			'previewAiData',
 			array(
-				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
-				'nonce'           => wp_create_nonce( 'preview_ai_ajax' ),
-				'productId'       => $product_id,
-				'variationId'     => '',
-				'productName'     => $product_name,
-				'productUrl'      => $product_url,
-				'productImageUrl' => $product_image_url,
+				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
+				'nonce'              => wp_create_nonce( 'preview_ai_ajax' ),
+				'productId'          => $product_id,
+				'variationId'        => '',
+				'productName'        => $product_name,
+				'productUrl'         => $product_url,
+				'productImageUrl'    => $product_image_url,
+				'maxPreviewsWeekly'  => PREVIEW_AI_Admin_Settings::get_max_previews_per_user_weekly(),
 				'i18n'      => array(
-					'error'         => __( 'Something went wrong. Please try again later.', 'preview-ai' ),
-					'openCamera'    => __( 'Open camera', 'preview-ai' ),
-					'uploadPhoto'   => __( 'Upload photo', 'preview-ai' ),
-					'checkingPhoto' => __( 'Checking photo…', 'preview-ai' ),
-					'photoOk'       => __( 'Photo looks good.', 'preview-ai' ),
-					'photoWarning'  => __( 'Photo is valid, but could be improved.', 'preview-ai' ),
-					'photoBad'      => __( 'Photo is not valid. Please try another one.', 'preview-ai' ),
+					'error'              => __( 'Something went wrong. Please try again later.', 'preview-ai' ),
+					'weeklyLimitReached' => __( 'You have used all your weekly previews! Come back next week to try on more products.', 'preview-ai' ),
+					'openCamera'         => __( 'Open camera', 'preview-ai' ),
+					'uploadPhoto'        => __( 'Upload photo', 'preview-ai' ),
+					'checkingPhoto'      => __( 'Checking photo…', 'preview-ai' ),
+					'photoOk'            => __( 'Photo looks good.', 'preview-ai' ),
+					'photoWarning'       => __( 'Photo is valid, but could be improved.', 'preview-ai' ),
+					'photoBad'           => __( 'Photo is not valid. Please try another one.', 'preview-ai' ),
 					'warningCodes'  => array(
 						// Generic / heuristic checks (backend/src/api/routes/generate.py).
 						'LOW_RESOLUTION' => __( 'The photo has low resolution; Try to use a photo with a higher resolution.', 'preview-ai' ),
@@ -306,10 +348,16 @@ class PREVIEW_AI_Public {
 
 		$tips = $clothing_subtypes[ $clothing_subtype ]['tips'];
 
-		// Check if branding should be shown (only for free_tier).
-		$account_status = PREVIEW_AI_Api::get_account_status();
-		$subscription_status = isset( $account_status['subscription_status'] ) ? $account_status['subscription_status'] : 'free_trial';
-		$show_branding = ( 'free_trial' === $subscription_status || empty( $subscription_status ) );
+		// Prepare variables for the partial.
+		$preview_ai_product_id        = $product_id;
+		$preview_ai_button_text       = $button_text;
+		$preview_ai_button_svg        = $button_svg;
+		$preview_ai_button_position   = $button_position;
+		$preview_ai_button_shape      = $button_shape;
+		$preview_ai_button_height     = $button_height;
+		$preview_ai_button_full_width = $button_full_width;
+		$preview_ai_clothing_subtype  = $clothing_subtype;
+		$preview_ai_tips              = $tips;
 
 		ob_start();
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-public-display.php';

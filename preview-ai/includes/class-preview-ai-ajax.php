@@ -37,8 +37,8 @@ class PREVIEW_AI_Ajax {
 		}
 
 		// Validate product.
-		$product_id   = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
-		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+		$product_id   = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( wp_unslash( $_POST['variation_id'] ) ) : 0;
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid product', 'preview-ai' ) ) );
 		}
@@ -48,8 +48,32 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Preview AI not enabled for this product', 'preview-ai' ) ) );
 		}
 
-		// Process image to base64.
-		$image_file = isset( $_FILES['image'] ) ? $_FILES['image'] : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		// Process image.
+		$image_file = null;
+		if (
+			isset( $_FILES['image'] ) &&
+			is_array( $_FILES['image'] ) &&
+			isset( $_FILES['image']['name'] ) &&
+			isset( $_FILES['image']['type'] ) &&
+			isset( $_FILES['image']['tmp_name'] ) &&
+			isset( $_FILES['image']['error'] ) &&
+			isset( $_FILES['image']['size'] )
+		) {
+			$image_file = array(
+				'name'     => sanitize_file_name( wp_unslash( $_FILES['image']['name'] ) ),
+				'type'     => sanitize_mime_type( wp_unslash( $_FILES['image']['type'] ) ),
+				'tmp_name' => sanitize_text_field( wp_unslash( $_FILES['image']['tmp_name'] ) ),
+				'error'    => absint( $_FILES['image']['error'] ),
+				'size'     => absint( $_FILES['image']['size'] ),
+			);
+		}
+
+		// Validate upload structure and safety.
+		$validation = $this->validate_upload_file( $image_file );
+		if ( is_wp_error( $validation ) ) {
+			wp_send_json_error( array( 'message' => $validation->get_error_message() ) );
+		}
+
 		$upload = $this->upload_image( $image_file );
 		if ( is_wp_error( $upload ) ) {
 			wp_send_json_error( array( 'message' => $upload->get_error_message() ) );
@@ -81,8 +105,8 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'No image provided', 'preview-ai' ) ) );
 		}
 
-		$product_id   = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
-		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+		$product_id   = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( wp_unslash( $_POST['variation_id'] ) ) : 0;
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid product', 'preview-ai' ) ) );
 		}
@@ -91,7 +115,24 @@ class PREVIEW_AI_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Preview AI not enabled for this product', 'preview-ai' ) ) );
 		}
 
-		$image_file = isset( $_FILES['image'] ) ? $_FILES['image'] : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$image_file = null;
+		if (
+			isset( $_FILES['image'] ) &&
+			is_array( $_FILES['image'] ) &&
+			isset( $_FILES['image']['name'] ) &&
+			isset( $_FILES['image']['type'] ) &&
+			isset( $_FILES['image']['tmp_name'] ) &&
+			isset( $_FILES['image']['error'] ) &&
+			isset( $_FILES['image']['size'] )
+		) {
+			$image_file = array(
+				'name'     => sanitize_file_name( wp_unslash( $_FILES['image']['name'] ) ),
+				'type'     => sanitize_mime_type( wp_unslash( $_FILES['image']['type'] ) ),
+				'tmp_name' => sanitize_text_field( wp_unslash( $_FILES['image']['tmp_name'] ) ),
+				'error'    => absint( $_FILES['image']['error'] ),
+				'size'     => absint( $_FILES['image']['size'] ),
+			);
+		}
 		$validation = $this->validate_upload_file( $image_file );
 		if ( is_wp_error( $validation ) ) {
 			wp_send_json_error( array( 'message' => $validation->get_error_message() ) );
@@ -151,47 +192,60 @@ class PREVIEW_AI_Ajax {
 	 * @return array|WP_Error Base64 data or error.
 	 */
 	private function upload_image( $file ) {
-		$allowed = array( 'image/jpeg', 'image/png', 'image/webp' );
-		if ( ! in_array( $file['type'], $allowed, true ) ) {
-			return new WP_Error( 'invalid_type', __( 'Invalid image type. Use JPG, PNG or WebP.', 'preview-ai' ) );
-		}
-
-		$max_size = 5 * 1024 * 1024; // 5MB.
-		if ( $file['size'] > $max_size ) {
-			return new WP_Error( 'file_too_large', __( 'Image too large. Max 5MB.', 'preview-ai' ) );
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$image_data = file_get_contents( $file['tmp_name'] );
-		if ( false === $image_data ) {
+		// Validations already handled by validate_upload_file.
+		
+		if ( ! is_readable( $file['tmp_name'] ) ) {
 			return new WP_Error( 'read_error', __( 'Could not read image file.', 'preview-ai' ) );
 		}
 
+		$image_data = file_get_contents( $file['tmp_name'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading local temp file validated by is_uploaded_file(); WP_Filesystem is unnecessary overhead for $_FILES.
+		if ( false === $image_data ) {
+			return new WP_Error( 'read_error', __( 'Could not read image file content.', 'preview-ai' ) );
+		}
+
+		$file_info = wp_check_filetype( $file['name'] );
+
 		return array(
 			'base64'    => base64_encode( $image_data ),
-			'mime_type' => $file['type'],
+			'mime_type' => $file_info['type'] ? $file_info['type'] : 'image/jpeg',
 		);
 	}
 
 	/**
 	 * Validate user upload file (type/size/readability).
 	 *
-	 * @param array $file $_FILES element.
+	 * @param array $file Sanitized $_FILES element.
 	 * @return true|WP_Error
 	 */
 	private function validate_upload_file( $file ) {
-		$allowed = array( 'image/jpeg', 'image/png', 'image/webp' );
-		if ( empty( $file['type'] ) || ! in_array( $file['type'], $allowed, true ) ) {
+		if ( empty( $file ) || ! is_array( $file ) || empty( $file['name'] ) || empty( $file['tmp_name'] ) ) {
+			return new WP_Error( 'invalid_file', __( 'No file provided', 'preview-ai' ) );
+		}
+
+		if ( ! empty( $file['error'] ) ) {
+			return new WP_Error( 'upload_error', __( 'Upload error.', 'preview-ai' ) );
+		}
+
+		if ( ! is_uploaded_file( $file['tmp_name'] ) ) {
+			return new WP_Error( 'invalid_upload', __( 'Invalid file upload', 'preview-ai' ) );
+		}
+
+		// Verify it's an actual image.
+		$check = getimagesize( $file['tmp_name'] );
+		if ( false === $check ) {
+			return new WP_Error( 'invalid_image', __( 'File is not a valid image.', 'preview-ai' ) );
+		}
+
+		$allowed_mimes = array( 'image/jpeg', 'image/png', 'image/webp' );
+		$file_info     = wp_check_filetype( $file['name'] );
+		
+		if ( ! in_array( $file_info['type'], $allowed_mimes, true ) || ! in_array( $check['mime'], $allowed_mimes, true ) ) {
 			return new WP_Error( 'invalid_type', __( 'Invalid image type. Use JPG, PNG or WebP.', 'preview-ai' ) );
 		}
 
 		$max_size = 5 * 1024 * 1024; // 5MB.
 		if ( ! empty( $file['size'] ) && $file['size'] > $max_size ) {
 			return new WP_Error( 'file_too_large', __( 'Image too large. Max 5MB.', 'preview-ai' ) );
-		}
-
-		if ( empty( $file['tmp_name'] ) || ! file_exists( $file['tmp_name'] ) ) {
-			return new WP_Error( 'read_error', __( 'Could not read image file.', 'preview-ai' ) );
 		}
 
 		return true;
@@ -306,8 +360,11 @@ class PREVIEW_AI_Ajax {
 			return null;
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$image_data = file_get_contents( $file_path );
+		if ( ! is_readable( $file_path ) ) {
+			return null;
+		}
+
+		$image_data = file_get_contents( $file_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local attachment file from get_attached_file(); WP_Filesystem adds unnecessary overhead.
 		if ( false === $image_data ) {
 			return null;
 		}

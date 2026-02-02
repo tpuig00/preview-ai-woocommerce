@@ -6,10 +6,10 @@
  * @package           Preview_Ai
  *
  * @wordpress-plugin
- * Plugin Name:       Preview AI
+ * Plugin Name:       Preview AI – Virtual Try-On for WooCommerce
  * Plugin URI:        https://previewai.app/
  * Description:       Preview AI is a plugin that allows your customers to preview your products in real-time using AI image generation.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Preview AI
  * Author URI:        https://profiles.wordpress.org/previewai/
  * License:           GPL-2.0+
