@@ -208,6 +208,28 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 						</td>
 					</tr>
 
+					<!-- Max Previews Per User Weekly -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_max_previews_per_user_weekly">
+								<?php esc_html_e( 'Max Previews Per User (Weekly)', 'preview-ai' ); ?>
+							</label>
+						</th>
+						<td>
+							<input type="number" 
+								   id="preview_ai_max_previews_per_user_weekly" 
+								   name="preview_ai_max_previews_per_user_weekly" 
+								   value="<?php echo esc_attr( PREVIEW_AI_Admin_Settings::get_max_previews_per_user_weekly() ); ?>" 
+								   class="small-text" 
+								   min="1"
+								   step="1"
+							/>
+							<p class="description">
+								<?php esc_html_e( 'Maximum number of previews each visitor can generate per week. Default: 8.', 'preview-ai' ); ?>
+							</p>
+						</td>
+					</tr>
+
 					<!-- API Key -->
 					<tr>
 						<th scope="row">

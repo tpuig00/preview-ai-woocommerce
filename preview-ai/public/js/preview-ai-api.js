@@ -195,6 +195,14 @@
 					return;
 				}
 
+				// Check weekly usage limit.
+				if ( ! PreviewAI.Storage.canGeneratePreview() ) {
+					var limitMsg = ( previewAiData.i18n && previewAiData.i18n.weeklyLimitReached ) 
+						|| 'You have used all your weekly previews! Come back next week to try on more products.';
+					this.showError( $els, limitMsg, modal.stopLoadingSteps );
+					return;
+				}
+
 				var formData = new FormData();
 				formData.append( 'action', 'preview_ai_upload' );
 				formData.append( 'nonce', previewAiData.nonce );
@@ -232,6 +240,9 @@
 								$els.$stage.addClass( 'is-result' );
 								$els.$resultActions.addClass( 'is-visible' );
 								$els.$disclaimer.addClass( 'is-visible' );
+
+								// Increment weekly usage counter.
+								PreviewAI.Storage.incrementWeeklyUsage();
 
 								var variationId = $( 'input.variation_id' ).val() || '';
 								PreviewAI.Storage.saveTryOn( {
