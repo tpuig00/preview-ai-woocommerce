@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -153,6 +153,10 @@ Preview AI currently supports:
 4. Product-level configuration options
 
 == Changelog ==
+
+= 1.0.2 =
+– Added weekly preview limit per visitor (configurable in Settings > General)
+– Default limit: 8 previews per visitor per week
 
 = 1.0.1 =
 – Updated plugin name to "Preview AI – Virtual Try-On for WooCommerce"

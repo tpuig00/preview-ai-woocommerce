@@ -9,7 +9,7 @@
  * Plugin Name:       Preview AI – Virtual Try-On for WooCommerce
  * Plugin URI:        https://previewai.app/
  * Description:       Preview AI is a plugin that allows your customers to preview your products in real-time using AI image generation.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Author:            Preview AI
  * Author URI:        https://profiles.wordpress.org/previewai/
  * License:           GPL-2.0+
@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Current plugin version.
  */
-define( 'PREVIEW_AI_VERSION', '1.0.1' );
+define( 'PREVIEW_AI_VERSION', '1.0.2' );
 define( 'PREVIEW_AI_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 /**
