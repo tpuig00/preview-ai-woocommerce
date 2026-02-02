@@ -324,7 +324,7 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 				<p class="preview-ai-catalog-desc">
 					<?php esc_html_e( 'Preview AI will automatically detect what type of product each one is (t-shirts, dresses, belts, earrings, fanny packs…).', 'preview-ai' ); ?>
 					<br><strong>
-					<?php esc_html_e( 'This is necessary to generate much more precise previews without manual configuration.', 'preview-ai' ); ?></strong>
+					<?php esc_html_e( 'This will analyze your catalog and assign the appropriate product type to each product.', 'preview-ai' ); ?></strong>
 				</p>
 				<p class="preview-ai-catalog-note">
 					<?php esc_html_e( 'Nothing will be modified in your store. Only recommendations will be assigned.', 'preview-ai' ); ?>
