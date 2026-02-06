@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.4
-Stable tag: 1.0.4
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -156,6 +156,12 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.1.0 =
+– Added Bulk Actions to enable or disable Preview AI for multiple products at once.
+– Added filtering by Preview AI status (Active, Disabled, Not Analyzed, Not Supported) in the product list.
+– Added sorting capability for the Preview AI column in the product list.
+– Improved scalability for large catalogs using background processing for bulk activation.
+
 = 1.0.4 =
 – Added full internationalization support (i18n)
 – Complete translation catalog (.pot) with 130+ translatable strings
@@ -175,6 +181,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+New bulk actions and filtering options for easier catalog management.
 
 = 1.0.0 =
 Initial stable release.
