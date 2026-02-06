@@ -20,7 +20,7 @@ class PREVIEW_AI_Admin_Catalog {
 	const CATALOG_BATCH_SIZE = 50;
 
 	/**
-	 * Handle AJAX request for Learn My Catalog feature.
+	 * Handle AJAX request for Analyze & Enable Catalog feature.
 	 */
 	public function handle_learn_catalog() {
 		check_ajax_referer( 'preview_ai_learn_catalog', 'nonce' );
@@ -60,7 +60,7 @@ class PREVIEW_AI_Admin_Catalog {
 			wp_send_json_success(
 				array(
 					'status'  => 'complete',
-					'message' => __( 'All products have already been analyzed. No new products to process.', 'preview-ai' ),
+					'message' => __( 'All products have already been analyzed and enabled. No new products to process.', 'preview-ai' ),
 					'stats'   => array(
 						'total'      => 0,
 						'configured' => 0,
@@ -85,7 +85,7 @@ class PREVIEW_AI_Admin_Catalog {
 				'total'   => $total_products,
 				'message' => sprintf(
 					/* translators: %d: number of products */
-					__( 'Analysis scheduled for %d products. Processing in background...', 'preview-ai' ),
+					__( 'Analyzing and enabling %d products in background...', 'preview-ai' ),
 					$total_products
 				),
 			)
@@ -117,16 +117,14 @@ class PREVIEW_AI_Admin_Catalog {
 				'status'          => 'completed',
 				'total'           => $stats['total'],
 				'configured'      => $stats['configured'],
-				'needs_review'    => $stats['needs_review'],
-				'images_analyzed' => $stats['images_analyzed'],
+				'not_supported'   => $stats['not_supported'],
 				'analysis_errors' => $analysis_errors,
 				'try_product_url' => $try_product_url,
 				'message'         => sprintf(
-					/* translators: 1: number of configured products, 2: number of products needing review, 3: number of images analyzed */
-					__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
+					/* translators: 1: number of enabled products, 2: number of not supported products */
+					__( '%1$d products enabled. %2$d not supported.', 'preview-ai' ),
 					$stats['configured'],
-					$stats['needs_review'],
-					$stats['images_analyzed']
+					$stats['not_supported']
 				),
 			)
 		);
@@ -144,8 +142,7 @@ class PREVIEW_AI_Admin_Catalog {
 				'total'           => count( $products_data ),
 				'processed'       => 0,
 				'configured'      => 0,
-				'needs_review'    => 0,
-				'images_analyzed' => 0,
+				'not_supported'   => 0,
 				'analysis_errors' => 0,
 				'configured_ids'  => array(),
 			),
@@ -185,8 +182,7 @@ class PREVIEW_AI_Admin_Catalog {
 
 			$progress['processed']       += count( $batch );
 			$progress['configured']      += $stats['configured'];
-			$progress['needs_review']    += $stats['needs_review'];
-			$progress['images_analyzed'] += $stats['images_analyzed'];
+			$progress['not_supported']   += $stats['not_supported'];
 			$progress['analysis_errors'] += isset( $result['analysis_errors'] ) ? intval( $result['analysis_errors'] ) : 0;
 			$progress['configured_ids']   = array_merge( $progress['configured_ids'], $stats['configured_ids'] );
 
@@ -234,16 +230,14 @@ class PREVIEW_AI_Admin_Catalog {
 			}
 
 			$response['configured']      = $progress['configured'];
-			$response['needs_review']    = $progress['needs_review'];
-			$response['images_analyzed'] = $progress['images_analyzed'];
+			$response['not_supported']   = $progress['not_supported'];
 			$response['analysis_errors'] = $progress['analysis_errors'];
 			$response['try_product_url'] = $try_product_url;
 			$response['message']         = sprintf(
-				/* translators: 1: number of configured products, 2: number of products needing review, 3: number of images analyzed */
-				__( '%1$d products configured. %2$d need review. %3$d images analyzed.', 'preview-ai' ),
+				/* translators: 1: number of enabled products, 2: number of not supported products */
+				__( '%1$d products enabled. %2$d not supported.', 'preview-ai' ),
 				$progress['configured'],
-				$progress['needs_review'],
-				$progress['images_analyzed']
+				$progress['not_supported']
 			);
 
 			update_option( self::ANALYSIS_STATUS_OPTION, 'idle', false );
@@ -428,8 +422,7 @@ class PREVIEW_AI_Admin_Catalog {
 		$stats = array(
 			'total'           => 0,
 			'configured'      => 0,
-			'needs_review'    => 0,
-			'images_analyzed' => 0,
+			'not_supported'   => 0,
 			'configured_ids'  => array(),
 		);
 
@@ -465,60 +458,16 @@ class PREVIEW_AI_Admin_Catalog {
 					$stats['configured_ids'][] = $product_id;
 				} else {
 					update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
-					$stats['needs_review']++;
+					$stats['not_supported']++;
 				}
 			} else {
 				update_post_meta( $product_id, '_preview_ai_enabled', 'no' );
-				$stats['needs_review']++;
-			}
-
-			// Save parent product image analysis.
-			if ( ! empty( $classification['image_analysis'] ) ) {
-				$this->save_image_analysis( $product_id, $classification['image_analysis'] );
-				$stats['images_analyzed']++;
-			}
-
-			// Save variations image analysis.
-			if ( ! empty( $classification['variations'] ) && is_array( $classification['variations'] ) ) {
-				foreach ( $classification['variations'] as $variation_data ) {
-					if ( ! empty( $variation_data['variation_id'] ) && ! empty( $variation_data['image_analysis'] ) ) {
-						$this->save_image_analysis(
-							absint( $variation_data['variation_id'] ),
-							$variation_data['image_analysis']
-						);
-						$stats['images_analyzed']++;
-					}
-				}
+				$stats['not_supported']++;
 			}
 		}
 
 		return $stats;
 	}
 
-	/**
-	 * Save image analysis data to post meta.
-	 *
-	 * @param int   $post_id  Post ID (product or variation).
-	 * @param array $analysis Image analysis data from backend.
-	 */
-	private function save_image_analysis( $post_id, $analysis ) {
-		$detected_objects = array();
-		if ( ! empty( $analysis['detected_objects'] ) && is_array( $analysis['detected_objects'] ) ) {
-			$detected_objects = array_map( 'sanitize_text_field', $analysis['detected_objects'] );
-		}
-
-		$image_analysis = array(
-			'has_model'         => ! empty( $analysis['has_model'] ),
-			'shot_type'         => sanitize_key( $analysis['shot_type'] ?? 'unknown' ),
-			'framing'           => sanitize_key( $analysis['framing'] ?? 'unknown' ),
-			'multiple_garments' => ! empty( $analysis['multiple_garments'] ),
-			'detected_objects'  => $detected_objects,
-			'confidence'        => floatval( $analysis['confidence'] ?? 0.0 ),
-			'image_id'          => absint( $analysis['image_id'] ?? 0 ),
-			'updated_at'        => sanitize_text_field( $analysis['updated_at'] ?? current_time( 'Y-m-d' ) ),
-		);
-
-		update_post_meta( $post_id, '_preview_ai_image_analysis', $image_analysis );
-	}
 }
 

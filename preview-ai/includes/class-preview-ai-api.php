@@ -286,6 +286,34 @@ class PREVIEW_AI_Api {
 	}
 
 	/**
+	 * Activate products via bulk action (classify unanalyzed products).
+	 *
+	 * Uses the /catalog/activate endpoint which:
+	 * - Always blocks free tier (405).
+	 * - Has no product count limits for paid tiers.
+	 *
+	 * @param array $products_data Array of products with id, title, categories, tags, thumbnail_url.
+	 * @return array|WP_Error      Response data with classifications or error.
+	 */
+	public function activate_products( $products_data ) {
+		PREVIEW_AI_Logger::debug( 'Starting bulk activate', array(
+			'product_count' => count( $products_data ),
+		) );
+
+		$result = $this->request( 'catalog/activate', array(
+			'products' => $products_data,
+		), 120 );
+
+		if ( ! is_wp_error( $result ) ) {
+			PREVIEW_AI_Logger::info( 'Bulk activate completed', array(
+				'total_analyzed' => $result['total_analyzed'] ?? 0,
+			) );
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Send catalog data to AI backend for product classification and image analysis.
 	 *
 	 * @param array $products_data  Array of products with id, title, categories, tags, thumbnail_url, variation_id.

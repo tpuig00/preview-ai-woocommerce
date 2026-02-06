@@ -71,7 +71,7 @@
 			} );
 		}
 
-		// Learn My Catalog functional with background processing support.
+		// Analyze & Enable Catalog with background processing support.
 		var learnBtn = document.getElementById( 'preview_ai_learn_catalog_btn' );
 		var loadingEl = document.getElementById( 'preview_ai_learn_catalog_loading' );
 		var progressEl = document.getElementById( 'preview_ai_learn_catalog_progress' );

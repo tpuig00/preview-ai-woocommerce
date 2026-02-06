@@ -523,27 +523,23 @@ msgid "Domain:"
 msgstr ""
 
 #: admin/partials/preview-ai-admin-display.php:322
-msgid "Learn My Catalog (AI)"
+msgid "Analyze & Enable Catalog"
 msgstr ""
 
 #: admin/partials/preview-ai-admin-display.php:325
-msgid "Preview AI will automatically detect what type of product each one is (t-shirts, dresses, belts, earrings, fanny packs…)."
+msgid "Automatically detect what type each product is (t-shirts, dresses, pants, accessories…) and enable virtual try-on for all supported products."
 msgstr ""
 
-#: admin/partials/preview-ai-admin-display.php:327
-msgid "This will analyze your catalog and assign the appropriate product type to each product."
+#: admin/partials/preview-ai-admin-display.php:329
+msgid "Unsupported products will be marked but not modified."
 msgstr ""
 
-#: admin/partials/preview-ai-admin-display.php:330
-msgid "Nothing will be modified in your store. Only recommendations will be assigned."
-msgstr ""
-
-#: admin/partials/preview-ai-admin-display.php:339
+#: admin/partials/preview-ai-admin-display.php:338
 msgid "Re-verify compatibility"
 msgstr ""
 
-#: admin/partials/preview-ai-admin-display.php:347
-msgid "Analyze My Catalog"
+#: admin/partials/preview-ai-admin-display.php:346
+msgid "Analyze & Enable Products"
 msgstr ""
 
 #: admin/partials/preview-ai-admin-display.php:386
@@ -662,13 +658,48 @@ msgstr ""
 msgid "Setting up your store..."
 msgstr ""
 
-#: admin/class-preview-ai-admin.php:340
-#: admin/class-preview-ai-admin.php:549
-msgid "Analyzing your product catalog..."
+#: admin/class-preview-ai-admin-onboarding.php:30
+msgid "Analyzing and enabling products..."
 msgstr ""
 
-#: admin/class-preview-ai-admin.php:436
-msgid "Catalog configured!"
+#: admin/class-preview-ai-admin.php:284
+msgid "Catalog analyzed and enabled!"
+msgstr ""
+
+#: admin/class-preview-ai-admin-catalog.php:63
+msgid "All products have already been analyzed and enabled. No new products to process."
+msgstr ""
+
+#: admin/class-preview-ai-admin-catalog.php:89
+#, php-format
+msgid "Analyzing and enabling %d products in background..."
+msgstr ""
+
+#: admin/class-preview-ai-admin-catalog.php:125
+#: admin/class-preview-ai-admin-catalog.php:238
+#, php-format
+msgid "%1$d products enabled. %2$d not supported."
+msgstr ""
+
+#: admin/class-preview-ai-admin-catalog.php:225
+#, php-format
+msgid "Processing... %1$d of %2$d products analyzed."
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:277
+msgid "Analyzing and enabling in background"
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:278
+msgid "products are being analyzed and enabled. This may take a few minutes."
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:285
+msgid "products ready for virtual try-on"
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:290
+msgid "You can analyze and enable your catalog later from settings."
 msgstr ""
 
 #: admin/class-preview-ai-admin-onboarding.php:52
@@ -758,7 +789,7 @@ msgid "Product type not supported."
 msgstr ""
 
 #: admin/class-preview-ai-admin-product.php:459
-msgid "Not analyzed yet - run Learn Catalog"
+msgid "Not analyzed yet - run Analyze & Enable from settings"
 msgstr ""
 
 #: admin/class-preview-ai-admin-product.php:469

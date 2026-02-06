@@ -152,6 +152,22 @@ class PREVIEW_AI_Admin {
 		$this->product->handle_toggle_product();
 	}
 
+	public function register_bulk_actions( $actions ) {
+		return $this->product->register_bulk_actions( $actions );
+	}
+
+	public function handle_bulk_actions( $redirect_to, $action, $post_ids ) {
+		return $this->product->handle_bulk_actions( $redirect_to, $action, $post_ids );
+	}
+
+	public function process_bulk_activate_batch() {
+		$this->product->process_bulk_activate_batch();
+	}
+
+	public function show_bulk_action_notice() {
+		$this->product->show_bulk_action_notice();
+	}
+
 	public function handle_learn_catalog() {
 		$this->catalog->handle_learn_catalog();
 	}
@@ -258,20 +274,20 @@ class PREVIEW_AI_Admin {
 					'manualAddNow'         => __( 'You can add the widget manually:', 'preview-ai' ),
 					'elementorSearch'      => __( 'Search for "Preview AI" widget', 'preview-ai' ),
 					'configureIn'          => __( 'Configure in: Products → Preview AI → Widget tab', 'preview-ai' ),
-					'analyzingBackground'  => __( 'Analyzing in background', 'preview-ai' ),
-					'productsAnalyzed'     => __( 'products are being analyzed. This may take a few minutes.', 'preview-ai' ),
+					'analyzingBackground'  => __( 'Analyzing and enabling in background', 'preview-ai' ),
+					'productsAnalyzed'     => __( 'products are being analyzed and enabled. This may take a few minutes.', 'preview-ai' ),
 					'closeAndCheck'        => __( 'You can close this window and check progress in Preview AI settings.', 'preview-ai' ),
 					'closeAndContinue'     => __( 'Close & Continue', 'preview-ai' ),
 					'tryNow'               => __( 'Try Preview AI Now', 'preview-ai' ),
 					'experienceMagic'      => __( 'See how your customers will experience the magic!', 'preview-ai' ),
 					'closeAndConfigure'    => __( 'Close & Configure Products', 'preview-ai' ),
-					'catalogConfigured'    => __( 'Catalog configured!', 'preview-ai' ),
-					'productsReady'        => __( 'products ready for preview', 'preview-ai' ),
+					'catalogConfigured'    => __( 'Catalog analyzed and enabled!', 'preview-ai' ),
+					'productsReady'        => __( 'products ready for virtual try-on', 'preview-ai' ),
 					'couldNotAnalyze'      => __( 'Could not analyze catalog', 'preview-ai' ),
 					'manualConfig'         => __( 'You can configure products manually.', 'preview-ai' ),
 					'continueToSettings'   => __( 'Continue to Settings', 'preview-ai' ),
 					'couldNotConnect'      => __( 'Could not connect to server', 'preview-ai' ),
-					'analyzeLater'         => __( 'You can analyze your catalog later from settings.', 'preview-ai' ),
+					'analyzeLater'         => __( 'You can analyze and enable your catalog later from settings.', 'preview-ai' ),
 					'continue'             => __( 'Continue', 'preview-ai' ),
 				),
 			)
@@ -302,7 +318,7 @@ class PREVIEW_AI_Admin {
 					'apiPending'   => __( '(API integration pending)', 'preview-ai' ),
 					'activating'   => __( 'Activating...', 'preview-ai' ),
 					'activated'    => __( 'Preview AI activated! Redirecting...', 'preview-ai' ),
-					'analyzing'    => __( 'Analyzing your catalog...', 'preview-ai' ),
+					'analyzing'    => __( 'Analyzing and enabling products...', 'preview-ai' ),
 					'catalogStatus' => PREVIEW_AI_Admin::get_catalog_analysis_status()['status'],
 				),
 			)

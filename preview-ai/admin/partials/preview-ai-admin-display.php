@@ -307,7 +307,7 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 
 			<?php submit_button(); ?>
 
-			<!-- Learn My Catalog Section -->
+			<!-- Analyze & Enable Catalog Section -->
 			<?php
 			$preview_ai_catalog_status = PREVIEW_AI_Admin::get_catalog_analysis_status();
 			$preview_ai_is_processing  = 'processing' === $preview_ai_catalog_status['status'];
@@ -319,15 +319,13 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 			?>
 			<div class="preview-ai-learn-catalog">
 				<h2 class="preview-ai-catalog-title">
-					🧠 <?php esc_html_e( 'Learn My Catalog (AI)', 'preview-ai' ); ?>
+					<?php esc_html_e( 'Analyze & Enable Catalog', 'preview-ai' ); ?>
 				</h2>
 				<p class="preview-ai-catalog-desc">
-					<?php esc_html_e( 'Preview AI will automatically detect what type of product each one is (t-shirts, dresses, belts, earrings, fanny packs…).', 'preview-ai' ); ?>
-					<br><strong>
-					<?php esc_html_e( 'This will analyze your catalog and assign the appropriate product type to each product.', 'preview-ai' ); ?></strong>
+					<?php esc_html_e( 'Automatically detect what type each product is (t-shirts, dresses, pants, accessories…) and enable virtual try-on for all supported products.', 'preview-ai' ); ?>
 				</p>
 				<p class="preview-ai-catalog-note">
-					<?php esc_html_e( 'Nothing will be modified in your store. Only recommendations will be assigned.', 'preview-ai' ); ?>
+					<?php esc_html_e( 'Unsupported products will be marked but not modified.', 'preview-ai' ); ?>
 				</p>
 				
 				<?php if ( ! $preview_ai_is_compatible ) : ?>
@@ -343,8 +341,8 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 				<?php endif; ?>
 
 				<button type="button" id="preview_ai_learn_catalog_btn" class="button button-primary" <?php echo ( $preview_ai_is_processing || ! $preview_ai_is_compatible ) ? 'disabled' : ''; ?>>
-					<span class="dashicons dashicons-welcome-learn-more"></span>
-					<?php esc_html_e( 'Analyze My Catalog', 'preview-ai' ); ?>
+					<span class="dashicons dashicons-search"></span>
+					<?php esc_html_e( 'Analyze & Enable Products', 'preview-ai' ); ?>
 				</button>
 
 				<div id="preview_ai_learn_catalog_loading" style="<?php echo $preview_ai_is_processing ? '' : 'display: none;'; ?>">
@@ -359,7 +357,7 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 								absint( $preview_ai_progress['total'] )
 							);
 						} else {
-							esc_html_e( 'Analyzing your catalog...', 'preview-ai' );
+							esc_html_e( 'Analyzing and enabling products...', 'preview-ai' );
 						}
 						?>
 					</span>

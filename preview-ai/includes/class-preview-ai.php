@@ -221,6 +221,14 @@ class Preview_Ai {
 		$this->loader->add_filter( 'manage_edit-product_sortable_columns', $plugin_admin, 'make_column_sortable' );
 		$this->loader->add_action( 'pre_get_posts', $plugin_admin, 'sort_by_preview_ai' );
 
+		// Product list bulk actions.
+		$this->loader->add_filter( 'bulk_actions-edit-product', $plugin_admin, 'register_bulk_actions' );
+		$this->loader->add_filter( 'handle_bulk_actions-edit-product', $plugin_admin, 'handle_bulk_actions', 10, 3 );
+		$this->loader->add_action( 'admin_notices', $plugin_admin, 'show_bulk_action_notice' );
+
+		// Action Scheduler hook for background bulk-activate processing.
+		$this->loader->add_action( 'preview_ai_process_bulk_activate_batch', $plugin_admin, 'process_bulk_activate_batch' );
+
 		// Admin AJAX handlers.
 		$this->loader->add_action( 'wp_ajax_preview_ai_learn_catalog', $plugin_admin, 'handle_learn_catalog' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_verify_api_key', $plugin_admin, 'handle_verify_api_key' );

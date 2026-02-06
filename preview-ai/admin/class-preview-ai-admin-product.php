@@ -645,7 +645,7 @@ class PREVIEW_AI_Admin_Product {
 		if ( ! $was_analyzed ) {
 			printf(
 				'<span class="preview-ai-col preview-ai-col--pending" title="%s"><span class="dashicons dashicons-clock"></span> %s</span>',
-				esc_attr__( 'Not analyzed yet - run Learn Catalog', 'preview-ai' ),
+				esc_attr__( 'Not analyzed yet - run Analyze & Enable from settings', 'preview-ai' ),
 				esc_html__( 'Not Analyzed', 'preview-ai' )
 			);
 			return;
@@ -681,6 +681,477 @@ class PREVIEW_AI_Admin_Product {
 			printf(
 				'<span class="preview-ai-col preview-ai-col--disabled" title="%s">—</span>',
 				esc_attr__( 'Preview AI disabled for this product', 'preview-ai' )
+			);
+		}
+	}
+
+	// =========================================================================
+	// Bulk Actions
+	// =========================================================================
+
+	/**
+	 * Option keys for background bulk-activate processing.
+	 */
+	const BULK_ACTIVATE_STATUS_OPTION   = 'preview_ai_bulk_activate_status';
+	const BULK_ACTIVATE_PROGRESS_OPTION = 'preview_ai_bulk_activate_progress';
+	const BULK_ACTIVATE_PENDING_OPTION  = 'preview_ai_bulk_activate_pending';
+
+	/**
+	 * Batch size for background bulk-activate processing.
+	 */
+	const BULK_ACTIVATE_BATCH_SIZE = 50;
+
+	/**
+	 * Register Preview AI bulk actions in the product list dropdown.
+	 *
+	 * @param array $actions Existing bulk actions.
+	 * @return array
+	 */
+	public function register_bulk_actions( $actions ) {
+		$actions['preview_ai_enable']  = __( 'Enable Preview AI', 'preview-ai' );
+		$actions['preview_ai_disable'] = __( 'Disable Preview AI', 'preview-ai' );
+		return $actions;
+	}
+
+	/**
+	 * Handle Preview AI bulk actions.
+	 *
+	 * @param string $redirect_to Current redirect URL.
+	 * @param string $action      The bulk action being processed.
+	 * @param array  $post_ids    Array of selected post IDs.
+	 * @return string Modified redirect URL.
+	 */
+	public function handle_bulk_actions( $redirect_to, $action, $post_ids ) {
+		if ( 'preview_ai_disable' === $action ) {
+			return $this->handle_bulk_disable( $redirect_to, $post_ids );
+		}
+
+		if ( 'preview_ai_enable' === $action ) {
+			return $this->handle_bulk_enable( $redirect_to, $post_ids );
+		}
+
+		return $redirect_to;
+	}
+
+	/**
+	 * Handle bulk disable: just toggle meta locally (no API call).
+	 *
+	 * @param string $redirect_to Redirect URL.
+	 * @param array  $post_ids    Selected product IDs.
+	 * @return string
+	 */
+	private function handle_bulk_disable( $redirect_to, $post_ids ) {
+		foreach ( $post_ids as $post_id ) {
+			update_post_meta( absint( $post_id ), '_preview_ai_enabled', 'no' );
+		}
+
+		set_transient(
+			'preview_ai_bulk_result_' . get_current_user_id(),
+			array(
+				'action'         => 'disable',
+				'disabled_count' => count( $post_ids ),
+			),
+			120
+		);
+
+		return $redirect_to;
+	}
+
+	/**
+	 * Handle bulk enable: toggle already-analyzed products locally,
+	 * send unanalyzed products to the backend for classification.
+	 *
+	 * @param string $redirect_to Redirect URL.
+	 * @param array  $post_ids    Selected product IDs.
+	 * @return string
+	 */
+	private function handle_bulk_enable( $redirect_to, $post_ids ) {
+		$already_supported = array();
+		$not_supported     = 0;
+		$need_analysis     = array();
+
+		// Step 1: Categorize products.
+		foreach ( $post_ids as $post_id ) {
+			$supported = get_post_meta( $post_id, '_preview_ai_supported', true );
+
+			if ( 'yes' === $supported ) {
+				$already_supported[] = $post_id;
+			} elseif ( 'no' === $supported ) {
+				$not_supported++;
+			} else {
+				// Not analyzed yet — may need backend classification.
+				$product = wc_get_product( $post_id );
+				if ( $product && $product->get_image_id() ) {
+					$need_analysis[] = $post_id;
+				} else {
+					$not_supported++;
+				}
+			}
+		}
+
+		// Step 2: Enable already-analyzed supported products immediately.
+		foreach ( $already_supported as $post_id ) {
+			update_post_meta( $post_id, '_preview_ai_enabled', 'yes' );
+		}
+
+		$enabled_count  = count( $already_supported );
+		$error_message  = '';
+		$pending_count  = 0;
+
+		// Step 3: Analyze unanalyzed products via backend.
+		if ( ! empty( $need_analysis ) ) {
+			// Build data only for the first batch (avoid loading all products at once).
+			$first_batch_ids = array_splice( $need_analysis, 0, self::BULK_ACTIVATE_BATCH_SIZE );
+			$first_batch     = $this->build_products_data( $first_batch_ids );
+
+			$result = $this->process_activate_batch_sync( $first_batch );
+
+			$enabled_count += $result['enabled'];
+			$not_supported += $result['not_supported'];
+
+			if ( ! empty( $result['error_message'] ) ) {
+				// Backend error (e.g. 405 free tier) — don't schedule remaining.
+				$error_message = $result['error_message'];
+			} elseif ( ! empty( $need_analysis ) ) {
+				// First batch succeeded and there are more products — schedule in background.
+				// Store only IDs (lightweight); data is built lazily per batch.
+				$this->schedule_bulk_activate( $need_analysis );
+				$pending_count = count( $need_analysis );
+			}
+		}
+
+		set_transient(
+			'preview_ai_bulk_result_' . get_current_user_id(),
+			array(
+				'action'          => 'enable',
+				'enabled_count'   => $enabled_count,
+				'not_supported'   => $not_supported,
+				'pending_count'   => $pending_count,
+				'error_message'   => $error_message,
+			),
+			120
+		);
+
+		return $redirect_to;
+	}
+
+	/**
+	 * Build product data array for the backend API from product IDs.
+	 *
+	 * @param array $product_ids Array of product IDs.
+	 * @return array Products data formatted for the API.
+	 */
+	private function build_products_data( $product_ids ) {
+		$products_data = array();
+
+		foreach ( $product_ids as $product_id ) {
+			$product = wc_get_product( $product_id );
+			if ( ! $product ) {
+				continue;
+			}
+
+			$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
+			$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
+			$tags           = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
+			$tags_str       = is_array( $tags ) ? implode( ', ', $tags ) : '';
+			$thumbnail_id   = $product->get_image_id();
+			$thumbnail_url  = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
+
+			$product_data = array(
+				'id'            => $product_id,
+				'title'         => $product->get_name(),
+				'categories'    => $categories_str,
+				'tags'          => $tags_str,
+				'thumbnail_url' => $thumbnail_url,
+				'variations'    => array(),
+			);
+
+			// Add variations with different images.
+			if ( $product->is_type( 'variable' ) ) {
+				$variation_ids = $product->get_children();
+				foreach ( $variation_ids as $variation_id ) {
+					$variation = wc_get_product( $variation_id );
+					if ( ! $variation || ! $variation->is_in_stock() ) {
+						continue;
+					}
+
+					$var_image_id = $variation->get_image_id();
+					if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
+						$var_thumbnail_url            = wp_get_attachment_url( $var_image_id );
+						$product_data['variations'][] = array(
+							'variation_id'  => $variation_id,
+							'thumbnail_url' => $var_thumbnail_url,
+						);
+					}
+				}
+			}
+
+			$products_data[] = $product_data;
+		}
+
+		return $products_data;
+	}
+
+	/**
+	 * Process a batch of products synchronously via the activate API.
+	 *
+	 * @param array $products_data Products data for the API.
+	 * @return array Results with 'enabled', 'not_supported', 'error_message' keys.
+	 */
+	private function process_activate_batch_sync( $products_data ) {
+		$result = array(
+			'enabled'       => 0,
+			'not_supported' => 0,
+			'error_message' => '',
+		);
+
+		$api      = new PREVIEW_AI_Api();
+		$response = $api->activate_products( $products_data );
+
+		if ( is_wp_error( $response ) ) {
+			$result['error_message'] = $response->get_error_message();
+			return $result;
+		}
+
+		// Save classifications and enable supported products.
+		$catalog = new PREVIEW_AI_Admin_Catalog();
+		$stats   = $catalog->save_catalog_classifications( $response );
+
+		// Enable supported products that were just classified.
+		if ( ! empty( $stats['configured_ids'] ) ) {
+			foreach ( $stats['configured_ids'] as $product_id ) {
+				update_post_meta( $product_id, '_preview_ai_enabled', 'yes' );
+			}
+		}
+
+		$result['enabled']       = $stats['configured'];
+		$result['not_supported'] = $stats['not_supported'];
+
+		return $result;
+	}
+
+	/**
+	 * Schedule remaining products for background activation via Action Scheduler.
+	 *
+	 * Stores only product IDs (lightweight). Product data is built lazily
+	 * in each batch to avoid loading hundreds of products at once.
+	 *
+	 * @param array $product_ids Array of product IDs to process.
+	 */
+	public function schedule_bulk_activate( $product_ids ) {
+		update_option( self::BULK_ACTIVATE_PENDING_OPTION, array_map( 'absint', $product_ids ), false );
+		update_option(
+			self::BULK_ACTIVATE_PROGRESS_OPTION,
+			array(
+				'total'         => count( $product_ids ),
+				'processed'     => 0,
+				'enabled'       => 0,
+				'not_supported' => 0,
+				'errors'        => 0,
+			),
+			false
+		);
+		update_option( self::BULK_ACTIVATE_STATUS_OPTION, 'processing', false );
+
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action( time() + 2, 'preview_ai_process_bulk_activate_batch' );
+		} else {
+			// No Action Scheduler — mark as completed (first batch already processed sync).
+			update_option( self::BULK_ACTIVATE_STATUS_OPTION, 'completed', false );
+			delete_option( self::BULK_ACTIVATE_PENDING_OPTION );
+		}
+	}
+
+	/**
+	 * Process a batch of bulk-activate products in the background.
+	 *
+	 * Invoked by Action Scheduler. Takes BULK_ACTIVATE_BATCH_SIZE product IDs,
+	 * builds product data lazily, classifies them, enables supported ones,
+	 * and schedules the next batch.
+	 */
+	public function process_bulk_activate_batch() {
+		$pending_ids = get_option( self::BULK_ACTIVATE_PENDING_OPTION, array() );
+		$progress    = get_option( self::BULK_ACTIVATE_PROGRESS_OPTION, array() );
+
+		if ( empty( $pending_ids ) ) {
+			update_option( self::BULK_ACTIVATE_STATUS_OPTION, 'completed', false );
+			delete_option( self::BULK_ACTIVATE_PENDING_OPTION );
+			return;
+		}
+
+		// Take next batch of IDs and build product data lazily.
+		$batch_ids = array_splice( $pending_ids, 0, self::BULK_ACTIVATE_BATCH_SIZE );
+		update_option( self::BULK_ACTIVATE_PENDING_OPTION, $pending_ids, false );
+
+		$batch  = $this->build_products_data( $batch_ids );
+		$result = $this->process_activate_batch_sync( $batch );
+
+		$progress['processed']     += count( $batch_ids );
+		$progress['enabled']       += $result['enabled'];
+		$progress['not_supported'] += $result['not_supported'];
+		if ( ! empty( $result['error_message'] ) ) {
+			$progress['errors']++;
+		}
+
+		update_option( self::BULK_ACTIVATE_PROGRESS_OPTION, $progress, false );
+
+		if ( ! empty( $pending_ids ) && empty( $result['error_message'] ) && function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action( time() + 2, 'preview_ai_process_bulk_activate_batch' );
+		} else {
+			update_option( self::BULK_ACTIVATE_STATUS_OPTION, 'completed', false );
+			delete_option( self::BULK_ACTIVATE_PENDING_OPTION );
+		}
+	}
+
+	/**
+	 * Show admin notice with bulk action results.
+	 */
+	public function show_bulk_action_notice() {
+		$screen = get_current_screen();
+		if ( ! $screen || 'edit-product' !== $screen->id ) {
+			return;
+		}
+
+		// Show immediate results from transient.
+		$transient_key = 'preview_ai_bulk_result_' . get_current_user_id();
+		$result        = get_transient( $transient_key );
+
+		if ( $result ) {
+			delete_transient( $transient_key );
+			$this->render_bulk_result_notice( $result );
+		}
+
+		// Show background processing status.
+		$bg_status = get_option( self::BULK_ACTIVATE_STATUS_OPTION, 'idle' );
+
+		if ( 'processing' === $bg_status ) {
+			$progress = get_option( self::BULK_ACTIVATE_PROGRESS_OPTION, array() );
+			printf(
+				'<div class="notice notice-info is-dismissible"><p>%s</p></div>',
+				sprintf(
+					/* translators: 1: processed count, 2: total count */
+					esc_html__( 'Preview AI: Analyzing products in background... %1$d of %2$d processed.', 'preview-ai' ),
+					intval( $progress['processed'] ?? 0 ),
+					intval( $progress['total'] ?? 0 )
+				)
+			);
+		} elseif ( 'completed' === $bg_status ) {
+			$progress = get_option( self::BULK_ACTIVATE_PROGRESS_OPTION, array() );
+
+			if ( ! empty( $progress ) ) {
+				$parts = array();
+
+				if ( ! empty( $progress['enabled'] ) ) {
+					$parts[] = sprintf(
+						/* translators: %d: number of products enabled */
+						_n( '%d product enabled', '%d products enabled', $progress['enabled'], 'preview-ai' ),
+						$progress['enabled']
+					);
+				}
+				if ( ! empty( $progress['not_supported'] ) ) {
+					$parts[] = sprintf(
+						/* translators: %d: number of products not supported */
+						_n( '%d not supported', '%d not supported', $progress['not_supported'], 'preview-ai' ),
+						$progress['not_supported']
+					);
+				}
+				if ( ! empty( $progress['errors'] ) ) {
+					$parts[] = sprintf(
+						/* translators: %d: number of errors */
+						_n( '%d error', '%d errors', $progress['errors'], 'preview-ai' ),
+						$progress['errors']
+					);
+				}
+
+				if ( ! empty( $parts ) ) {
+					printf(
+						'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+						/* translators: %s: summary of bulk activation results */
+						esc_html( sprintf( __( 'Preview AI bulk activation complete: %s.', 'preview-ai' ), implode( ', ', $parts ) ) )
+					);
+				}
+			}
+
+			// Clean up.
+			update_option( self::BULK_ACTIVATE_STATUS_OPTION, 'idle', false );
+			delete_option( self::BULK_ACTIVATE_PROGRESS_OPTION );
+		}
+	}
+
+	/**
+	 * Render the immediate bulk result admin notice.
+	 *
+	 * @param array $result Result data from transient.
+	 */
+	private function render_bulk_result_notice( $result ) {
+		if ( 'disable' === $result['action'] ) {
+			$count = intval( $result['disabled_count'] ?? 0 );
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+				sprintf(
+					/* translators: %d: number of products disabled */
+					esc_html( _n(
+						'Preview AI: %d product disabled.',
+						'Preview AI: %d products disabled.',
+						$count,
+						'preview-ai'
+					) ),
+					$count
+				)
+			);
+			return;
+		}
+
+		// Enable action.
+		$parts = array();
+
+		$enabled = intval( $result['enabled_count'] ?? 0 );
+		if ( $enabled > 0 ) {
+			$parts[] = sprintf(
+				/* translators: %d: number of products enabled */
+				_n( '%d product enabled', '%d products enabled', $enabled, 'preview-ai' ),
+				$enabled
+			);
+		}
+
+		$not_supported = intval( $result['not_supported'] ?? 0 );
+		if ( $not_supported > 0 ) {
+			$parts[] = sprintf(
+				/* translators: %d: number of products not supported */
+				_n( '%d not supported', '%d not supported', $not_supported, 'preview-ai' ),
+				$not_supported
+			);
+		}
+
+		$pending = intval( $result['pending_count'] ?? 0 );
+		if ( $pending > 0 ) {
+			$parts[] = sprintf(
+				/* translators: %d: number of products being analyzed */
+				_n( '%d more product being analyzed in background', '%d more products being analyzed in background', $pending, 'preview-ai' ),
+				$pending
+			);
+		}
+
+		$error_message = $result['error_message'] ?? '';
+		$notice_type   = empty( $error_message ) ? 'success' : 'warning';
+
+		$message = '';
+		if ( ! empty( $parts ) ) {
+			$message = sprintf( __( 'Preview AI: %s.', 'preview-ai' ), implode( ', ', $parts ) );
+		}
+
+		if ( ! empty( $error_message ) ) {
+			if ( ! empty( $message ) ) {
+				$message .= ' ';
+			}
+			$message .= $error_message;
+		}
+
+		if ( ! empty( $message ) ) {
+			printf(
+				'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+				esc_attr( $notice_type ),
+				esc_html( $message )
 			);
 		}
 	}

@@ -27,7 +27,7 @@ class PREVIEW_AI_Admin_Onboarding {
 					<div style="height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;">
 						<div id="onboarding-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width 0.5s ease;"></div>
 					</div>
-					<p id="onboarding-status" style="margin:16px 0 0;color:#64748b;font-size:14px;"><?php esc_html_e( 'Analyzing your product catalog...', 'preview-ai' ); ?></p>
+					<p id="onboarding-status" style="margin:16px 0 0;color:#64748b;font-size:14px;"><?php esc_html_e( 'Analyzing and enabling products...', 'preview-ai' ); ?></p>
 				</div>
 				
 				<div id="onboarding-result" style="display:none;"></div>
