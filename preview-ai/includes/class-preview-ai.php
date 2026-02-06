@@ -215,6 +215,12 @@ class Preview_Ai {
 		$this->loader->add_filter( 'manage_edit-product_columns', $plugin_admin, 'add_product_column' );
 		$this->loader->add_action( 'manage_product_posts_custom_column', $plugin_admin, 'render_product_column', 10, 2 );
 
+		// Product list filter and sorting.
+		$this->loader->add_action( 'restrict_manage_posts', $plugin_admin, 'add_product_filter_dropdown' );
+		$this->loader->add_action( 'pre_get_posts', $plugin_admin, 'filter_products_by_preview_ai' );
+		$this->loader->add_filter( 'manage_edit-product_sortable_columns', $plugin_admin, 'make_column_sortable' );
+		$this->loader->add_action( 'pre_get_posts', $plugin_admin, 'sort_by_preview_ai' );
+
 		// Admin AJAX handlers.
 		$this->loader->add_action( 'wp_ajax_preview_ai_learn_catalog', $plugin_admin, 'handle_learn_catalog' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_verify_api_key', $plugin_admin, 'handle_verify_api_key' );

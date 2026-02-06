@@ -428,6 +428,195 @@ class PREVIEW_AI_Admin_Product {
 	}
 
 	/**
+	 * Add Preview AI status filter dropdown to product list.
+	 */
+	public function add_product_filter_dropdown() {
+		global $typenow;
+		if ( 'product' !== $typenow ) {
+			return;
+		}
+
+		$current = isset( $_GET['preview_ai_status'] ) ? sanitize_key( wp_unslash( $_GET['preview_ai_status'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$statuses = array(
+			''              => __( 'All Preview AI statuses', 'preview-ai' ),
+			'active'        => __( 'Active', 'preview-ai' ),
+			'disabled'      => __( 'Disabled', 'preview-ai' ),
+			'not_analyzed'  => __( 'Not Analyzed', 'preview-ai' ),
+			'not_supported' => __( 'Not Supported', 'preview-ai' ),
+		);
+
+		echo '<select name="preview_ai_status">';
+		foreach ( $statuses as $value => $label ) {
+			printf(
+				'<option value="%s" %s>%s</option>',
+				esc_attr( $value ),
+				selected( $current, $value, false ),
+				esc_html( $label )
+			);
+		}
+		echo '</select>';
+	}
+
+	/**
+	 * Filter products by Preview AI status in the product list.
+	 *
+	 * @param WP_Query $query The current query.
+	 */
+	public function filter_products_by_preview_ai( $query ) {
+		global $typenow, $pagenow;
+
+		if ( 'edit.php' !== $pagenow || 'product' !== $typenow || ! $query->is_main_query() ) {
+			return;
+		}
+
+		if ( ! isset( $_GET['preview_ai_status'] ) || '' === $_GET['preview_ai_status'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		$status = sanitize_key( wp_unslash( $_GET['preview_ai_status'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$meta_query = $query->get( 'meta_query' );
+		if ( ! is_array( $meta_query ) ) {
+			$meta_query = array();
+		}
+
+		$global_enabled = get_option( 'preview_ai_enabled', 0 );
+
+		switch ( $status ) {
+			case 'not_analyzed':
+				$meta_query[] = array(
+					'key'     => '_preview_ai_supported',
+					'compare' => 'NOT EXISTS',
+				);
+				break;
+
+			case 'not_supported':
+				$meta_query[] = array(
+					'key'   => '_preview_ai_supported',
+					'value' => 'no',
+				);
+				break;
+
+			case 'active':
+				if ( $global_enabled ) {
+					// Global ON: active = supported AND not explicitly disabled.
+					$meta_query[] = array(
+						'key'   => '_preview_ai_supported',
+						'value' => 'yes',
+					);
+					$meta_query[] = array(
+						'relation' => 'OR',
+						array(
+							'key'     => '_preview_ai_enabled',
+							'compare' => 'NOT EXISTS',
+						),
+						array(
+							'key'     => '_preview_ai_enabled',
+							'value'   => 'no',
+							'compare' => '!=',
+						),
+					);
+				} else {
+					// Global OFF: active = supported AND explicitly enabled.
+					$meta_query[] = array(
+						'key'   => '_preview_ai_supported',
+						'value' => 'yes',
+					);
+					$meta_query[] = array(
+						'key'   => '_preview_ai_enabled',
+						'value' => 'yes',
+					);
+				}
+				break;
+
+			case 'disabled':
+				if ( $global_enabled ) {
+					// Global ON: disabled = supported AND explicitly disabled.
+					$meta_query['relation'] = 'AND';
+					$meta_query[]           = array(
+						'key'   => '_preview_ai_supported',
+						'value' => 'yes',
+					);
+					$meta_query[]           = array(
+						'key'   => '_preview_ai_enabled',
+						'value' => 'no',
+					);
+				} else {
+					// Global OFF: disabled = supported AND not explicitly enabled.
+					$meta_query['relation'] = 'AND';
+					$meta_query[]           = array(
+						'key'   => '_preview_ai_supported',
+						'value' => 'yes',
+					);
+					$meta_query[]           = array(
+						'relation' => 'OR',
+						array(
+							'key'     => '_preview_ai_enabled',
+							'compare' => 'NOT EXISTS',
+						),
+						array(
+							'key'     => '_preview_ai_enabled',
+							'value'   => 'yes',
+							'compare' => '!=',
+						),
+					);
+				}
+				break;
+		}
+
+		$query->set( 'meta_query', $meta_query );
+	}
+
+	/**
+	 * Make Preview AI column sortable.
+	 *
+	 * @param array $columns Sortable columns.
+	 * @return array
+	 */
+	public function make_column_sortable( $columns ) {
+		$columns['preview_ai'] = 'preview_ai';
+		return $columns;
+	}
+
+	/**
+	 * Handle sorting by Preview AI column.
+	 *
+	 * Uses named meta_query clauses with EXISTS/NOT EXISTS so WordPress
+	 * performs a LEFT JOIN, including products without the meta key
+	 * (i.e. "Not Analyzed" products).
+	 *
+	 * @param WP_Query $query The current query.
+	 */
+	public function sort_by_preview_ai( $query ) {
+		if ( ! is_admin() || ! $query->is_main_query() ) {
+			return;
+		}
+
+		if ( 'preview_ai' !== $query->get( 'orderby' ) ) {
+			return;
+		}
+
+		$meta_query = $query->get( 'meta_query' );
+		if ( ! is_array( $meta_query ) ) {
+			$meta_query = array();
+		}
+
+		$meta_query['relation']               = 'OR';
+		$meta_query['preview_ai_has_status']   = array(
+			'key'     => '_preview_ai_supported',
+			'compare' => 'EXISTS',
+		);
+		$meta_query['preview_ai_no_status']    = array(
+			'key'     => '_preview_ai_supported',
+			'compare' => 'NOT EXISTS',
+		);
+
+		$query->set( 'meta_query', $meta_query );
+		$query->set( 'orderby', 'preview_ai_has_status' );
+	}
+
+	/**
 	 * Add Preview AI column to product list.
 	 */
 	public function add_product_column( $columns ) {

@@ -132,6 +132,22 @@ class PREVIEW_AI_Admin {
 		$this->product->render_product_column( $column, $post_id );
 	}
 
+	public function add_product_filter_dropdown() {
+		$this->product->add_product_filter_dropdown();
+	}
+
+	public function filter_products_by_preview_ai( $query ) {
+		$this->product->filter_products_by_preview_ai( $query );
+	}
+
+	public function make_column_sortable( $columns ) {
+		return $this->product->make_column_sortable( $columns );
+	}
+
+	public function sort_by_preview_ai( $query ) {
+		$this->product->sort_by_preview_ai( $query );
+	}
+
 	public function handle_toggle_product() {
 		$this->product->handle_toggle_product();
 	}

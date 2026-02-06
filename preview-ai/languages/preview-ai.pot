@@ -1,20 +1,27 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Preview AI 1.0.0\n"
+"Project-Id-Version: Preview AI 1.0.4\n"
 "Report-Msgid-Bugs-To: https://previewai.app/support\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Spanish <es@li.org>\n"
+"POT-Creation-Date: 2026-02-05 12:00+0000\n"
+"PO-Revision-Date: 2026-02-05 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-01-10 12:00+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.8.1\n"
 "X-Domain: preview-ai\n"
 
 #: public/partials/preview-ai-public-display.php:24
+#: public/partials/preview-ai-public-display.php:131
 #: public/class-preview-ai-public.php:240
+#: admin/partials/preview-ai-admin-display.php:417
+#: includes/widgets/class-preview-ai-elementor-widget.php:84
 msgid "See it on you"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:132
+msgid "See how this product looks on you"
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:55
@@ -23,46 +30,628 @@ msgid "Close"
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:60
+#: public/partials/preview-ai-public-display.php:76
 msgid "Welcome back!"
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:61
+#: public/partials/preview-ai-public-display.php:77
 msgid "Use your saved photo to try on this product instantly"
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:67
+#: public/partials/preview-ai-public-display.php:83
 msgid "Use this photo"
 msgstr ""
 
+#: public/partials/preview-ai-public-display.php:80
+msgid "Your saved photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:86
+msgid "or upload a different photo"
+msgstr ""
+
 #: public/partials/preview-ai-public-display.php:76
+#: public/partials/preview-ai-public-display.php:92
 #: public/partials/preview-ai-public-display.php:94
+#: public/partials/preview-ai-public-display.php:115
 #: public/partials/preview-ai-public-display.php:173
+#: public/partials/preview-ai-public-display.php:194
 #: public/partials/preview-ai-public-display.php:227
+#: public/partials/preview-ai-public-display.php:248
 msgid "Your Looks"
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:80
-msgid "Your photo is stored only on this device. We never upload or save it on our servers."
+#: public/partials/preview-ai-public-display.php:100
+msgid "Your photos stay on your device. We never upload or store them."
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:81
+#: public/partials/preview-ai-public-display.php:102
 msgid "Delete my photo"
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:103
+#: public/partials/preview-ai-public-display.php:124
 msgid "No looks yet. Generate your first preview!"
 msgstr ""
 
+#: public/partials/preview-ai-public-display.php:109
+msgid "Back"
+msgstr ""
+
 #: public/partials/preview-ai-public-display.php:150
+#: public/partials/preview-ai-public-display.php:171
 msgid "For best results:"
 msgstr ""
 
 #: public/partials/preview-ai-public-display.php:188
+#: public/partials/preview-ai-public-display.php:209
 msgid "Analyzing your photo..."
 msgstr ""
 
+#: public/partials/preview-ai-public-display.php:202
+msgid "Generated preview"
+msgstr ""
+
 #: public/partials/preview-ai-public-display.php:204
+#: public/partials/preview-ai-public-display.php:225
 msgid "Generate preview"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:160
+msgid "Good example photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:163
+msgid "Bad example photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:149
+msgid "Upload a Full Body Image"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:177
+msgid "Tip: wearing a similar item helps the preview look more realistic"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:183
+msgid "Add your photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:210
+msgid "Preparing garment..."
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:211
+msgid "Fitting to your body..."
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:212
+msgid "Applying garment..."
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:213
+msgid "Adding final touches..."
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:222
+msgid "Change photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:235
+msgid "Download"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:242
+msgid "New photo"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php:255
+msgid "This is an AI-generated preview for reference only. <strong>Actual fit and appearance may vary</strong> — please check the size guide before ordering."
+msgstr ""
+
+#: public/class-preview-ai-public.php:152
+msgid "Demo Tour"
+msgstr ""
+
+#: public/class-preview-ai-public.php:153
+msgid "Skip"
+msgstr ""
+
+#: public/class-preview-ai-public.php:154
+msgid "Next"
+msgstr ""
+
+#: public/class-preview-ai-public.php:155
+msgid "Try it now!"
+msgstr ""
+
+#: public/class-preview-ai-public.php:156
+msgid "🎨 Preview AI Understands Your Catalog"
+msgstr ""
+
+#: public/class-preview-ai-public.php:157
+msgid "Our AI analyzes your <strong>product images</strong>, including all <strong>variations and color options</strong>. If you have photos for each variant, Preview AI will use them for more accurate try-ons."
+msgstr ""
+
+#: public/class-preview-ai-public.php:158
+msgid "Auto-detection"
+msgstr ""
+
+#: public/class-preview-ai-public.php:159
+msgid "Real-time"
+msgstr ""
+
+#: public/class-preview-ai-public.php:160
+msgid "All colors"
+msgstr ""
+
+#: public/class-preview-ai-public.php:161
+msgid "✨ Your Customers See This"
+msgstr ""
+
+#: public/class-preview-ai-public.php:162
+msgid "This widget is <strong>fully customizable</strong> and adapts to your store's design. Customers click here to instantly try on your products using their own photo."
+msgstr ""
+
+#: public/class-preview-ai-public.php:163
+msgid "Customizable"
+msgstr ""
+
+#: public/class-preview-ai-public.php:164
+msgid "Responsive"
+msgstr ""
+
+#: public/class-preview-ai-public.php:165
+msgid "One-click"
+msgstr ""
+
+#: public/class-preview-ai-public.php:255
+msgid "Something went wrong. Please try again later."
+msgstr ""
+
+#: public/class-preview-ai-public.php:256
+msgid "You have used all your weekly previews! Come back next week to try on more products."
+msgstr ""
+
+#: public/class-preview-ai-public.php:257
+msgid "Open camera"
+msgstr ""
+
+#: public/class-preview-ai-public.php:258
+msgid "Upload photo"
+msgstr ""
+
+#: public/class-preview-ai-public.php:259
+msgid "Checking photo…"
+msgstr ""
+
+#: public/class-preview-ai-public.php:260
+msgid "Photo looks good."
+msgstr ""
+
+#: public/class-preview-ai-public.php:261
+msgid "Photo is valid, but could be improved."
+msgstr ""
+
+#: public/class-preview-ai-public.php:262
+msgid "Photo is not valid. Please try another one."
+msgstr ""
+
+#: public/class-preview-ai-public.php:265
+msgid "The photo has low resolution; Try to use a photo with a higher resolution."
+msgstr ""
+
+#: public/class-preview-ai-public.php:266
+msgid "The photo looks landscape; it usually works better in portrait (front-facing body)."
+msgstr ""
+
+#: public/class-preview-ai-public.php:267
+msgid "The photo is a bit dark; try more front-facing light."
+msgstr ""
+
+#: public/class-preview-ai-public.php:268
+msgid "The photo is overexposed; avoid strong backlight or very direct light."
+msgstr ""
+
+#: public/class-preview-ai-public.php:271
+msgid "No person is clearly detected."
+msgstr ""
+
+#: public/class-preview-ai-public.php:272
+msgid "The photo seems to contain more than one person."
+msgstr ""
+
+#: public/class-preview-ai-public.php:273
+msgid "Try a front-facing photo with good lighting."
+msgstr ""
+
+#: public/class-preview-ai-public.php:274
+msgid "Avoid heavy crops and occlusions."
+msgstr ""
+
+#: public/class-preview-ai-public.php:275
+msgid "Use a front-facing photo with a single person."
+msgstr ""
+
+#: public/class-preview-ai-public.php:276
+msgid "Avoid people in the background, mirrors, or posters with people."
+msgstr ""
+
+#: public/class-preview-ai-public.php:277
+msgid "Torso is not detected clearly; try a front-facing photo with the torso visible."
+msgstr ""
+
+#: public/class-preview-ai-public.php:278
+msgid "Arms are not detected clearly. Try to include shoulders and arms."
+msgstr ""
+
+#: public/class-preview-ai-public.php:279
+msgid "Arms look raised. Please keep arms relaxed down."
+msgstr ""
+
+#: public/class-preview-ai-public.php:280
+msgid "Arms look bent. Relax your arms if possible."
+msgstr ""
+
+#: public/class-preview-ai-public.php:281
+msgid "Arms look crossed. Keep arms separated and relaxed."
+msgstr ""
+
+#: public/class-preview-ai-public.php:282
+msgid "Upper torso is not detected. The photo may be cropped from the waist, which can still work for pants."
+msgstr ""
+
+#: public/class-preview-ai-public.php:283
+msgid "Legs look quite bent. Stand with straighter legs if possible."
+msgstr ""
+
+#: public/class-preview-ai-public.php:284
+msgid "Feet/ankles look cropped. Please include them fully."
+msgstr ""
+
+#: public/class-preview-ai-public.php:285
+msgid "Knees are not detected. It can still work, but for best results include from knees down to the full feet."
+msgstr ""
+
+#: public/class-preview-ai-public.php:286
+msgid "Head looks cropped. We need the full body in frame."
+msgstr ""
+
+#: public/class-preview-ai-public.php:287
+msgid "Feet are cropped. We need the full body from head to toe."
+msgstr ""
+
+#: public/class-preview-ai-public.php:288
+msgid "Pose looks crouched or seated. Stand upright if possible."
+msgstr ""
+
+#: public/class-preview-ai-public.php:289
+msgid "Photo looks sideways. A front-facing photo works best."
+msgstr ""
+
+#: public/class-preview-ai-public.php:290
+msgid "Legs are too bent (seated/crouching). Stand with straighter legs."
+msgstr ""
+
+#: public/class-preview-ai-public.php:291
+msgid "Left shoulder is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:292
+msgid "Right shoulder is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:293
+msgid "Left hip is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:294
+msgid "Right hip is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:295
+msgid "Left knee is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:296
+msgid "Right knee is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:297
+msgid "Left ankle/foot is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:298
+msgid "Right ankle/foot is not detected clearly."
+msgstr ""
+
+#: public/class-preview-ai-public.php:306
+msgid "Add to Cart"
+msgstr ""
+
+#: public/class-preview-ai-public.php:308
+msgid "View Product"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:21
+msgid "Preview AI Settings"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:26
+msgid "General"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:30
+msgid "Widget"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:34
+msgid "Statistics"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:39
+msgid "Contact Support"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:52
+msgid "Period:"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:58
+msgid "Last 7 days"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:61
+msgid "Last 30 days"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:64
+msgid "All time"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:73
+msgid "Customers Used Preview AI"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:77
+msgid "Orders Influenced"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:81
+msgid "User Conversion Rate"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:85
+msgid "Revenue Influenced"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:95
+msgid "Avg. Order Value"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:101
+msgid "Orders Refunded"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:110
+msgid "Top Converting Products"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:115
+#: admin/partials/preview-ai-admin-display.php:151
+msgid "No conversions yet."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:120
+msgid "Product"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:121
+msgid "Previews"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:122
+msgid "Conv."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:123
+msgid "Rate"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:146
+msgid "Recent Conversions"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:156
+msgid "Customer"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:158
+msgid "Order Total"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:191
+msgid "Enable Preview AI"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:206
+msgid "Show the Preview AI widget on product pages."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:215
+msgid "Max Previews Per User (Weekly)"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:228
+msgid "Maximum number of previews each visitor can generate per week. Default: 8."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:236
+msgid "API Configuration"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:252
+msgid "Monthly Usage"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:254
+msgid "previews"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:263
+msgid "remaining"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:270
+msgid "Resets on"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:287
+msgid "Verified"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:292
+msgid "Email:"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:295
+msgid "Domain:"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:322
+msgid "Learn My Catalog (AI)"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:325
+msgid "Preview AI will automatically detect what type of product each one is (t-shirts, dresses, belts, earrings, fanny packs…)."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:327
+msgid "This will analyze your catalog and assign the appropriate product type to each product."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:330
+msgid "Nothing will be modified in your store. Only recommendations will be assigned."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:339
+msgid "Re-verify compatibility"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:347
+msgid "Analyze My Catalog"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:386
+msgid "Widget Display"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:392
+msgid "Automatic - Show on product pages"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:395
+msgid "Manual - Use shortcode or Elementor"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:399
+msgid "Use \"Manual\" if you want to place the widget with [preview_ai] shortcode or Elementor widget."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:408
+msgid "Button Text"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:420
+msgid "Leave empty to use the default text."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:428
+msgid "Button Icon"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:464
+msgid "Button Position"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:470
+msgid "Left"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:473
+msgid "Center"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:476
+msgid "Right"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:486
+msgid "Button Shape"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:492
+msgid "Pill (Rounded)"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:495
+msgid "Rounded Corners"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:498
+msgid "Squared (Sharp)"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:508
+msgid "Button Height"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:522
+msgid "Height of the button in pixels. Default: 38px."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:531
+msgid "Full Width"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:546
+msgid "Make the button 100% width of its container."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:555
+msgid "Accent Color"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:567
+msgid "Choose the accent color for the widget and modal buttons."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:578
+msgid "Shortcode"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:581
+msgid "Use this shortcode to manually place the widget anywhere on your product pages."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:588
+msgid "Need help or have a suggestion?"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:590
+msgid "We are here to help you get the most out of Preview AI. Whether you have a technical issue or an idea to improve the plugin, we want to hear from you."
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php:594
+msgid "Contact Support & Suggestions"
+msgstr ""
+
+#: admin/class-preview-ai-admin.php:86
+msgid "Settings"
 msgstr ""
 
 #: admin/class-preview-ai-admin.php:333
@@ -82,3 +671,383 @@ msgstr ""
 msgid "Catalog configured!"
 msgstr ""
 
+#: admin/class-preview-ai-admin-onboarding.php:52
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: admin/class-preview-ai-admin-onboarding.php:73
+msgid "Preview AI has been activated!"
+msgstr ""
+
+#: admin/class-preview-ai-admin-onboarding.php:102
+msgid "Activate Preview AI"
+msgstr ""
+
+#: admin/class-preview-ai-admin-onboarding.php:103
+msgid "Enter your email to activate Preview AI on your store:"
+msgstr ""
+
+#: admin/class-preview-ai-admin-onboarding.php:110
+msgid "Your email address"
+msgstr ""
+
+#: admin/class-preview-ai-admin-onboarding.php:113
+msgid "Activate Now"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:51
+#: admin/class-preview-ai-admin-product.php:405
+msgid "No Image"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:55
+#: admin/class-preview-ai-admin-product.php:409
+#: admin/class-preview-ai-admin-product.php:470
+msgid "Not Supported"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:64
+#: admin/class-preview-ai-admin-product.php:413
+msgid "Disabled"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:71
+msgid "Active (Pending Analysis)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:75
+#: admin/class-preview-ai-admin-product.php:417
+#: admin/class-preview-ai-admin-product.php:489
+msgid "Active"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:88
+msgid "This product has no image. Add a product image to enable Preview AI."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:136
+msgid "Some variations don't have their own image."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:137
+msgid "Preview AI will use the main product image, so the preview will look the same for those variations."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:138
+msgid "Add an image to each variation for more accurate previews."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:138
+msgid "See how to improve"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:339
+msgid "Invalid product ID."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:344
+msgid "Product not found."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:349
+msgid "Product has no image."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:371
+msgid "Product type not supported."
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:459
+msgid "Not analyzed yet - run Learn Catalog"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:469
+msgid "Product type not supported yet (V1 supports tops and pants only)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:488
+msgid "Preview AI active on this product"
+msgstr ""
+
+#: admin/class-preview-ai-admin-product.php:494
+msgid "Preview AI disabled for this product"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:49
+msgid "Magic Wand"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:53
+msgid "Camera"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:57
+msgid "Eye / Preview"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:61
+msgid "T-Shirt"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:65
+msgid "Sparkles / AI"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:101
+msgid "Clothing"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:105
+msgid "Furniture"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:109
+msgid "Decoration"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:113
+msgid "Crafts"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:117
+msgid "Other (Generic)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:129
+msgid "Mixed / All types"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:130
+msgid "All types of clothing"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:132
+msgid "One person only"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:133
+msgid "Front-facing, good lighting"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:134
+msgid "Avoid heavy cropping and occlusions"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:138
+msgid "Upper Body"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:139
+msgid "T-shirts, shirts, blouses, jackets, hoodies, tops"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:141
+msgid "Front-facing with shoulders and torso visible"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:142
+msgid "Arms relaxed"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:143
+msgid "Good light, no torso occlusions"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:147
+msgid "Lower Body"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:148
+msgid "Pants, shorts, leggings, skirts"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:150
+msgid "Hips, knees and full feet visible (no crop)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:151
+msgid "Standing, front-facing"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:152
+msgid "Good light, no leg occlusions"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:156
+msgid "Full Body"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:157
+msgid "Dresses, jumpsuits, full suits"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:159
+msgid "Full body head-to-toe (no crop)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:160
+msgid "Front-facing and upright (avoid side pose or crouching)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:161
+msgid "One person, simple background, good light"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:165
+msgid "Headwear"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:166
+msgid "Caps, hats, berets, head scarves"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:168
+msgid "Include head plus some torso"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:170
+msgid "No occlusions over the head (hair/hands/objects)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:174
+msgid "Footwear"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:175
+msgid "Shoes, boots, sandals, slippers"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:177
+msgid "Both feet fully visible (not cropped)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:178
+msgid "Best framing: knees-to-feet, front-facing"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:179
+msgid "Good light, sharp photo"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:183
+msgid "Neckwear"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:184
+msgid "Necklaces, scarves, chokers"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:186
+msgid "Include face, neck and some torso (no extreme close-up)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:188
+msgid "No occlusions over the accessory"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:192
+msgid "Waistwear"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:193
+msgid "Belts, fanny packs, waist bags"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:195
+msgid "Front-facing with waist and hips visible"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:196
+msgid "No hands/objects covering the waist area"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:201
+msgid "Wrist & Hand"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:202
+msgid "Bracelets, watches, rings"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:204
+msgid "Include arm and some torso (no extreme close-up)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:205
+msgid "Keep the accessory visible (no motion blur)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:210
+msgid "Ear Accessories"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:211
+msgid "Earrings, hoops, ear cuffs"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:213
+msgid "Include face and some torso (no extreme close-up)"
+msgstr ""
+
+#: admin/class-preview-ai-admin-settings.php:214
+msgid "Good light, ear not covered by hair/hands"
+msgstr ""
+
+#: includes/class-preview-ai-api.php:63
+msgid "API not configured"
+msgstr ""
+
+#: includes/class-preview-ai-api.php:130
+msgid "API request failed"
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:36
+#: includes/class-preview-ai-ajax.php:105
+msgid "No image provided"
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:43
+#: includes/class-preview-ai-ajax.php:111
+msgid "Invalid product"
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:48
+#: includes/class-preview-ai-ajax.php:115
+msgid "Preview AI not enabled for this product"
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:198
+msgid "Could not read image file."
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:203
+msgid "Could not read image file content."
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:222
+msgid "No file provided"
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:226
+msgid "Upload error."
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:230
+msgid "Invalid file upload"
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:236
+msgid "File is not a valid image."
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:243
+msgid "Invalid image type. Use JPG, PNG or WebP."
+msgstr ""
+
+#: includes/class-preview-ai-ajax.php:248
+msgid "Image too large. Max 5MB."
+msgstr ""
+
+#: includes/widgets/class-preview-ai-elementor-widget.php:174
+msgid "Preview AI: Use this widget on a product page."
+msgstr ""

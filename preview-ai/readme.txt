@@ -7,13 +7,15 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.4
-Stable tag: 1.0.2
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Virtual try-on for WooCommerce that helps fashion stores increase conversions and reduce returns.
 
 == Description ==
+
+https://www.youtube.com/watch?v=_IGk4fOwGDs
 
 Preview AI is an AI-powered Virtual Try-On plugin for WooCommerce that helps fashion stores increase conversion rates and reduce returns by allowing customers to preview how a product may look on them before buying 👕✨
 
@@ -153,6 +155,11 @@ Preview AI currently supports:
 4. Product-level configuration options
 
 == Changelog ==
+
+= 1.0.4 =
+– Added full internationalization support (i18n)
+– Complete translation catalog (.pot) with 130+ translatable strings
+– Improved pose validation feedback messages
 
 = 1.0.2 =
 – Added weekly preview limit per visitor (configurable in Settings > General)
