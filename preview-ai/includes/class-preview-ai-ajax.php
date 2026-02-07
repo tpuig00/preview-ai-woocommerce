@@ -26,6 +26,20 @@ class PREVIEW_AI_Ajax {
 	}
 
 	/**
+	 * Return a fresh nonce.
+	 *
+	 * Page-caching plugins freeze the nonce inside the HTML, causing it to
+	 * expire for every visitor that hits the cached version.  This lightweight
+	 * endpoint lets the JS layer obtain a valid nonce right before it needs one.
+	 *
+	 * No nonce verification is required here – the endpoint performs no
+	 * state-changing action; it merely issues a token.
+	 */
+	public function handle_nonce() {
+		wp_send_json_success( array( 'nonce' => wp_create_nonce( 'preview_ai_ajax' ) ) );
+	}
+
+	/**
 	 * Handle image upload and preview generation.
 	 */
 	public function handle_upload() {

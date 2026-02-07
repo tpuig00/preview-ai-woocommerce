@@ -268,6 +268,8 @@ class Preview_Ai {
 
 		// AJAX handlers.
 		$ajax_handler = new PREVIEW_AI_Ajax();
+		$this->loader->add_action( 'wp_ajax_preview_ai_nonce', $ajax_handler, 'handle_nonce' );
+		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_nonce', $ajax_handler, 'handle_nonce' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_upload', $ajax_handler, 'handle_upload' );
 		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_upload', $ajax_handler, 'handle_upload' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_check', $ajax_handler, 'handle_check' );

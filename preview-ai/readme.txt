@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -156,6 +156,9 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.1.1 =
+– Fixed nonce validation failing on sites with page caching (WP Rocket, LiteSpeed Cache, W3 Total Cache, etc.), which caused "Something went wrong" errors on every try-on request.
+
 = 1.1.0 =
 – Added Bulk Actions to enable or disable Preview AI for multiple products at once.
 – Added filtering by Preview AI status (Active, Disabled, Not Analyzed, Not Supported) in the product list.
@@ -181,6 +184,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+Fixes "Something went wrong" errors on sites with page caching enabled.
 
 = 1.1.0 =
 New bulk actions and filtering options for easier catalog management.

@@ -6,6 +6,34 @@
 	PreviewAI.Api = (function() {
 		return {
 			/**
+			 * Fetch a fresh nonce from the server.
+			 *
+			 * Page-caching plugins freeze the nonce embedded in the HTML,
+			 * so it can be expired by the time the visitor interacts.
+			 * This lightweight call obtains a valid nonce before each
+			 * real API request.
+			 *
+			 * @param {Function} callback Called once the nonce has been refreshed (or on failure).
+			 */
+			refreshNonce: function( callback ) {
+				$.ajax( {
+					url: previewAiData.ajaxUrl,
+					type: 'POST',
+					data: { action: 'preview_ai_nonce' },
+					success: function( res ) {
+						if ( res && res.success && res.data && res.data.nonce ) {
+							previewAiData.nonce = res.data.nonce;
+						}
+						callback();
+					},
+					error: function() {
+						// If refresh fails, proceed with whatever nonce we have.
+						callback();
+					}
+				} );
+			},
+
+			/**
 			 * Render photo check status.
 			 *
 			 * @param {jQuery} $checkStatus Status element.
@@ -81,72 +109,76 @@
 					[]
 				);
 
-				var formData = new FormData();
-				formData.append( 'action', 'preview_ai_check' );
-				formData.append( 'nonce', previewAiData.nonce );
-				formData.append( 'product_id', previewAiData.productId );
-
-				var $var = $( 'input.variation_id' );
-				if ( $var.length && $var.val() ) {
-					formData.append( 'variation_id', $var.val() );
-				}
-
-				formData.append( 'image', file );
-
 				var self = this;
-				state.checkXhr = $.ajax( {
-					url: previewAiData.ajaxUrl,
-					type: 'POST',
-					data: formData,
-					contentType: false,
-					processData: false,
-					success: function( res ) {
-						if ( token !== state.checkToken ) {
-							return;
-						}
 
-						if ( res && res.success && res.data ) {
-							var status = res.data.status;
-							var warnings = res.data.warnings || [];
+				// Refresh nonce first to handle page-cache scenarios.
+				this.refreshNonce( function() {
+					var formData = new FormData();
+					formData.append( 'action', 'preview_ai_check' );
+					formData.append( 'nonce', previewAiData.nonce );
+					formData.append( 'product_id', previewAiData.productId );
 
-							if ( status === 'ok' ) {
-								self.renderCheckStatus( $els.$checkStatus, 'ok', ( previewAiData.i18n && previewAiData.i18n.photoOk ) || 'Photo looks good.', [] );
-								$els.$generate.prop( 'disabled', false );
-								return;
-							}
-
-							if ( status === 'warning' ) {
-								self.renderCheckStatus( $els.$checkStatus, 'warning', ( previewAiData.i18n && previewAiData.i18n.photoWarning ) || 'Photo is valid, but could be improved.', warnings );
-								$els.$generate.prop( 'disabled', false );
-								return;
-							}
-
-							self.renderCheckStatus( $els.$checkStatus, 'error', ( previewAiData.i18n && previewAiData.i18n.photoBad ) || 'Photo is not valid. Please try another one.', warnings );
-							$els.$generate.prop( 'disabled', true );
-							return;
-						}
-
-						self.renderCheckStatus(
-							$els.$checkStatus,
-							'error',
-							( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.',
-							[]
-						);
-					},
-					error: function( xhr, statusText ) {
-						if ( token !== state.checkToken ) {
-							return;
-						}
-						if ( statusText === 'abort' ) {
-							return;
-						}
-						self.renderCheckStatus(
-							$els.$checkStatus,
-							'error',
-							( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.',
-							[]
-						);
+					var $var = $( 'input.variation_id' );
+					if ( $var.length && $var.val() ) {
+						formData.append( 'variation_id', $var.val() );
 					}
+
+					formData.append( 'image', file );
+
+					state.checkXhr = $.ajax( {
+						url: previewAiData.ajaxUrl,
+						type: 'POST',
+						data: formData,
+						contentType: false,
+						processData: false,
+						success: function( res ) {
+							if ( token !== state.checkToken ) {
+								return;
+							}
+
+							if ( res && res.success && res.data ) {
+								var status = res.data.status;
+								var warnings = res.data.warnings || [];
+
+								if ( status === 'ok' ) {
+									self.renderCheckStatus( $els.$checkStatus, 'ok', ( previewAiData.i18n && previewAiData.i18n.photoOk ) || 'Photo looks good.', [] );
+									$els.$generate.prop( 'disabled', false );
+									return;
+								}
+
+								if ( status === 'warning' ) {
+									self.renderCheckStatus( $els.$checkStatus, 'warning', ( previewAiData.i18n && previewAiData.i18n.photoWarning ) || 'Photo is valid, but could be improved.', warnings );
+									$els.$generate.prop( 'disabled', false );
+									return;
+								}
+
+								self.renderCheckStatus( $els.$checkStatus, 'error', ( previewAiData.i18n && previewAiData.i18n.photoBad ) || 'Photo is not valid. Please try another one.', warnings );
+								$els.$generate.prop( 'disabled', true );
+								return;
+							}
+
+							self.renderCheckStatus(
+								$els.$checkStatus,
+								'error',
+								( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.',
+								[]
+							);
+						},
+						error: function( xhr, statusText ) {
+							if ( token !== state.checkToken ) {
+								return;
+							}
+							if ( statusText === 'abort' ) {
+								return;
+							}
+							self.renderCheckStatus(
+								$els.$checkStatus,
+								'error',
+								( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.',
+								[]
+							);
+						}
+					} );
 				} );
 			},
 
@@ -203,18 +235,6 @@
 					return;
 				}
 
-				var formData = new FormData();
-				formData.append( 'action', 'preview_ai_upload' );
-				formData.append( 'nonce', previewAiData.nonce );
-				formData.append( 'product_id', previewAiData.productId );
-
-				var $var = $( 'input.variation_id' );
-				if ( $var.length && $var.val() ) {
-					formData.append( 'variation_id', $var.val() );
-				}
-
-				formData.append( 'image', state.selectedFile );
-
 				$els.$stage.addClass( 'is-loading' );
 				$els.$generate.addClass( 'is-hidden' );
 				$els.$changeBtn.addClass( 'is-hidden' );
@@ -222,52 +242,68 @@
 				modal.startLoadingSteps();
 
 				var self = this;
-				$.ajax( {
-					url: previewAiData.ajaxUrl,
-					type: 'POST',
-					data: formData,
-					contentType: false,
-					processData: false,
-					success: function( res ) {
-						$els.$stage.removeClass( 'is-loading' );
-						modal.stopLoadingSteps();
 
-						if ( res && res.success && res.data && res.data.generated_image_url ) {
-							var img = new Image();
-							img.onload = function() {
-								state.generatedImageUrl = res.data.generated_image_url;
-								$els.$imgAfter.attr( 'src', state.generatedImageUrl );
-								$els.$stage.addClass( 'is-result' );
-								$els.$resultActions.addClass( 'is-visible' );
-								$els.$disclaimer.addClass( 'is-visible' );
+				// Refresh nonce first to handle page-cache scenarios.
+				this.refreshNonce( function() {
+					var formData = new FormData();
+					formData.append( 'action', 'preview_ai_upload' );
+					formData.append( 'nonce', previewAiData.nonce );
+					formData.append( 'product_id', previewAiData.productId );
 
-								// Increment weekly usage counter.
-								PreviewAI.Storage.incrementWeeklyUsage();
+					var $var = $( 'input.variation_id' );
+					if ( $var.length && $var.val() ) {
+						formData.append( 'variation_id', $var.val() );
+					}
 
-								var variationId = $( 'input.variation_id' ).val() || '';
-								PreviewAI.Storage.saveTryOn( {
-									id: Date.now().toString(),
-									generatedImageUrl: state.generatedImageUrl,
-									productId: previewAiData.productId,
-									variationId: variationId,
-									productName: previewAiData.productName || '',
-									productUrl: previewAiData.productUrl || '',
-									productImageUrl: previewAiData.productImageUrl || '',
-									createdAt: Date.now()
-								} );
-								tryOns.updateBadge( $els );
-							};
-							img.onerror = function() {
+					formData.append( 'image', state.selectedFile );
+
+					$.ajax( {
+						url: previewAiData.ajaxUrl,
+						type: 'POST',
+						data: formData,
+						contentType: false,
+						processData: false,
+						success: function( res ) {
+							$els.$stage.removeClass( 'is-loading' );
+							modal.stopLoadingSteps();
+
+							if ( res && res.success && res.data && res.data.generated_image_url ) {
+								var img = new Image();
+								img.onload = function() {
+									state.generatedImageUrl = res.data.generated_image_url;
+									$els.$imgAfter.attr( 'src', state.generatedImageUrl );
+									$els.$stage.addClass( 'is-result' );
+									$els.$resultActions.addClass( 'is-visible' );
+									$els.$disclaimer.addClass( 'is-visible' );
+
+									// Increment weekly usage counter.
+									PreviewAI.Storage.incrementWeeklyUsage();
+
+									var variationId = $( 'input.variation_id' ).val() || '';
+									PreviewAI.Storage.saveTryOn( {
+										id: Date.now().toString(),
+										generatedImageUrl: state.generatedImageUrl,
+										productId: previewAiData.productId,
+										variationId: variationId,
+										productName: previewAiData.productName || '',
+										productUrl: previewAiData.productUrl || '',
+										productImageUrl: previewAiData.productImageUrl || '',
+										createdAt: Date.now()
+									} );
+									tryOns.updateBadge( $els );
+								};
+								img.onerror = function() {
+									self.showError( $els, null, modal.stopLoadingSteps );
+								};
+								img.src = res.data.generated_image_url;
+							} else {
 								self.showError( $els, null, modal.stopLoadingSteps );
-							};
-							img.src = res.data.generated_image_url;
-						} else {
+							}
+						},
+						error: function() {
 							self.showError( $els, null, modal.stopLoadingSteps );
 						}
-					},
-					error: function() {
-						self.showError( $els, null, modal.stopLoadingSteps );
-					}
+					} );
 				} );
 			}
 		};
