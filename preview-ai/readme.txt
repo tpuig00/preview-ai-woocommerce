@@ -6,8 +6,8 @@ Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
-WC tested up to: 10.4
-Stable tag: 1.1.1
+WC tested up to: 10.5.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,16 +93,19 @@ You can start with the default setup and progressively customize the experience 
 
 == External Service Disclosure ==
 
-This plugin connects to an external service to perform AI image analysis and virtual try-on generation.
+This plugin connects to an external service operated by Preview AI.
 
 Service Provider: Preview AI
 Service URL: https://previewai.app
-Purpose: AI-powered virtual try-on generation
-
 Terms of Service: https://www.previewai.app/terms/terms-and-conditions
 Privacy Policy: https://www.previewai.app/terms/privacy-policy
 
-A free usage tier is included so the plugin is functional immediately after activation.
+Data transmitted to the service:
+
+1. **Virtual try-on generation** — Product images and a customer-uploaded photo are sent to generate the try-on preview. Customer photos are processed in real time and are not stored permanently.
+2. **Conversion attribution** — When an order is completed or refunded, anonymized order metadata (order ID, order total, currency, and product IDs) is sent to measure the impact of virtual try-on on sales. No customer personal data (name, email, address, or IP) is transmitted.
+
+All communication is authenticated via the store's API key and transmitted over HTTPS. A free usage tier is included so the plugin is functional immediately after activation.
 
 == Compatibility ==
 
@@ -156,6 +159,10 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.2.0 =
+– Added centralized conversion tracking: try-on usage is now linked to purchases for accurate ROI measurement.
+– Session attribution: each virtual try-on session is tracked end-to-end, from preview to checkout.
+
 = 1.1.1 =
 – Fixed nonce validation failing on sites with page caching (WP Rocket, LiteSpeed Cache, W3 Total Cache, etc.), which caused "Something went wrong" errors on every try-on request.
 
@@ -184,6 +191,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Adds end-to-end conversion attribution: see exactly how virtual try-on impacts your sales.
 
 = 1.1.1 =
 Fixes "Something went wrong" errors on sites with page caching enabled.

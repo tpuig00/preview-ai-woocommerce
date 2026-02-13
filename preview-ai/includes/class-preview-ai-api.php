@@ -55,9 +55,10 @@ class PREVIEW_AI_Api {
 	 * @param string $path    API endpoint path (e.g., 'generate', 'catalog/analyze').
 	 * @param array  $data    Request data to send.
 	 * @param int    $timeout Request timeout in seconds (default 120).
+	 * @param string $method  HTTP method (default 'POST').
 	 * @return array|WP_Error Response data or error.
 	 */
-	public function request( $path, $data = array(), $timeout = 120 ) {
+	public function request( $path, $data = array(), $timeout = 120, $method = 'POST' ) {
 		if ( empty( $this->api_key ) ) {
 			PREVIEW_AI_Logger::error( 'API key not configured' );
 			return new WP_Error( 'not_configured', __( 'API not configured', 'preview-ai' ) );
@@ -65,20 +66,21 @@ class PREVIEW_AI_Api {
 
 		$endpoint = rtrim( $this->endpoint, '/' ) . '/' . ltrim( $path, '/' );
 
-		$response = wp_remote_post(
-			$endpoint,
-			array(
-				'timeout' => $timeout,
-				'headers' => array(
-					'Content-Type' => 'application/json',
-					'X-Api-Key'    => $this->api_key,
-				),
-				'body'    => wp_json_encode( $data ),
-			)
+		$args = array(
+			'method'  => $method,
+			'timeout' => $timeout,
+			'headers' => array(
+				'Content-Type' => 'application/json',
+				'X-Api-Key'    => $this->api_key,
+			),
+			'body'    => wp_json_encode( $data ),
 		);
+
+		$response = wp_remote_request( $endpoint, $args );
 
 		PREVIEW_AI_Logger::debug( 'API request response', array(
 			'endpoint' => $endpoint,
+			'method'   => $method,
 			'response' => $response,
 		) );
 
@@ -220,6 +222,7 @@ class PREVIEW_AI_Api {
 			'product_subtype' => $product_data['subtype'],
 			'garment_type'    => $product_data['garment_type'] ?? null,
 			'image_analysis'  => $product_data['image_analysis'],
+			'session_id'      => PREVIEW_AI_Tracking::get_session_id(),
 		), 120 );
 
 		if ( ! is_wp_error( $result ) ) {
@@ -355,6 +358,52 @@ class PREVIEW_AI_Api {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Record a conversion (purchase) in the backend for attribution.
+	 *
+	 * Sends order data so the backend can attribute purchases to try-ons.
+	 *
+	 * @param string      $session_id  Client session ID.
+	 * @param string      $order_id    WooCommerce order ID.
+	 * @param float       $order_total Order total amount.
+	 * @param string      $currency    Currency code (ISO 4217).
+	 * @param array       $items       Array of items with product_id and variation_id.
+	 * @return array|WP_Error Response data or error.
+	 */
+	public function record_conversion( $session_id, $order_id, $order_total, $currency, $items ) {
+		return $this->request(
+			'analytics/conversions',
+			array(
+				'source'      => 'wordpress',
+				'session_id'  => $session_id,
+				'order_id'    => (string) $order_id,
+				'order_total' => (float) $order_total,
+				'currency'    => $currency,
+				'items'       => $items,
+			),
+			15,
+			'PUT'
+		);
+	}
+
+	/**
+	 * Record a refund in the backend.
+	 *
+	 * @param string $order_id WooCommerce order ID.
+	 * @return array|WP_Error Response data or error.
+	 */
+	public function record_refund( $order_id ) {
+		return $this->request(
+			'analytics/refunds/' . (string) $order_id,
+			array(
+				'source'   => 'wordpress',
+				'order_id' => (string) $order_id,
+			),
+			15,
+			'PUT'
+		);
 	}
 
 	/**

@@ -97,12 +97,12 @@ class PREVIEW_AI_Tracking {
         setcookie( self::COOKIE_NAME, $sid, time() + ( 30 * DAY_IN_SECONDS ), '/', '', is_ssl(), false );
     }
 
-    /**
-     * Get session ID.
-     *
-     * @return string|null
-     */
-    private static function get_session_id() {
+	/**
+	 * Get session ID.
+	 *
+	 * @return string|null
+	 */
+	public static function get_session_id() {
         return isset( $_COOKIE[ self::COOKIE_NAME ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE_NAME ] ) ) : null;
     }
 
@@ -289,6 +289,43 @@ class PREVIEW_AI_Tracking {
 
         $order->update_meta_data( '_preview_ai_converted', true );
         $order->save();
+
+        // Send conversion to backend for centralized analytics.
+        self::send_conversion_to_backend( $session_id, $order_id, $order_total, $order, $converted_items );
+    }
+
+    /**
+     * Send conversion data to the backend API.
+     *
+     * Non-blocking: failures are logged but do not affect local tracking.
+     *
+     * @param string|null $session_id      Client session ID.
+     * @param int         $order_id        Order ID.
+     * @param float       $order_total     Order total.
+     * @param \WC_Order   $order           Order object.
+     * @param array       $converted_items Items attributed to try-on.
+     */
+    private static function send_conversion_to_backend( $session_id, $order_id, $order_total, $order, $converted_items ) {
+        try {
+            $api = new PREVIEW_AI_Api();
+
+            $items = array();
+            foreach ( $converted_items as $item ) {
+                $items[] = array(
+                    'product_id'   => (string) $item['product_id'],
+                    'variation_id' => $item['variation_id'] ? (string) $item['variation_id'] : null,
+                );
+            }
+
+            $currency = method_exists( $order, 'get_currency' ) ? $order->get_currency() : 'EUR';
+
+            $api->record_conversion( $session_id, $order_id, $order_total, $currency, $items );
+        } catch ( \Exception $e ) {
+            PREVIEW_AI_Logger::error( 'Failed to send conversion to backend', array(
+                'order_id' => $order_id,
+                'error'    => $e->getMessage(),
+            ) );
+        }
     }
 
     /**
@@ -335,6 +372,28 @@ class PREVIEW_AI_Tracking {
 
         $order->update_meta_data( '_preview_ai_refunded', true );
         $order->save();
+
+        // Send refund to backend for centralized analytics.
+        self::send_refund_to_backend( $order_id );
+    }
+
+    /**
+     * Send refund data to the backend API.
+     *
+     * Non-blocking: failures are logged but do not affect local tracking.
+     *
+     * @param int $order_id Order ID.
+     */
+    private static function send_refund_to_backend( $order_id ) {
+        try {
+            $api = new PREVIEW_AI_Api();
+            $api->record_refund( $order_id );
+        } catch ( \Exception $e ) {
+            PREVIEW_AI_Logger::error( 'Failed to send refund to backend', array(
+                'order_id' => $order_id,
+                'error'    => $e->getMessage(),
+            ) );
+        }
     }
 
     /**
