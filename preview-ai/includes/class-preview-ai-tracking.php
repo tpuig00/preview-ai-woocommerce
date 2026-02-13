@@ -306,6 +306,10 @@ class PREVIEW_AI_Tracking {
      * @param array       $converted_items Items attributed to try-on.
      */
     private static function send_conversion_to_backend( $session_id, $order_id, $order_total, $order, $converted_items ) {
+        if ( ! get_option( 'preview_ai_analytics_enabled', 0 ) ) {
+            return;
+        }
+
         try {
             $api = new PREVIEW_AI_Api();
 
@@ -385,6 +389,10 @@ class PREVIEW_AI_Tracking {
      * @param int $order_id Order ID.
      */
     private static function send_refund_to_backend( $order_id ) {
+        if ( ! get_option( 'preview_ai_analytics_enabled', 0 ) ) {
+            return;
+        }
+
         try {
             $api = new PREVIEW_AI_Api();
             $api->record_refund( $order_id );

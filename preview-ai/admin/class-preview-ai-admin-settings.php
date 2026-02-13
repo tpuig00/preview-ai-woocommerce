@@ -25,6 +25,7 @@ class PREVIEW_AI_Admin_Settings {
 				'default'           => 8,
 			)
 		);
+		register_setting( 'preview_ai_general_settings', 'preview_ai_analytics_enabled', 'absint' );
 
 		// Widget settings group.
 		register_setting( 'preview_ai_widget_settings', 'preview_ai_display_mode', 'sanitize_key' );

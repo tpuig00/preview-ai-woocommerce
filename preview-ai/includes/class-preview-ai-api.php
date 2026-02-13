@@ -222,7 +222,7 @@ class PREVIEW_AI_Api {
 			'product_subtype' => $product_data['subtype'],
 			'garment_type'    => $product_data['garment_type'] ?? null,
 			'image_analysis'  => $product_data['image_analysis'],
-			'session_id'      => PREVIEW_AI_Tracking::get_session_id(),
+			'session_id'      => get_option( 'preview_ai_analytics_enabled', 0 ) ? PREVIEW_AI_Tracking::get_session_id() : null,
 		), 120 );
 
 		if ( ! is_wp_error( $result ) ) {

@@ -230,6 +230,30 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 						</td>
 					</tr>
 
+					<!-- Advanced Analytics -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_analytics_enabled">
+								<?php esc_html_e( 'Advanced Analytics', 'preview-ai' ); ?>
+							</label>
+						</th>
+						<td>
+							<label class="preview-ai-toggle">
+								<input type="hidden" name="preview_ai_analytics_enabled" value="0" />
+								<input type="checkbox" 
+									   id="preview_ai_analytics_enabled" 
+									   name="preview_ai_analytics_enabled" 
+									   value="1" 
+									   <?php checked( 1, get_option( 'preview_ai_analytics_enabled', 0 ) ); ?> 
+								/>
+								<span class="preview-ai-toggle__slider"></span>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Send anonymized conversion data (order ID, total, currency and product IDs) to Preview AI to measure how virtual try-on impacts your sales. No customer personal data is shared.', 'preview-ai' ); ?>
+							</p>
+						</td>
+					</tr>
+
 					<!-- API Key -->
 					<tr>
 						<th scope="row">
