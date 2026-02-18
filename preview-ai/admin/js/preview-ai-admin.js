@@ -331,6 +331,87 @@
 			} );
 		}
 
+		// ================================
+		// Deactivation Feedback Modal
+		// ================================
+
+		var $deactivateLink = $( '#the-list [data-slug="' + ( previewAiAdmin.pluginSlug || 'preview-ai' ) + '"] .deactivate a' );
+
+		if ( $deactivateLink.length ) {
+			var deactivateUrl = $deactivateLink.attr( 'href' );
+			var $modal = $( '#preview-ai-deactivation-modal' );
+			var $form = $( '#preview-ai-deactivation-form' );
+			var $details = $( '#preview-ai-deactivation-details' );
+			var $submitBtn = $( '#preview-ai-deactivation-submit' );
+
+			$deactivateLink.on( 'click', function( e ) {
+				e.preventDefault();
+				$modal.fadeIn( 200 );
+			} );
+
+			// Close modal.
+			$( '#preview-ai-deactivation-close' ).on( 'click', function() {
+				$modal.fadeOut( 150 );
+			} );
+
+			// Close on overlay click.
+			$modal.on( 'click', function( e ) {
+				if ( $( e.target ).is( $modal ) ) {
+					$modal.fadeOut( 150 );
+				}
+			} );
+
+			// Close on Esc key.
+			$( document ).on( 'keydown', function( e ) {
+				if ( 27 === e.keyCode && $modal.is( ':visible' ) ) {
+					$modal.fadeOut( 150 );
+				}
+			} );
+
+			// Show/hide details textarea based on selection.
+			$form.on( 'change', 'input[name="preview_ai_deactivation_reason"]', function() {
+				$submitBtn.prop( 'disabled', false );
+				var val = $( this ).val();
+				if ( 'other' === val || 'not_working' === val || 'not_compatible' === val ) {
+					$details.slideDown( 150 );
+				} else {
+					$details.slideUp( 150 );
+				}
+			} );
+
+			// Skip & Deactivate.
+			$( '#preview-ai-deactivation-skip' ).on( 'click', function() {
+				window.location.href = deactivateUrl;
+			} );
+
+			// Submit & Deactivate.
+			$form.on( 'submit', function( e ) {
+				e.preventDefault();
+				var reason = $form.find( 'input[name="preview_ai_deactivation_reason"]:checked' ).val();
+
+				if ( ! reason ) {
+					window.location.href = deactivateUrl;
+					return;
+				}
+
+				$submitBtn.prop( 'disabled', true ).text( previewAiAdmin.i18n.deactivating || 'Deactivating...' );
+
+				$.ajax( {
+					url: previewAiAdmin.ajaxUrl,
+					type: 'POST',
+					data: {
+						action: 'preview_ai_deactivation_feedback',
+						nonce: previewAiAdmin.deactivationNonce,
+						reason: reason,
+						details: $details.val() || ''
+					},
+					complete: function() {
+						window.location.href = deactivateUrl;
+					}
+				} );
+			} );
+		}
+
 	});
 
 })( jQuery );

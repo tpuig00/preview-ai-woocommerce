@@ -239,6 +239,10 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_preview_ai_reverify_compatibility', $plugin_admin, 'handle_reverify_compatibility' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_toggle_product', $plugin_admin, 'handle_toggle_product' );
 
+		// Deactivation feedback modal.
+		$this->loader->add_action( 'admin_footer', $plugin_admin, 'render_deactivation_modal' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_deactivation_feedback', $plugin_admin, 'handle_deactivation_feedback' );
+
 		// Action Scheduler hook for background catalog processing.
 		$this->loader->add_action( 'preview_ai_process_catalog_batch', $plugin_admin, 'process_catalog_batch' );
 

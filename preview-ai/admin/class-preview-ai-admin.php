@@ -227,6 +227,119 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
+	 * Render the deactivation feedback modal on the plugins page.
+	 */
+	public function render_deactivation_modal() {
+		$screen = get_current_screen();
+		if ( ! $screen || 'plugins' !== $screen->id ) {
+			return;
+		}
+		?>
+		<div id="preview-ai-deactivation-modal" class="preview-ai-deactivation-overlay" style="display:none;">
+			<div class="preview-ai-deactivation-modal">
+				<button type="button" class="preview-ai-deactivation-close" id="preview-ai-deactivation-close">&times;</button>
+				<div class="preview-ai-deactivation-header">
+					<div class="preview-ai-deactivation-icon">
+						<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+					</div>
+					<h3><?php esc_html_e( 'Quick feedback before you go', 'preview-ai' ); ?></h3>
+					<p><?php esc_html_e( 'We\'d love to know why you\'re deactivating so we can improve.', 'preview-ai' ); ?></p>
+				</div>
+				<form id="preview-ai-deactivation-form">
+					<ul class="preview-ai-deactivation-reasons">
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="too_complex">
+								<span><?php esc_html_e( 'Too complex to set up or use', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="not_working">
+								<span><?php esc_html_e( 'Doesn\'t work as expected', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="not_compatible">
+								<span><?php esc_html_e( 'Not compatible with my store/theme', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="too_expensive">
+								<span><?php esc_html_e( 'Too expensive', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="just_testing">
+								<span><?php esc_html_e( 'Just testing, not ready yet', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="found_alternative">
+								<span><?php esc_html_e( 'Found a better alternative', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="ai_quality">
+								<span><?php esc_html_e( 'AI-generated images aren\'t good enough', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+						<li>
+							<label>
+								<input type="radio" name="preview_ai_deactivation_reason" value="other">
+								<span><?php esc_html_e( 'Other', 'preview-ai' ); ?></span>
+							</label>
+						</li>
+					</ul>
+					<textarea id="preview-ai-deactivation-details" class="preview-ai-deactivation-details" rows="3" placeholder="<?php esc_attr_e( 'Any additional details? (optional)', 'preview-ai' ); ?>" style="display:none;"></textarea>
+					<div class="preview-ai-deactivation-actions">
+						<button type="button" class="button" id="preview-ai-deactivation-skip">
+							<?php esc_html_e( 'Skip & Deactivate', 'preview-ai' ); ?>
+						</button>
+						<button type="submit" class="button button-primary" id="preview-ai-deactivation-submit" disabled>
+							<?php esc_html_e( 'Submit & Deactivate', 'preview-ai' ); ?>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Handle deactivation feedback AJAX request.
+	 */
+	public function handle_deactivation_feedback() {
+		check_ajax_referer( 'preview_ai_deactivation_feedback', 'nonce' );
+
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
+		}
+
+		$reason  = isset( $_POST['reason'] ) ? sanitize_text_field( wp_unslash( $_POST['reason'] ) ) : '';
+		$details = isset( $_POST['details'] ) ? sanitize_textarea_field( wp_unslash( $_POST['details'] ) ) : '';
+
+		if ( empty( $reason ) ) {
+			wp_send_json_error( array( 'message' => __( 'No reason provided.', 'preview-ai' ) ) );
+		}
+
+		$api = new PREVIEW_AI_Api();
+		$api->request( 'feedback/deactivation', array(
+			'reason'         => $reason,
+			'details'        => $details,
+			'plugin_version' => PREVIEW_AI_VERSION,
+			'site_url'       => home_url(),
+		), 5 );
+
+		wp_send_json_success();
+	}
+
+	/**
 	 * Register the stylesheets for the admin area.
 	 */
 	public function enqueue_styles() {
@@ -307,13 +420,15 @@ class PREVIEW_AI_Admin {
 			$this->plugin_name,
 			'previewAiAdmin',
 			array(
-				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
-				'nonce'              => wp_create_nonce( 'preview_ai_learn_catalog' ),
-				'verifyNonce'        => wp_create_nonce( 'preview_ai_verify_api_key' ),
-				'dismissNonce'       => wp_create_nonce( 'preview_ai_dismiss_notice' ),
-				'registerNonce'      => wp_create_nonce( 'preview_ai_register_site' ),
-				'toggleProductNonce' => wp_create_nonce( 'preview_ai_toggle_product' ),
-				'i18n'               => array(
+				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
+				'nonce'                 => wp_create_nonce( 'preview_ai_learn_catalog' ),
+				'verifyNonce'           => wp_create_nonce( 'preview_ai_verify_api_key' ),
+				'dismissNonce'          => wp_create_nonce( 'preview_ai_dismiss_notice' ),
+				'registerNonce'         => wp_create_nonce( 'preview_ai_register_site' ),
+				'toggleProductNonce'    => wp_create_nonce( 'preview_ai_toggle_product' ),
+				'deactivationNonce'     => wp_create_nonce( 'preview_ai_deactivation_feedback' ),
+				'pluginSlug'            => 'preview-ai',
+				'i18n'                  => array(
 					'error'        => __( 'An error occurred.', 'preview-ai' ),
 					'apiPending'   => __( '(API integration pending)', 'preview-ai' ),
 					'activating'   => __( 'Activating...', 'preview-ai' ),

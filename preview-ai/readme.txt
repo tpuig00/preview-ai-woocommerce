@@ -162,6 +162,7 @@ Preview AI currently supports:
 = 1.2.1 =
 – Renamed plugin to "Virtual Try-On for WooCommerce – Preview AI"
 – Added WooCommerce as a required plugin dependency (Requires Plugins header)
+– Added optional deactivation feedback survey to help us improve the plugin
 
 = 1.2.0 =
 – Added optional Advanced Analytics (opt-in): link try-on usage to purchases for accurate ROI measurement.
@@ -197,7 +198,7 @@ Preview AI currently supports:
 == Upgrade Notice ==
 
 = 1.2.1 =
-Plugin renamed and WooCommerce declared as required dependency.
+Plugin renamed, WooCommerce declared as required dependency, and added deactivation feedback survey.
 
 = 1.2.0 =
 Adds end-to-end conversion attribution: see exactly how virtual try-on impacts your sales.
