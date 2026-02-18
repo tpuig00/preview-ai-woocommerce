@@ -1,4 +1,4 @@
-=== Preview AI – Virtual Try-On for WooCommerce ===
+=== Virtual Try-On for WooCommerce – Preview AI ===
 Contributors: previewai
 Donate link: https://previewai.app/
 Tags: virtual try-on, ai, woocommerce, ecommerce, conversion
@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.5.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -159,6 +159,10 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.2.1 =
+– Renamed plugin to "Virtual Try-On for WooCommerce – Preview AI"
+– Added WooCommerce as a required plugin dependency (Requires Plugins header)
+
 = 1.2.0 =
 – Added optional Advanced Analytics (opt-in): link try-on usage to purchases for accurate ROI measurement.
 – Session attribution: each virtual try-on session can be tracked end-to-end, from preview to checkout.
@@ -182,7 +186,7 @@ Preview AI currently supports:
 – Default limit: 8 previews per visitor per week
 
 = 1.0.1 =
-– Updated plugin name to "Preview AI – Virtual Try-On for WooCommerce"
+– Updated plugin name to "Virtual Try-On for WooCommerce – Preview AI"
 
 = 1.0.0 =
 – Initial release
@@ -191,6 +195,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Plugin renamed and WooCommerce declared as required dependency.
 
 = 1.2.0 =
 Adds end-to-end conversion attribution: see exactly how virtual try-on impacts your sales.
