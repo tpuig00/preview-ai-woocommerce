@@ -210,7 +210,8 @@ class Preview_Ai {
 		$this->loader->add_filter( 'woocommerce_product_data_tabs', $plugin_admin, 'add_product_data_tab' );
 		$this->loader->add_action( 'woocommerce_product_data_panels', $plugin_admin, 'render_product_data_panel' );
 		$this->loader->add_action( 'woocommerce_process_product_meta', $plugin_admin, 'save_product_data' );
-		$this->loader->add_action( 'transition_post_status', $plugin_admin, 'maybe_analyze_on_publish', 10, 3 );
+		$this->loader->add_action( 'woocommerce_update_product', $plugin_admin, 'maybe_analyze_on_publish', 20, 2 );
+		$this->loader->add_action( 'woocommerce_new_product', $plugin_admin, 'maybe_analyze_on_publish', 20, 2 );
 
 		// Product list column.
 		$this->loader->add_filter( 'manage_edit-product_columns', $plugin_admin, 'add_product_column' );

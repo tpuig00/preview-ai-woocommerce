@@ -355,18 +355,20 @@ class PREVIEW_AI_Admin_Product {
 			wp_send_json_success( $this->get_product_status( $product_id ) );
 		}
 
-		// If enabling, call backend for classification and analysis.
-		$result = $this->analyze_single_product( $product );
+		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
 
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		// Only call backend if product hasn't been analyzed yet.
+		if ( '' === $supported ) {
+			$result = $this->analyze_single_product( $product );
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+			}
+
+			$this->save_single_product_classification( $product_id, $result );
+			$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
 		}
 
-		// Save classification.
-		$this->save_single_product_classification( $product_id, $result );
-
-		// Check if supported.
-		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
 		if ( 'no' === $supported ) {
 			wp_send_json_error( array( 'message' => __( 'Product type not supported.', 'preview-ai' ) ) );
 		}
@@ -619,25 +621,26 @@ class PREVIEW_AI_Admin_Product {
 	/**
 	 * Auto-analyze product when first published so Preview AI activates automatically.
 	 *
-	 * @param string  $new_status New post status.
-	 * @param string  $old_status Old post status.
-	 * @param WP_Post $post       Post object.
+	 * Hooked to woocommerce_update_product which fires after all product data
+	 * (including images) is fully saved to the database.
+	 *
+	 * @param int        $product_id Product ID.
+	 * @param WC_Product $product    Product object.
 	 */
-	public function maybe_analyze_on_publish( $new_status, $old_status, $post ) {
-		if ( 'publish' !== $new_status || 'publish' === $old_status ) {
+	public function maybe_analyze_on_publish( $product_id, $product = null ) {
+		if ( ! $product ) {
+			$product = wc_get_product( $product_id );
+		}
+
+		if ( ! $product || 'publish' !== $product->get_status() ) {
 			return;
 		}
 
-		if ( 'product' !== $post->post_type ) {
+		if ( ! $product->get_image_id() ) {
 			return;
 		}
 
-		$product = wc_get_product( $post->ID );
-		if ( ! $product || ! $product->get_image_id() ) {
-			return;
-		}
-
-		$supported = get_post_meta( $post->ID, '_preview_ai_supported', true );
+		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
 		if ( '' !== $supported ) {
 			return;
 		}
@@ -649,7 +652,11 @@ class PREVIEW_AI_Admin_Product {
 				$catalog = new PREVIEW_AI_Admin_Catalog();
 				$catalog->save_catalog_classifications( $result );
 			} else {
-				$this->save_single_product_classification( $post->ID, $result );
+				$this->save_single_product_classification( $product_id, $result );
+			}
+
+			if ( 'yes' === get_post_meta( $product_id, '_preview_ai_supported', true ) ) {
+				update_post_meta( $product_id, '_preview_ai_enabled', 'yes' );
 			}
 		}
 	}
@@ -848,7 +855,6 @@ class PREVIEW_AI_Admin_Product {
 			$not_supported += $result['not_supported'];
 
 			if ( ! empty( $result['error_message'] ) ) {
-				// Backend error (e.g. 405 free tier) — don't schedule remaining.
 				$error_message = $result['error_message'];
 			} elseif ( ! empty( $need_analysis ) ) {
 				// First batch succeeded and there are more products — schedule in background.
@@ -1128,13 +1134,12 @@ class PREVIEW_AI_Admin_Product {
 				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
 				sprintf(
 					/* translators: %d: number of products disabled */
-					esc_html( _n(
+					esc_html( sprintf( _n(
 						'Preview AI: %d product disabled.',
 						'Preview AI: %d products disabled.',
 						$count,
 						'preview-ai'
-					) ),
-					$count
+					), $count ) )
 				)
 			);
 			return;
@@ -1175,6 +1180,7 @@ class PREVIEW_AI_Admin_Product {
 
 		$message = '';
 		if ( ! empty( $parts ) ) {
+			/* translators: %s: list of results */
 			$message = sprintf( __( 'Preview AI: %s.', 'preview-ai' ), implode( ', ', $parts ) );
 		}
 

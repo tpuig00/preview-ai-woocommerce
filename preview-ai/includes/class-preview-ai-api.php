@@ -291,9 +291,7 @@ class PREVIEW_AI_Api {
 	/**
 	 * Activate products via bulk action (classify unanalyzed products).
 	 *
-	 * Uses the /catalog/activate endpoint which:
-	 * - Always blocks free tier (405).
-	 * - Has no product count limits for paid tiers.
+	 * Uses the /catalog/activate endpoint.
 	 *
 	 * @param array $products_data Array of products with id, title, categories, tags, thumbnail_url.
 	 * @return array|WP_Error      Response data with classifications or error.
