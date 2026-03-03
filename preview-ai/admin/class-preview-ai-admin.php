@@ -328,13 +328,17 @@ class PREVIEW_AI_Admin {
 			wp_send_json_error( array( 'message' => __( 'No reason provided.', 'preview-ai' ) ) );
 		}
 
-		$api = new PREVIEW_AI_Api();
-		$api->request( 'feedback/deactivation', array(
-			'reason'         => $reason,
-			'details'        => $details,
-			'plugin_version' => PREVIEW_AI_VERSION,
-			'site_url'       => home_url(),
-		), 5 );
+		$api_key = get_option( 'preview_ai_api_key', '' );
+
+		if ( ! empty( $api_key ) ) {
+			$api = new PREVIEW_AI_Api();
+			$api->request( 'feedback/deactivation', array(
+				'reason'         => $reason,
+				'details'        => $details,
+				'plugin_version' => PREVIEW_AI_VERSION,
+				'site_url'       => home_url(),
+			), 5 );
+		}
 
 		wp_send_json_success();
 	}
