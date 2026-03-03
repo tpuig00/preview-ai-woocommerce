@@ -617,6 +617,44 @@ class PREVIEW_AI_Admin_Product {
 	}
 
 	/**
+	 * Auto-analyze product when first published so Preview AI activates automatically.
+	 *
+	 * @param string  $new_status New post status.
+	 * @param string  $old_status Old post status.
+	 * @param WP_Post $post       Post object.
+	 */
+	public function maybe_analyze_on_publish( $new_status, $old_status, $post ) {
+		if ( 'publish' !== $new_status || 'publish' === $old_status ) {
+			return;
+		}
+
+		if ( 'product' !== $post->post_type ) {
+			return;
+		}
+
+		$product = wc_get_product( $post->ID );
+		if ( ! $product || ! $product->get_image_id() ) {
+			return;
+		}
+
+		$supported = get_post_meta( $post->ID, '_preview_ai_supported', true );
+		if ( '' !== $supported ) {
+			return;
+		}
+
+		$result = $this->analyze_single_product( $product );
+
+		if ( ! is_wp_error( $result ) ) {
+			if ( isset( $result['classifications'] ) ) {
+				$catalog = new PREVIEW_AI_Admin_Catalog();
+				$catalog->save_catalog_classifications( $result );
+			} else {
+				$this->save_single_product_classification( $post->ID, $result );
+			}
+		}
+	}
+
+	/**
 	 * Add Preview AI column to product list.
 	 */
 	public function add_product_column( $columns ) {

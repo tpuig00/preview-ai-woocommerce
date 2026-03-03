@@ -124,6 +124,10 @@ class PREVIEW_AI_Admin {
 		$this->product->save_product_data( $post_id );
 	}
 
+	public function maybe_analyze_on_publish( $new_status, $old_status, $post ) {
+		$this->product->maybe_analyze_on_publish( $new_status, $old_status, $post );
+	}
+
 	public function add_product_column( $columns ) {
 		return $this->product->add_product_column( $columns );
 	}
