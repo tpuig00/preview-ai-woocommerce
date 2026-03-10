@@ -175,11 +175,6 @@ class PREVIEW_AI_Public {
 	 * @since 1.0.0
 	 */
 	public function render_widget() {
-		// Check if widget is available (API key + tokens).
-		if ( ! PREVIEW_AI_Api::is_widget_available() ) {
-			return;
-		}
-
 		if ( ! function_exists( 'is_product' ) || ! is_product() ) {
 			return;
 		}
@@ -213,11 +208,6 @@ class PREVIEW_AI_Public {
 	 * @return string HTML output.
 	 */
 	public static function render_widget_output( $product_id, $overrides = array() ) {
-		// Check if widget is available (API key + tokens).
-		if ( ! PREVIEW_AI_Api::is_widget_available() ) {
-			return '';
-		}
-
 		if ( ! $product_id ) {
 			return '';
 		}

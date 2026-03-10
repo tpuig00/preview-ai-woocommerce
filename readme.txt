@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.5.1
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -159,6 +159,9 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.3.1 =
+– Fixed widget visibility: the try-on button no longer disappears due to account status changes. Errors are shown at generation time instead.
+
 = 1.3.0 =
 – Added automatic product analysis on publish: Preview AI now activates automatically for supported products when they are first published.
 – Improved onboarding experience by reducing manual steps for new products.
@@ -200,6 +203,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.3.1 =
+Fixed: try-on button no longer disappears silently when account status changes.
 
 = 1.3.0 =
 Automatic product analysis on publish: Preview AI now activates automatically for supported products when they are first published.
