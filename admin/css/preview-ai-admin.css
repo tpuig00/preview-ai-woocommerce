@@ -581,6 +581,57 @@
 	color: #8c8f94;
 }
 
+/* Upgrade Banner */
+.preview-ai-upgrade-banner {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin-top: 16px;
+	padding: 16px 20px;
+	background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+	border: 1px solid #c7d2fe;
+	border-radius: 8px;
+}
+
+.preview-ai-upgrade-banner__icon .dashicons {
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+	color: #4f46e5;
+}
+
+.preview-ai-upgrade-banner__body {
+	flex: 1;
+}
+
+.preview-ai-upgrade-banner__body strong {
+	display: block;
+	font-size: 13px;
+	color: #1e1b4b;
+	margin-bottom: 2px;
+}
+
+.preview-ai-upgrade-banner__body p {
+	margin: 0;
+	font-size: 12px;
+	color: #4338ca;
+	line-height: 1.4;
+}
+
+.preview-ai-upgrade-banner__btn {
+	white-space: nowrap;
+	display: inline-flex !important;
+	align-items: center;
+	gap: 4px;
+}
+
+.preview-ai-upgrade-banner__btn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	line-height: 28px;
+}
+
 /* Analyze & Enable Catalog Section */
 .preview-ai-learn-catalog {
 	margin-top: 30px;

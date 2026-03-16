@@ -319,9 +319,28 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 										<span class="pai-detail-label"><?php esc_html_e( 'Domain:', 'preview-ai' ); ?></span>
 										<span id="pai-status-domain"><?php echo esc_html( $preview_ai_status['domain'] ?? '—' ); ?></span>
 									</div>
-								</div>
 							</div>
-							
+						</div>
+
+							<?php
+							$preview_ai_recommended_plan = ! empty( $preview_ai_status['recomended_plan'] ) ? $preview_ai_status['recomended_plan'] : '';
+							if ( $preview_ai_recommended_plan ) :
+							?>
+							<div class="preview-ai-upgrade-banner">
+								<div class="preview-ai-upgrade-banner__icon">
+									<span class="dashicons dashicons-superhero-alt"></span>
+								</div>
+								<div class="preview-ai-upgrade-banner__body">
+									<strong><?php esc_html_e( "Don't let your customers run out of try-ons", 'preview-ai' ); ?></strong>
+									<p><?php esc_html_e( 'Your previews are running low. Upgrade so every shopper can see it on themselves before buying.', 'preview-ai' ); ?></p>
+								</div>
+								<a href="<?php echo esc_url( $preview_ai_recommended_plan ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary preview-ai-upgrade-banner__btn">
+									<?php esc_html_e( 'Get More Previews', 'preview-ai' ); ?>
+									<span class="dashicons dashicons-external"></span>
+								</a>
+							</div>
+							<?php endif; ?>
+
 							<input type="hidden" id="preview_ai_api_key" name="preview_ai_api_key" value="<?php echo esc_attr( get_option( 'preview_ai_api_key', '' ) ); ?>" />
 							
 						</td>

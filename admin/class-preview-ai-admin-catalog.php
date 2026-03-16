@@ -180,6 +180,10 @@ class PREVIEW_AI_Admin_Catalog {
 		if ( ! is_wp_error( $result ) ) {
 			$stats = $this->save_catalog_classifications( $result );
 
+			if ( $stats['configured'] > 0 ) {
+				update_option( 'preview_ai_enabled', 1 );
+			}
+
 			$progress['processed']       += count( $batch );
 			$progress['configured']      += $stats['configured'];
 			$progress['not_supported']   += $stats['not_supported'];
