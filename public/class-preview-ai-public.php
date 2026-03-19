@@ -191,10 +191,6 @@ class PREVIEW_AI_Public {
 			return;
 		}
 
-		if ( ! self::is_enabled_for_product( $product->get_id() ) ) {
-			return;
-		}
-
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML template output; all dynamic values escaped with esc_html/esc_attr/esc_url in preview-ai-public-display.php.
 		echo self::render_widget_output( $product->get_id() );
 	}
@@ -208,7 +204,7 @@ class PREVIEW_AI_Public {
 	 * @return string HTML output.
 	 */
 	public static function render_widget_output( $product_id, $overrides = array() ) {
-		if ( ! $product_id ) {
+		if ( ! $product_id || ! self::is_enabled_for_product( $product_id ) ) {
 			return '';
 		}
 
