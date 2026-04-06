@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.5.1
-Stable tag: 1.3.2
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -159,6 +159,9 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.4.0 =
+– Stable release. Sends the WordPress site locale on registration so the Preview AI service can align transactional emails with the store language.
+
 = 1.3.2 =
 – Added smart plan recommendation: the settings page now shows a contextual upgrade suggestion when your monthly previews are running low, so your customers never miss a try-on.
 
@@ -206,6 +209,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Stable release: registration now includes site locale for service email language alignment.
 
 = 1.3.2 =
 New: contextual upgrade banner when previews are running low.

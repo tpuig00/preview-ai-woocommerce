@@ -393,6 +393,7 @@ class PREVIEW_AI_Api {
 		// Get site info for registration.
 		$site_url = home_url();
 		$domain   = wp_parse_url( $site_url, PHP_URL_HOST );
+		$locale   = get_locale();
 
 		global $wp_version;
 
@@ -409,6 +410,7 @@ class PREVIEW_AI_Api {
 					'email'          => $email,
 					'domain'         => $domain,
 					'site_url'       => $site_url,
+					'locale'         => $locale,
 					'wp_version'     => $wp_version,
 					'plugin_version' => PREVIEW_AI_VERSION,
 				) ),
@@ -420,6 +422,7 @@ class PREVIEW_AI_Api {
 			'email' => $email,
 			'domain' => $domain,
 			'site_url' => $site_url,
+			'locale' => $locale,
 			'wp_version' => $wp_version,
 			'plugin_version' => PREVIEW_AI_VERSION,
 			'response' => $response,
