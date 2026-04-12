@@ -319,6 +319,18 @@ class PREVIEW_AI_Api {
 	}
 
 	/**
+	 * Refresh expired signed URLs for stored try-on images.
+	 *
+	 * @param array $blob_paths List of blob paths to refresh.
+	 * @return array|WP_Error   Map of blob_path → fresh URL, or error.
+	 */
+	public function refresh_urls( $blob_paths ) {
+		return $this->request( 'generate/refresh-urls', array(
+			'blob_paths' => $blob_paths,
+		), 10 );
+	}
+
+	/**
 	 * Verify API key and get account status.
 	 *
 	 * @return array|WP_Error Account status or error.

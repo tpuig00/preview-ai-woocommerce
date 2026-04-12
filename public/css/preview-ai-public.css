@@ -1453,6 +1453,30 @@ a.preview-ai-action-btn--tertiary:hover {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Expired Image Placeholder
+───────────────────────────────────────────────────────────── */
+.preview-ai-tryon-expired {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	height: 100%;
+	background: var(--pai-bg-soft);
+	color: var(--pai-text-muted);
+}
+
+.preview-ai-tryon-expired svg {
+	opacity: 0.4;
+}
+
+.preview-ai-tryon-expired span {
+	font-size: 13px !important;
+	font-weight: 500 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
    Animations
 ───────────────────────────────────────────────────────────── */
 @keyframes pai-fade-in {

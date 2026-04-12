@@ -283,6 +283,7 @@
 									PreviewAI.Storage.saveTryOn( {
 										id: Date.now().toString(),
 										generatedImageUrl: state.generatedImageUrl,
+										blobPath: res.data.blob_path || '',
 										productId: previewAiData.productId,
 										variationId: variationId,
 										productName: previewAiData.productName || '',

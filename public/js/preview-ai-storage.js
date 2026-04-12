@@ -138,6 +138,36 @@
 				} catch ( e ) {
 					// Ignore.
 				}
+			},
+
+			/**
+			 * Update signed URLs for try-ons matching the given blob paths.
+			 * Resets createdAt so they won't be considered stale again immediately.
+			 *
+			 * @param {Object} urlMap  { blobPath: newSignedUrl, ... }
+			 * @return {boolean} True if any entry was updated.
+			 */
+			updateTryOnUrls: function( urlMap ) {
+				try {
+					var tryOns = this.getTryOns();
+					var changed = false;
+
+					for ( var i = 0; i < tryOns.length; i++ ) {
+						var bp = tryOns[ i ].blobPath;
+						if ( bp && urlMap[ bp ] ) {
+							tryOns[ i ].generatedImageUrl = urlMap[ bp ];
+							tryOns[ i ].urlRefreshedAt = Date.now();
+							changed = true;
+						}
+					}
+
+					if ( changed ) {
+						localStorage.setItem( TRYONS_STORAGE_KEY, JSON.stringify( tryOns ) );
+					}
+					return changed;
+				} catch ( e ) {
+					return false;
+				}
 			}
 		};
 	})();

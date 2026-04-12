@@ -40,6 +40,31 @@ class PREVIEW_AI_Ajax {
 	}
 
 	/**
+	 * Refresh expired signed URLs for try-on images stored in the client.
+	 */
+	public function handle_refresh_urls() {
+		check_ajax_referer( 'preview_ai_ajax', 'nonce' );
+
+		$raw = isset( $_POST['blob_paths'] ) ? wp_unslash( $_POST['blob_paths'] ) : '';
+		$blob_paths = json_decode( $raw, true );
+
+		if ( ! is_array( $blob_paths ) || empty( $blob_paths ) ) {
+			wp_send_json_error( array( 'message' => __( 'No paths provided', 'preview-ai' ) ) );
+		}
+
+		$blob_paths = array_slice( array_values( $blob_paths ), 0, 10 );
+		$blob_paths = array_map( 'sanitize_text_field', $blob_paths );
+
+		$result = $this->api->refresh_urls( $blob_paths );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success( $result );
+	}
+
+	/**
 	 * Handle image upload and preview generation.
 	 */
 	public function handle_upload() {

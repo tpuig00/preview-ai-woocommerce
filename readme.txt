@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.5.1
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -159,6 +159,9 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.4.1 =
+– Fixed expired try-on images: saved looks now auto-refresh their signed URLs instead of showing broken images after 7 days.
+
 = 1.4.0 =
 – Stable release. Sends the WordPress site locale on registration so the Preview AI service can align transactional emails with the store language.
 
@@ -209,6 +212,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.4.1 =
+Fixed: saved try-on images no longer expire after 7 days. URLs are refreshed automatically.
 
 = 1.4.0 =
 Stable release: registration now includes site locale for service email language alignment.

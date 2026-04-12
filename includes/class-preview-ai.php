@@ -280,6 +280,8 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_upload', $ajax_handler, 'handle_upload' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_check', $ajax_handler, 'handle_check' );
 		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_check', $ajax_handler, 'handle_check' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_refresh_urls', $ajax_handler, 'handle_refresh_urls' );
+		$this->loader->add_action( 'wp_ajax_nopriv_preview_ai_refresh_urls', $ajax_handler, 'handle_refresh_urls' );
 
 		// Conversion tracking.
 		// Classic checkout.
