@@ -1,7 +1,7 @@
 === Virtual Try-On for WooCommerce – Preview AI ===
 Contributors: previewai
 Donate link: https://previewai.app/
-Tags: virtual try-on, ai, woocommerce, ecommerce, conversion
+Tags: virtual try-on, fashion, clothing, woocommerce, apparel
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
@@ -17,39 +17,29 @@ Virtual try-on for WooCommerce that helps fashion stores increase conversions an
 
 https://youtu.be/CvPFB16q24U
 
-Preview AI is an AI-powered Virtual Try-On plugin for WooCommerce that helps fashion stores increase conversion rates and reduce returns by allowing customers to preview how a product may look on them before buying 👕✨
+Preview AI is an AI-powered Virtual Try-On plugin for WooCommerce. Shoppers upload a photo and instantly see how a product looks on them — right on the product page, without leaving your store 👕✨
 
-With a simple “Virtual Try-On” button on your product pages, shoppers can upload a photo and generate a realistic visual preview directly within the product experience — without leaving your store or disrupting the checkout flow.
+Customers who use virtual try-on convert at **3× the rate** of those who don't.
 
-Preview AI is built to remove hesitation at the most critical moment of the buying journey: the product page.
+* 📈 **3× higher conversion** — shoppers who try on buy more
+* 🔄 **Fewer returns** — expectations match reality before checkout
+* ⏱️ **More time on site** — customers stay longer exploring products
+* 💰 **Higher average order value** — confidence drives bigger carts
 
-== Built to increase conversion on product pages 🚀 ==
+**[Try it yourself on the live demo →](https://demo.previewai.app/)**
 
-Many fashion shoppers hesitate not because of price, but because they can’t picture themselves wearing the product.
+== Why it works ==
 
-Preview AI addresses this hesitation by adding a visual confirmation layer that helps shoppers feel more confident in their decision before adding to cart.
+Most fashion shoppers hesitate not because of price, but because they can't picture themselves in the product. Preview AI removes that friction at the most critical moment — the product page.
 
-By giving customers a clearer expectation of how the product may look on them, Preview AI often leads to:
-* Higher add-to-cart rates
-* More confident purchases
-* Improved product page engagement
-
-== Reduce returns caused by uncertainty 📉 ==
-
-Returns in fashion ecommerce are often caused by unmet expectations around style and appearance.
-
-Preview AI helps reduce these returns by aligning expectations before purchase. Customers can visually assess how a garment may look on them, complementing your existing product photos and size charts.
-
-This leads to fewer surprise purchases and more intentional buying decisions — without claiming perfect fit or exact sizing.
+With a simple "Virtual Try-On" button, shoppers upload a photo and get a realistic AI-generated preview in seconds. No apps to install, no disruption to the checkout flow.
 
 == Benefits for merchants ==
 
-* 📈 Increase conversion rates on fashion product pages
-* 🔄 Reduce returns related to style and appearance uncertainty
-* 👀 Build shopper confidence without altering the checkout flow
-* ⚡ Keep your store fast with external AI processing
-* 🎨 Fully customize the Virtual Try-On button (color, text, placement)
-* 📊 Track performance with built-in analytics and conversion insights
+* 🎨 Fully customize the button (color, text, shape, position)
+* ⚡ Zero performance impact — AI runs on external infrastructure
+* 📊 Built-in analytics to measure try-on impact on sales
+* 🔌 Works with WooCommerce hooks, shortcode, or Elementor widget
 
 == Analytics & conversion tracking 📊 ==
 
@@ -134,7 +124,7 @@ Optional paid plans are available for stores with higher usage needs.
 
 AI image generation requires specialized infrastructure that typical web hosting environments do not provide.
 
-Using an external service allows Preview AI to deliver better results without affecting your site’s performance.
+Using an external service allows Preview AI to deliver better results without affecting your site's performance.
 
 = Are customer photos stored? =
 
