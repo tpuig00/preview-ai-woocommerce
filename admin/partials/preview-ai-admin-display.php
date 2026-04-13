@@ -13,35 +13,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; determines which settings tab to display, no data modification. Value sanitized with sanitize_key().
-$preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general';
+if ( ! isset( $preview_ai_current_page ) ) {
+	$preview_ai_current_page = 'general';
+}
 ?>
 
-<div class="wrap">
+<div class="wrap preview-ai-admin-page">
 	<h1><?php esc_html_e( 'Preview AI Settings', 'preview-ai' ); ?></h1>
 
-	<nav class="nav-tab-wrapper">
-		<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=general' ) ); ?>" 
-		   class="nav-tab <?php echo 'general' === $preview_ai_active_tab ? 'nav-tab-active' : ''; ?>">
-			<?php esc_html_e( 'General', 'preview-ai' ); ?>
-		</a>
-		<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=widget' ) ); ?>" 
-		   class="nav-tab <?php echo 'widget' === $preview_ai_active_tab ? 'nav-tab-active' : ''; ?>">
-			<?php esc_html_e( 'Widget', 'preview-ai' ); ?>
-		</a>
-		<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats' ) ); ?>" 
-		   class="nav-tab <?php echo 'stats' === $preview_ai_active_tab ? 'nav-tab-active' : ''; ?>">
-			<?php esc_html_e( 'Statistics', 'preview-ai' ); ?>
-		</a>
-
-		<a href="https://www.previewai.app/contact" target="_blank" class="nav-tab" style="margin-left: auto; border: none; color: #646970; font-weight: 400; font-size: 12px; opacity: 0.8;">
-			<span class="dashicons dashicons-sos" style="margin-right: 4px; font-size: 16px; width: 16px; height: 16px; vertical-align: middle;"></span>
-			<?php esc_html_e( 'Contact Support', 'preview-ai' ); ?>
-		</a>
-	</nav>
-
-	<?php if ( 'stats' === $preview_ai_active_tab ) : ?>
-		<!-- Statistics Tab -->
+	<?php if ( 'stats' === $preview_ai_current_page ) : ?>
+		<!-- Statistics Page -->
 		<?php
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; determines stats period filter, no data modification. Value sanitized with sanitize_key().
 		$preview_ai_period = isset( $_GET['period'] ) ? sanitize_key( wp_unslash( $_GET['period'] ) ) : '30days';
@@ -51,16 +32,16 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 		<div class="preview-ai-stats-header">
 			<label for="preview_ai_period"><?php esc_html_e( 'Period:', 'preview-ai' ); ?></label>
 			<select id="preview_ai_period" onchange="window.location.href=this.value;">
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=today' ) ); ?>" <?php selected( $preview_ai_period, 'today' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'admin.php?page=preview-ai-stats&period=today' ) ); ?>" <?php selected( $preview_ai_period, 'today' ); ?>>
 					<?php esc_html_e( 'Today', 'preview-ai' ); ?>
 				</option>
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=7days' ) ); ?>" <?php selected( $preview_ai_period, '7days' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'admin.php?page=preview-ai-stats&period=7days' ) ); ?>" <?php selected( $preview_ai_period, '7days' ); ?>>
 					<?php esc_html_e( 'Last 7 days', 'preview-ai' ); ?>
 				</option>
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=30days' ) ); ?>" <?php selected( $preview_ai_period, '30days' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'admin.php?page=preview-ai-stats&period=30days' ) ); ?>" <?php selected( $preview_ai_period, '30days' ); ?>>
 					<?php esc_html_e( 'Last 30 days', 'preview-ai' ); ?>
 				</option>
-				<option value="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai&tab=stats&period=all' ) ); ?>" <?php selected( $preview_ai_period, 'all' ); ?>>
+				<option value="<?php echo esc_url( admin_url( 'admin.php?page=preview-ai-stats&period=all' ) ); ?>" <?php selected( $preview_ai_period, 'all' ); ?>>
 					<?php esc_html_e( 'All time', 'preview-ai' ); ?>
 				</option>
 			</select>
@@ -178,10 +159,10 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 			</div>
 		</div>
 
-	<?php elseif ( 'general' === $preview_ai_active_tab ) : ?>
+	<?php elseif ( 'general' === $preview_ai_current_page ) : ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'preview_ai_general_settings' ); ?>
-			<!-- General Tab -->
+			<!-- General Page -->
 			<table class="form-table" role="presentation">
 				<tbody>
 					<!-- Enabled -->
@@ -356,7 +337,6 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 			$preview_ai_is_processing  = 'processing' === $preview_ai_catalog_status['status'];
 			$preview_ai_progress       = $preview_ai_catalog_status['progress'];
 
-			// Get compatibility status.
 			$preview_ai_preflight     = get_option( 'preview_ai_store_compatibility' );
 			$preview_ai_is_compatible = ! empty( $preview_ai_preflight ) ? $preview_ai_preflight['compatible'] : true;
 			?>
@@ -410,10 +390,10 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 			</div>
 		</form>
 
-	<?php elseif ( 'widget' === $preview_ai_active_tab ) : ?>
+	<?php elseif ( 'widget' === $preview_ai_current_page ) : ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'preview_ai_widget_settings' ); ?>
-			<!-- Widget Tab -->
+			<!-- Widget Page -->
 			<?php
 			$preview_ai_widget_settings = PREVIEW_AI_Admin::get_widget_settings();
 			$preview_ai_button_icons    = PREVIEW_AI_Admin::get_button_icons();
@@ -623,6 +603,51 @@ $preview_ai_active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET
 				</p>
 			</div>
 		</form>
+
+	<?php elseif ( 'products' === $preview_ai_current_page ) : ?>
+		<!-- Products Management Page -->
+
+		<!-- Manage by Category Section -->
+		<div class="preview-ai-category-manager">
+			<h2 class="preview-ai-catalog-title">
+				<?php esc_html_e( 'Manage by Category', 'preview-ai' ); ?>
+			</h2>
+			<p class="preview-ai-catalog-desc">
+				<?php esc_html_e( 'Enable or disable Preview AI for all products in a category. New products added to an enabled category will be automatically activated.', 'preview-ai' ); ?>
+			</p>
+
+			<div id="preview_ai_category_filter" style="margin-bottom: 12px;">
+				<input type="text" id="preview_ai_category_search" placeholder="<?php esc_attr_e( 'Search categories...', 'preview-ai' ); ?>" class="regular-text" style="max-width: 300px;" />
+			</div>
+
+			<div id="preview_ai_category_tree_container">
+				<div id="preview_ai_category_tree">
+					<span class="spinner is-active" style="float: none;"></span>
+					<?php esc_html_e( 'Loading categories...', 'preview-ai' ); ?>
+				</div>
+			</div>
+
+			<div id="preview_ai_category_notice" style="display: none; margin-top: 12px;"></div>
+		</div>
+
+		<!-- Bulk Actions Section -->
+		<div class="preview-ai-bulk-info">
+			<h2 class="preview-ai-catalog-title">
+				<?php esc_html_e( 'Bulk Actions', 'preview-ai' ); ?>
+			</h2>
+			<p class="preview-ai-catalog-desc">
+				<?php
+				printf(
+					/* translators: %s: link to WooCommerce products page */
+					esc_html__( 'You can enable or disable Preview AI for multiple products at once from the %s page. Select the products you want, choose "Enable Preview AI" or "Disable Preview AI" from the bulk actions dropdown, and click Apply.', 'preview-ai' ),
+					'<a href="' . esc_url( admin_url( 'edit.php?post_type=product' ) ) . '"><strong>' . esc_html__( 'WooCommerce Products', 'preview-ai' ) . '</strong></a>'
+				);
+				?>
+			</p>
+			<div class="preview-ai-bulk-screenshot">
+				<img src="<?php echo esc_url( plugin_dir_url( __DIR__ ) . 'img/bulk-actions.png' ); ?>" alt="<?php esc_attr_e( 'Bulk actions in WooCommerce product list', 'preview-ai' ); ?>" />
+			</div>
+		</div>
 	<?php endif; ?>
 
 	<div class="preview-ai-footer-help">

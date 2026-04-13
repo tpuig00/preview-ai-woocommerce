@@ -311,7 +311,7 @@
 							
 							// Redirect to settings page with onboarding flag.
 							setTimeout( function() {
-								window.location.href = 'edit.php?post_type=product&page=preview-ai&onboarding=complete';
+								window.location.href = 'admin.php?page=preview-ai&onboarding=complete';
 							}, 4000 );
 						} else {
 							// Show error inline.
@@ -330,6 +330,161 @@
 				} );
 			} );
 		}
+
+		// ================================
+		// Category Manager
+		// ================================
+
+		var $catTree = $( '#preview_ai_category_tree' );
+		var $catSearch = $( '#preview_ai_category_search' );
+		var $catNotice = $( '#preview_ai_category_notice' );
+
+		if ( $catTree.length && typeof previewAiAdmin !== 'undefined' && previewAiAdmin.toggleCategoryNonce ) {
+			loadCategoryTree();
+
+			$catSearch.on( 'input', function() {
+				var query = $( this ).val().toLowerCase();
+				$catTree.find( '.preview-ai-cat-item' ).each( function() {
+					var name = $( this ).data( 'name' ).toLowerCase();
+					$( this ).toggle( ! query || name.indexOf( query ) !== -1 );
+				} );
+			} );
+		}
+
+		function loadCategoryTree() {
+			$.ajax( {
+				url: previewAiAdmin.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'preview_ai_get_category_tree',
+					nonce: previewAiAdmin.toggleCategoryNonce
+				},
+				success: function( res ) {
+					if ( res.success && res.data.tree ) {
+						renderCategoryTree( res.data.tree );
+					} else {
+						$catTree.html( '<p>' + ( previewAiAdmin.i18n.error || 'Error' ) + '</p>' );
+					}
+				},
+				error: function() {
+					$catTree.html( '<p>' + ( previewAiAdmin.i18n.error || 'Error' ) + '</p>' );
+				}
+			} );
+		}
+
+		function renderCategoryTree( tree ) {
+			$catTree.empty();
+			if ( ! tree.length ) {
+				$catTree.html( '<p style="color:#646970;">No categories found.</p>' );
+				return;
+			}
+		var $table = $( '<table class="widefat striped" style="max-width:700px;">' );
+		$table.append(
+			'<thead><tr>' +
+			'<th>Category</th>' +
+			'<th style="text-align:center;width:100px;">Supported</th>' +
+			'<th style="text-align:center;width:160px;">Action</th>' +
+			'</tr></thead>'
+		);
+			var $tbody = $( '<tbody>' );
+			renderCategoryRows( $tbody, tree, 0 );
+			$table.append( $tbody );
+			$catTree.append( $table );
+		}
+
+		function renderCategoryRows( $tbody, items, depth ) {
+			for ( var i = 0; i < items.length; i++ ) {
+				var cat = items[ i ];
+				var indent = depth > 0 ? '<span style="padding-left:' + ( depth * 20 ) + 'px;display:inline-block;">— </span>' : '';
+				var ruleLabel = '';
+				if ( cat.rule === 'enabled' ) {
+					ruleLabel = '<span style="color:#00a32a;font-weight:500;">Enabled</span>';
+				} else if ( cat.rule === 'disabled' ) {
+					ruleLabel = '<span style="color:#d63638;font-weight:500;">Disabled</span>';
+				} else {
+					ruleLabel = '<span style="color:#646970;">Inherit</span>';
+				}
+
+				var $row = $( '<tr class="preview-ai-cat-item" data-name="' + escHtml( cat.name ) + '" data-id="' + cat.term_id + '">' );
+			$row.append( '<td>' + indent + escHtml( cat.name ) + ' ' + ruleLabel + '</td>' );
+			$row.append( '<td style="text-align:center;">' + cat.supported + ' / ' + cat.total + '</td>' );
+
+				var $actions = $( '<td style="text-align:center;">' );
+				var $enableBtn = $( '<button type="button" class="button button-small preview-ai-cat-enable" data-id="' + cat.term_id + '">Enable</button>' );
+				var $disableBtn = $( '<button type="button" class="button button-small preview-ai-cat-disable" data-id="' + cat.term_id + '">Disable</button>' );
+				var $inheritBtn = $( '<button type="button" class="button button-small preview-ai-cat-inherit" data-id="' + cat.term_id + '" title="Reset to inherit global setting" style="color:#646970;">×</button>' );
+
+				if ( cat.rule === 'enabled' ) {
+					$enableBtn.prop( 'disabled', true );
+				} else if ( cat.rule === 'disabled' ) {
+					$disableBtn.prop( 'disabled', true );
+				} else {
+					$inheritBtn.prop( 'disabled', true );
+				}
+
+				$actions.append( $enableBtn ).append( ' ' ).append( $disableBtn ).append( ' ' ).append( $inheritBtn );
+				$row.append( $actions );
+				$tbody.append( $row );
+
+				if ( cat.children && cat.children.length ) {
+					renderCategoryRows( $tbody, cat.children, depth + 1 );
+				}
+			}
+		}
+
+		function escHtml( str ) {
+			var div = document.createElement( 'div' );
+			div.appendChild( document.createTextNode( str ) );
+			return div.innerHTML;
+		}
+
+		function showCatNotice( message, type ) {
+			$catNotice.show().html(
+				'<div class="notice notice-' + ( type || 'success' ) + ' inline"><p>' + escHtml( message ) + '</p></div>'
+			);
+			setTimeout( function() {
+				$catNotice.fadeOut( 300 );
+			}, 6000 );
+		}
+
+		$( document ).on( 'click', '.preview-ai-cat-enable, .preview-ai-cat-disable, .preview-ai-cat-inherit', function() {
+			var $btn = $( this );
+			var catId = $btn.data( 'id' );
+			var action = 'inherit';
+			if ( $btn.hasClass( 'preview-ai-cat-enable' ) ) {
+				action = 'enable';
+			} else if ( $btn.hasClass( 'preview-ai-cat-disable' ) ) {
+				action = 'disable';
+			}
+
+			$btn.prop( 'disabled', true ).text( '...' );
+
+			$.ajax( {
+				url: previewAiAdmin.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'preview_ai_toggle_category',
+					nonce: previewAiAdmin.toggleCategoryNonce,
+					category_id: catId,
+					rule_action: action
+				},
+				success: function( res ) {
+					if ( res.success ) {
+						showCatNotice( res.data.message, 'success' );
+						if ( res.data.tree ) {
+							renderCategoryTree( res.data.tree );
+						}
+					} else {
+						showCatNotice( res.data.message || previewAiAdmin.i18n.error, 'error' );
+						$btn.prop( 'disabled', false );
+					}
+				},
+				error: function() {
+					showCatNotice( previewAiAdmin.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
+			} );
+		} );
 
 		// ================================
 		// Deactivation Feedback Modal

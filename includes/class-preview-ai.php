@@ -241,6 +241,10 @@ class Preview_Ai {
 		$this->loader->add_action( 'wp_ajax_preview_ai_reverify_compatibility', $plugin_admin, 'handle_reverify_compatibility' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_toggle_product', $plugin_admin, 'handle_toggle_product' );
 
+		// Category rules AJAX.
+		$this->loader->add_action( 'wp_ajax_preview_ai_toggle_category', $plugin_admin, 'handle_toggle_category' );
+		$this->loader->add_action( 'wp_ajax_preview_ai_get_category_tree', $plugin_admin, 'handle_get_category_tree' );
+
 		// Deactivation feedback modal.
 		$this->loader->add_action( 'admin_footer', $plugin_admin, 'render_deactivation_modal' );
 		$this->loader->add_action( 'wp_ajax_preview_ai_deactivation_feedback', $plugin_admin, 'handle_deactivation_feedback' );

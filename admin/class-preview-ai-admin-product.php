@@ -18,34 +18,48 @@ class PREVIEW_AI_Admin_Product {
 	}
 
 	/**
-	 * Render Preview AI tab content in Product Data.
+	 * Resolve the full Preview AI status for a product.
+	 *
+	 * Single source of truth used by the metabox, product list column,
+	 * AJAX toggle response, and the public-facing widget check.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array {
+	 *     @type bool   $is_enabled      Whether the widget is active for this product.
+	 *     @type bool   $was_analyzed     Whether the product has been classified.
+	 *     @type bool   $has_image        Whether the product has a featured image.
+	 *     @type string $supported        Raw meta value ('yes', 'no', or '').
+	 *     @type string $status_class     CSS class for the status badge.
+	 *     @type string $status_text      Human-readable status label.
+	 *     @type string $status_icon      HTML icon markup.
+	 *     @type bool   $toggle_disabled  Whether the toggle should be disabled.
+	 * }
 	 */
-	public function render_product_data_panel() {
-		global $post;
-		$product        = wc_get_product( $post->ID );
+	public static function resolve_product_status( $product_id ) {
+		$product        = wc_get_product( $product_id );
 		$has_image      = $product && $product->get_image_id();
-		$enabled        = get_post_meta( $post->ID, '_preview_ai_enabled', true );
-		$subtype        = get_post_meta( $post->ID, '_preview_ai_recommended_subtype', true );
-		$supported      = get_post_meta( $post->ID, '_preview_ai_supported', true );
+		$enabled        = get_post_meta( $product_id, '_preview_ai_enabled', true );
+		$supported      = get_post_meta( $product_id, '_preview_ai_supported', true );
 		$global_enabled = get_option( 'preview_ai_enabled', 0 );
-		$was_analyzed   = '' !== $supported; // Product has been processed by catalog.
+		$was_analyzed   = '' !== $supported;
 
-		// Determine current state.
 		$is_enabled = false;
 
-		// Can only be enabled if product was analyzed and is supported.
 		if ( $was_analyzed && 'yes' === $supported && $has_image ) {
 			if ( 'yes' === $enabled ) {
 				$is_enabled = true;
 			} elseif ( 'no' === $enabled ) {
 				$is_enabled = false;
 			} else {
-				// No explicit setting, use global.
-				$is_enabled = (bool) $global_enabled;
+				$category_rule = self::resolve_category_rule( $product_id );
+				if ( null !== $category_rule ) {
+					$is_enabled = 'enabled' === $category_rule;
+				} else {
+					$is_enabled = (bool) $global_enabled;
+				}
 			}
 		}
 
-		// Determine status for display.
 		if ( ! $has_image ) {
 			$status_class = 'preview-ai-col--disabled';
 			$status_text  = __( 'No Image', 'preview-ai' );
@@ -65,7 +79,6 @@ class PREVIEW_AI_Admin_Product {
 				$status_icon  = '—';
 			}
 		} else {
-			// Enabled.
 			if ( ! $was_analyzed ) {
 				$status_class = 'preview-ai-col--active';
 				$status_text  = __( 'Active (Pending Analysis)', 'preview-ai' );
@@ -76,6 +89,32 @@ class PREVIEW_AI_Admin_Product {
 				$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
 			}
 		}
+
+		return array(
+			'is_enabled'      => $is_enabled,
+			'was_analyzed'    => $was_analyzed,
+			'has_image'       => $has_image,
+			'supported'       => $supported,
+			'status_class'    => $status_class,
+			'status_text'     => $status_text,
+			'status_icon'     => $status_icon,
+			'toggle_disabled' => ! $has_image || 'no' === $supported,
+		);
+	}
+
+	/**
+	 * Render Preview AI tab content in Product Data.
+	 */
+	public function render_product_data_panel() {
+		global $post;
+		$status = self::resolve_product_status( $post->ID );
+
+		$is_enabled   = $status['is_enabled'];
+		$has_image    = $status['has_image'];
+		$supported    = $status['supported'];
+		$status_class = $status['status_class'];
+		$status_text  = $status['status_text'];
+		$status_icon  = $status['status_icon'];
 
 		?>
 		<div id="preview_ai_product_data" class="panel woocommerce_options_panel">
@@ -205,54 +244,11 @@ class PREVIEW_AI_Admin_Product {
 	 * Analyze a single product via backend API.
 	 */
 	public function analyze_single_product( $product ) {
-		$product_id     = $product->get_id();
-		$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
-		$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
-		$tags           = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
-		$tags_str       = is_array( $tags ) ? implode( ', ', $tags ) : '';
-		$thumbnail_id   = $product->get_image_id();
-		$thumbnail_url  = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
-
-		$product_data = array(
-			'id'                    => $product_id,
-			'title'                 => $product->get_name(),
-			'categories'            => $categories_str,
-			'tags'                  => $tags_str,
-			'thumbnail_url'         => $thumbnail_url,
-			'variations'            => array(),
-			'single_product'        => true
+		$product_data = PREVIEW_AI_Admin_Catalog::build_single_product_data(
+			$product,
+			true,
+			array( 'single_product' => true )
 		);
-
-		// Add variations with different images.
-		if ( $product->is_type( 'variable' ) ) {
-			$variation_ids = $product->get_children();
-			foreach ( $variation_ids as $variation_id ) {
-				$variation = wc_get_product( $variation_id );
-				if ( ! $variation ) {
-					continue;
-				}
-
-				// Skip out of stock variations.
-				if ( ! $variation->is_in_stock() ) {
-					continue;
-				}
-
-				// Skip already analyzed variations.
-				$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
-				if ( ! empty( $var_analysis ) ) {
-					continue;
-				}
-
-				$var_image_id = $variation->get_image_id();
-				if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
-					$var_thumbnail_url            = wp_get_attachment_url( $var_image_id );
-					$product_data['variations'][] = array(
-						'variation_id'  => $variation_id,
-						'thumbnail_url' => $var_thumbnail_url,
-					);
-				}
-			}
-		}
 
 		$api = new PREVIEW_AI_Api();
 		return $api->analyze_product( $product_data );
@@ -380,53 +376,10 @@ class PREVIEW_AI_Admin_Product {
 	}
 
 	/**
-	 * Get product status data for UI update.
+	 * Get product status data for UI update (AJAX responses).
 	 */
 	private function get_product_status( $product_id ) {
-		$product        = wc_get_product( $product_id );
-		$has_image      = $product && $product->get_image_id();
-		$enabled        = get_post_meta( $product_id, '_preview_ai_enabled', true );
-		$supported      = get_post_meta( $product_id, '_preview_ai_supported', true );
-		$global_enabled = get_option( 'preview_ai_enabled', 0 );
-		$was_analyzed   = '' !== $supported;
-
-		$is_enabled = false;
-		if ( $was_analyzed && 'yes' === $supported && $has_image ) {
-			if ( 'yes' === $enabled ) {
-				$is_enabled = true;
-			} elseif ( 'no' === $enabled ) {
-				$is_enabled = false;
-			} else {
-				$is_enabled = (bool) $global_enabled;
-			}
-		}
-
-		// Determine status.
-		if ( ! $has_image ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'No Image', 'preview-ai' );
-			$status_icon  = '—';
-		} elseif ( 'no' === $supported ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'Not Supported', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-warning"></span>';
-		} elseif ( ! $is_enabled ) {
-			$status_class = 'preview-ai-col--disabled';
-			$status_text  = __( 'Disabled', 'preview-ai' );
-			$status_icon  = '—';
-		} else {
-			$status_class = 'preview-ai-col--active';
-			$status_text  = __( 'Active', 'preview-ai' );
-			$status_icon  = '<span class="dashicons dashicons-visibility"></span>';
-		}
-
-		return array(
-			'is_enabled'      => $is_enabled,
-			'status_class'    => $status_class,
-			'status_text'     => $status_text,
-			'status_icon'     => $status_icon,
-			'toggle_disabled' => ! $has_image || 'no' === $supported,
-		);
+		return self::resolve_product_status( $product_id );
 	}
 
 	/**
@@ -656,7 +609,16 @@ class PREVIEW_AI_Admin_Product {
 			}
 
 			if ( 'yes' === get_post_meta( $product_id, '_preview_ai_supported', true ) ) {
-				update_post_meta( $product_id, '_preview_ai_enabled', 'yes' );
+				$category_rule = self::resolve_category_rule( $product_id );
+				if ( null !== $category_rule ) {
+					$should_enable = 'enabled' === $category_rule;
+				} else {
+					$should_enable = (bool) get_option( 'preview_ai_enabled', 0 );
+				}
+
+				if ( $should_enable ) {
+					update_post_meta( $product_id, '_preview_ai_enabled', 'yes' );
+				}
 			}
 		}
 	}
@@ -679,55 +641,18 @@ class PREVIEW_AI_Admin_Product {
 	 * Render Preview AI column content.
 	 */
 	public function render_product_column( $column, $post_id ) {
-		if ( 'preview_ai' !== $column ) return;
-
-		$enabled        = get_post_meta( $post_id, '_preview_ai_enabled', true );
-		$supported      = get_post_meta( $post_id, '_preview_ai_supported', true );
-		$was_analyzed   = '' !== $supported;
-		$global_enabled = get_option( 'preview_ai_enabled', 0 );
-
-		// Product hasn't been analyzed yet.
-		if ( ! $was_analyzed ) {
-			printf(
-				'<span class="preview-ai-col preview-ai-col--pending" title="%s"><span class="dashicons dashicons-clock"></span> %s</span>',
-				esc_attr__( 'Not analyzed yet - run Analyze & Enable from settings', 'preview-ai' ),
-				esc_html__( 'Not Analyzed', 'preview-ai' )
-			);
+		if ( 'preview_ai' !== $column ) {
 			return;
 		}
 
-		// Product analyzed but not supported.
-		if ( 'no' === $supported ) {
-			printf(
-				'<span class="preview-ai-col preview-ai-col--disabled" title="%s">%s</span>',
-				esc_attr__( 'Product type not supported yet (V1 supports tops and pants only)', 'preview-ai' ),
-				esc_html__( 'Not Supported', 'preview-ai' )
-			);
-			return;
-		}
+		$status = self::resolve_product_status( $post_id );
 
-		// Product is supported - check if enabled.
-		$is_enabled = false;
-		if ( 'yes' === $enabled ) {
-			$is_enabled = true;
-		} elseif ( 'no' === $enabled ) {
-			$is_enabled = false;
-		} else {
-			$is_enabled = (bool) $global_enabled;
-		}
-
-		if ( $is_enabled ) {
-			printf(
-				'<span class="preview-ai-col preview-ai-col--active" title="%s"><span class="dashicons dashicons-visibility"></span> %s</span>',
-				esc_attr__( 'Preview AI active on this product', 'preview-ai' ),
-				esc_html__( 'Active', 'preview-ai' )
-			);
-		} else {
-			printf(
-				'<span class="preview-ai-col preview-ai-col--disabled" title="%s">—</span>',
-				esc_attr__( 'Preview AI disabled for this product', 'preview-ai' )
-			);
-		}
+		printf(
+			'<span class="preview-ai-col %s">%s %s</span>',
+			esc_attr( $status['status_class'] ),
+			wp_kses_post( $status['status_icon'] ),
+			esc_html( $status['status_text'] )
+		);
 	}
 
 	// =========================================================================
@@ -893,44 +818,7 @@ class PREVIEW_AI_Admin_Product {
 			if ( ! $product ) {
 				continue;
 			}
-
-			$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
-			$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
-			$tags           = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
-			$tags_str       = is_array( $tags ) ? implode( ', ', $tags ) : '';
-			$thumbnail_id   = $product->get_image_id();
-			$thumbnail_url  = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
-
-			$product_data = array(
-				'id'            => $product_id,
-				'title'         => $product->get_name(),
-				'categories'    => $categories_str,
-				'tags'          => $tags_str,
-				'thumbnail_url' => $thumbnail_url,
-				'variations'    => array(),
-			);
-
-			// Add variations with different images.
-			if ( $product->is_type( 'variable' ) ) {
-				$variation_ids = $product->get_children();
-				foreach ( $variation_ids as $variation_id ) {
-					$variation = wc_get_product( $variation_id );
-					if ( ! $variation || ! $variation->is_in_stock() ) {
-						continue;
-					}
-
-					$var_image_id = $variation->get_image_id();
-					if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
-						$var_thumbnail_url            = wp_get_attachment_url( $var_image_id );
-						$product_data['variations'][] = array(
-							'variation_id'  => $variation_id,
-							'thumbnail_url' => $var_thumbnail_url,
-						);
-					}
-				}
-			}
-
-			$products_data[] = $product_data;
+			$products_data[] = PREVIEW_AI_Admin_Catalog::build_single_product_data( $product, false );
 		}
 
 		return $products_data;
@@ -1198,6 +1086,298 @@ class PREVIEW_AI_Admin_Product {
 				esc_html( $message )
 			);
 		}
+	}
+
+	// =========================================================================
+	// Category Rules
+	// =========================================================================
+
+	const CATEGORY_RULES_OPTION = 'preview_ai_category_rules';
+
+	/**
+	 * Resolve the category rule for a product by walking up the term hierarchy.
+	 *
+	 * Returns 'enabled', 'disabled', or null (no rule found, use global).
+	 *
+	 * @param int $product_id Product ID.
+	 * @return string|null
+	 */
+	public static function resolve_category_rule( $product_id ) {
+		$rules = get_option( self::CATEGORY_RULES_OPTION, array() );
+		if ( empty( $rules ) ) {
+			return null;
+		}
+
+		$term_ids = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'ids' ) );
+		if ( is_wp_error( $term_ids ) || empty( $term_ids ) ) {
+			return null;
+		}
+
+		foreach ( $term_ids as $term_id ) {
+			$current = $term_id;
+			while ( $current ) {
+				if ( isset( $rules[ $current ] ) ) {
+					return $rules[ $current ];
+				}
+				$term    = get_term( $current, 'product_cat' );
+				$current = ( $term && ! is_wp_error( $term ) && $term->parent ) ? $term->parent : 0;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get category tree with product counts and Preview AI stats.
+	 *
+	 * @return array Hierarchical category data.
+	 */
+	public static function get_category_tree() {
+		$categories = get_terms( array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => false,
+			'orderby'    => 'name',
+		) );
+
+		if ( is_wp_error( $categories ) || empty( $categories ) ) {
+			return array();
+		}
+
+		$rules = get_option( self::CATEGORY_RULES_OPTION, array() );
+
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only; counts per category for Preview AI status display. Cached within request.
+		$counts_raw = $wpdb->get_results(
+			"SELECT tr.term_taxonomy_id,
+				COUNT(DISTINCT p.ID) as total,
+				SUM(CASE WHEN pm_e.meta_value = 'yes' THEN 1 ELSE 0 END) as enabled,
+				SUM(CASE WHEN pm_s.meta_value = 'yes' THEN 1 ELSE 0 END) as supported,
+				SUM(CASE WHEN pm_s.meta_value IS NULL THEN 1 ELSE 0 END) as not_analyzed
+			FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+			LEFT JOIN {$wpdb->postmeta} pm_e ON p.ID = pm_e.post_id AND pm_e.meta_key = '_preview_ai_enabled'
+			LEFT JOIN {$wpdb->postmeta} pm_s ON p.ID = pm_s.post_id AND pm_s.meta_key = '_preview_ai_supported'
+			WHERE p.post_type = 'product' AND p.post_status = 'publish'
+			GROUP BY tr.term_taxonomy_id"
+		);
+
+		$counts = array();
+		foreach ( $counts_raw as $row ) {
+			$counts[ intval( $row->term_taxonomy_id ) ] = array(
+				'total'        => intval( $row->total ),
+				'enabled'      => intval( $row->enabled ),
+				'supported'    => intval( $row->supported ),
+				'not_analyzed' => intval( $row->not_analyzed ),
+			);
+		}
+
+		$tree = array();
+		$by_id = array();
+
+		foreach ( $categories as $cat ) {
+			$tt_id = $cat->term_taxonomy_id;
+			$c     = isset( $counts[ $tt_id ] ) ? $counts[ $tt_id ] : array(
+				'total' => 0, 'enabled' => 0, 'supported' => 0, 'not_analyzed' => 0,
+			);
+
+			$by_id[ $cat->term_id ] = array(
+				'term_id'  => $cat->term_id,
+				'name'     => $cat->name,
+				'parent'   => $cat->parent,
+				'rule'     => isset( $rules[ $cat->term_id ] ) ? $rules[ $cat->term_id ] : 'inherit',
+				'total'    => $c['total'],
+				'enabled'  => $c['enabled'],
+				'supported' => $c['supported'],
+				'not_analyzed' => $c['not_analyzed'],
+				'children' => array(),
+			);
+		}
+
+		foreach ( $by_id as $id => &$item ) {
+			if ( $item['parent'] && isset( $by_id[ $item['parent'] ] ) ) {
+				$by_id[ $item['parent'] ]['children'][] = &$item;
+			} else {
+				$tree[] = &$item;
+			}
+		}
+		unset( $item );
+
+		return $tree;
+	}
+
+	/**
+	 * Handle AJAX request to toggle category rule and update products.
+	 */
+	public function handle_toggle_category() {
+		check_ajax_referer( 'preview_ai_toggle_category', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
+		}
+
+		$category_id = isset( $_POST['category_id'] ) ? absint( wp_unslash( $_POST['category_id'] ) ) : 0;
+		$action      = isset( $_POST['rule_action'] ) ? sanitize_key( wp_unslash( $_POST['rule_action'] ) ) : '';
+
+		if ( ! $category_id || ! in_array( $action, array( 'enable', 'disable', 'inherit' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid parameters.', 'preview-ai' ) ) );
+		}
+
+		$term = get_term( $category_id, 'product_cat' );
+		if ( ! $term || is_wp_error( $term ) ) {
+			wp_send_json_error( array( 'message' => __( 'Category not found.', 'preview-ai' ) ) );
+		}
+
+		$rules = get_option( self::CATEGORY_RULES_OPTION, array() );
+
+		if ( 'inherit' === $action ) {
+			unset( $rules[ $category_id ] );
+		} else {
+			$rules[ $category_id ] = 'enable' === $action ? 'enabled' : 'disabled';
+		}
+
+		update_option( self::CATEGORY_RULES_OPTION, $rules, false );
+
+		if ( 'inherit' === $action ) {
+			wp_send_json_success( array(
+				'message' => sprintf(
+					/* translators: %s: category name */
+					__( '"%s" set to inherit global setting.', 'preview-ai' ),
+					$term->name
+				),
+				'tree' => self::get_category_tree(),
+			) );
+			return;
+		}
+
+		$product_ids = wc_get_products( array(
+			'status'   => 'publish',
+			'limit'    => -1,
+			'category' => array( $term->slug ),
+			'return'   => 'ids',
+		) );
+
+		if ( 'disable' === $action ) {
+			foreach ( $product_ids as $pid ) {
+				update_post_meta( $pid, '_preview_ai_enabled', 'no' );
+			}
+
+			wp_send_json_success( array(
+				'message' => sprintf(
+					/* translators: 1: count, 2: category name */
+					__( '%1$d products disabled in "%2$s".', 'preview-ai' ),
+					count( $product_ids ),
+					$term->name
+				),
+				'disabled_count' => count( $product_ids ),
+				'tree'           => self::get_category_tree(),
+			) );
+			return;
+		}
+
+		$already_supported = array();
+		$not_supported     = 0;
+		$need_analysis     = array();
+		$no_image          = 0;
+
+		foreach ( $product_ids as $pid ) {
+			$supported = get_post_meta( $pid, '_preview_ai_supported', true );
+
+			if ( 'yes' === $supported ) {
+				$already_supported[] = $pid;
+			} elseif ( 'no' === $supported ) {
+				$not_supported++;
+			} else {
+				$product = wc_get_product( $pid );
+				if ( $product && $product->get_image_id() ) {
+					$need_analysis[] = $pid;
+				} else {
+					$no_image++;
+				}
+			}
+		}
+
+		foreach ( $already_supported as $pid ) {
+			update_post_meta( $pid, '_preview_ai_enabled', 'yes' );
+		}
+
+		$enabled_count = count( $already_supported );
+		$error_message = '';
+		$pending_count = 0;
+
+		if ( ! empty( $need_analysis ) ) {
+			$first_batch_ids = array_splice( $need_analysis, 0, self::BULK_ACTIVATE_BATCH_SIZE );
+			$first_batch     = $this->build_products_data( $first_batch_ids );
+			$result          = $this->process_activate_batch_sync( $first_batch );
+
+			$enabled_count += $result['enabled'];
+			$not_supported += $result['not_supported'];
+
+			if ( ! empty( $result['error_message'] ) ) {
+				$error_message = $result['error_message'];
+			} elseif ( ! empty( $need_analysis ) ) {
+				$this->schedule_bulk_activate( $need_analysis );
+				$pending_count = count( $need_analysis );
+			}
+		}
+
+		$parts = array();
+		if ( $enabled_count > 0 ) {
+			$parts[] = sprintf(
+				_n( '%d enabled', '%d enabled', $enabled_count, 'preview-ai' ),
+				$enabled_count
+			);
+		}
+		if ( $not_supported > 0 ) {
+			$parts[] = sprintf(
+				_n( '%d not supported', '%d not supported', $not_supported, 'preview-ai' ),
+				$not_supported
+			);
+		}
+		if ( $pending_count > 0 ) {
+			$parts[] = sprintf(
+				_n( '%d analyzing in background', '%d analyzing in background', $pending_count, 'preview-ai' ),
+				$pending_count
+			);
+		}
+		if ( $no_image > 0 ) {
+			$parts[] = sprintf(
+				_n( '%d without image', '%d without image', $no_image, 'preview-ai' ),
+				$no_image
+			);
+		}
+
+		$response = array(
+			'message'        => sprintf(
+				/* translators: 1: category name, 2: results summary */
+				__( '"%1$s": %2$s.', 'preview-ai' ),
+				$term->name,
+				implode( ', ', $parts )
+			),
+			'enabled_count'  => $enabled_count,
+			'not_supported'  => $not_supported,
+			'pending_count'  => $pending_count,
+			'no_image'       => $no_image,
+			'tree'           => self::get_category_tree(),
+		);
+
+		if ( ! empty( $error_message ) ) {
+			$response['error_message'] = $error_message;
+		}
+
+		wp_send_json_success( $response );
+	}
+
+	/**
+	 * Handle AJAX request to get the category tree data.
+	 */
+	public function handle_get_category_tree() {
+		check_ajax_referer( 'preview_ai_toggle_category', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'preview-ai' ) ) );
+		}
+
+		wp_send_json_success( array( 'tree' => self::get_category_tree() ) );
 	}
 }
 

@@ -353,33 +353,14 @@ class PREVIEW_AI_Public {
 	/**
 	 * Check if Preview AI is enabled for this product.
 	 *
-	 * V1: Also checks if product subtype is supported (upper_body, lower_body and full_body).
+	 * Delegates to the single source of truth in PREVIEW_AI_Admin_Product.
 	 *
 	 * @param int $product_id Product ID.
 	 * @return bool
 	 */
 	public static function is_enabled_for_product( $product_id ) {
-		// If `_preview_ai_supported` is empty, the product hasn't been processed yet.
-		$supported = get_post_meta( $product_id, '_preview_ai_supported', true );
-
-		// Product hasn't been analyzed yet - don't show widget.
-		if ( '' === $supported ) {
-			return false;
-		}
-
-		// V1: Check if product type is supported (upper_body, lower_body and full_body).
-		// Products with footwear, accessories, etc. are not supported yet.
-		if ( 'no' === $supported ) {
-			return false;
-		}
-
-		$enabled = get_post_meta( $product_id, '_preview_ai_enabled', true );
-
-		if ( '' === $enabled ) {
-			return (bool) get_option( 'preview_ai_enabled', 0 );
-		}
-
-		return 'yes' === $enabled;
+		$status = PREVIEW_AI_Admin_Product::resolve_product_status( $product_id );
+		return $status['is_enabled'];
 	}
 
 }

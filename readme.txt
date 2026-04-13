@@ -7,7 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.5.1
-Stable tag: 1.4.1
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -149,6 +149,11 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.5.0 =
+– New top-level "Preview AI" menu with dedicated subpages: General, Widget, Statistics, and Products.
+– Added category-based product control: enable or disable Preview AI for entire categories at once.
+– New Products page with category manager and bulk actions guide.
+
 = 1.4.1 =
 – Fixed expired try-on images: saved looks now auto-refresh their signed URLs instead of showing broken images after 7 days.
 
@@ -202,6 +207,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+New dedicated Preview AI menu with category-based product control.
 
 = 1.4.1 =
 Fixed: saved try-on images no longer expire after 7 days. URLs are refreshed automatically.

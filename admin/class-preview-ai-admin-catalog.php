@@ -180,10 +180,6 @@ class PREVIEW_AI_Admin_Catalog {
 		if ( ! is_wp_error( $result ) ) {
 			$stats = $this->save_catalog_classifications( $result );
 
-			if ( $stats['configured'] > 0 ) {
-				update_option( 'preview_ai_enabled', 1 );
-			}
-
 			$progress['processed']       += count( $batch );
 			$progress['configured']      += $stats['configured'];
 			$progress['not_supported']   += $stats['not_supported'];
@@ -363,55 +359,7 @@ class PREVIEW_AI_Admin_Catalog {
 
 		$products_data = array();
 		foreach ( $products as $product ) {
-			$product_id     = $product->get_id();
-			$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
-			$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
-			$tags           = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
-			$tags_str       = is_array( $tags ) ? implode( ', ', $tags ) : '';
-			$thumbnail_id   = $product->get_image_id();
-			$thumbnail_url  = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
-
-			$product_data = array(
-				'id'            => $product_id,
-				'title'         => $product->get_name(),
-				'categories'    => $categories_str,
-				'tags'          => $tags_str,
-				'thumbnail_url' => $thumbnail_url,
-				'variations'    => array(),
-			);
-
-			// Add variations with different images.
-			if ( $product->is_type( 'variable' ) ) {
-				$variation_ids = $product->get_children();
-				foreach ( $variation_ids as $variation_id ) {
-					$variation = wc_get_product( $variation_id );
-					if ( ! $variation ) {
-						continue;
-					}
-
-					// Skip out of stock variations.
-					if ( ! $variation->is_in_stock() ) {
-						continue;
-					}
-
-					// Skip already analyzed variations.
-					$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
-					if ( ! empty( $var_analysis ) ) {
-						continue;
-					}
-
-					$var_image_id = $variation->get_image_id();
-					if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
-						$var_thumbnail_url              = wp_get_attachment_url( $var_image_id );
-						$product_data['variations'][] = array(
-							'variation_id'  => $variation_id,
-							'thumbnail_url' => $var_thumbnail_url,
-						);
-					}
-				}
-			}
-
-			$products_data[] = $product_data;
+			$products_data[] = self::build_single_product_data( $product );
 		}
 
 		return $products_data;
@@ -471,6 +419,65 @@ class PREVIEW_AI_Admin_Catalog {
 		}
 
 		return $stats;
+	}
+
+	/**
+	 * Build API payload for a single WC_Product.
+	 *
+	 * Shared helper used by catalog analysis, bulk activate, and single-product
+	 * analysis to avoid duplicating the same data-building logic.
+	 *
+	 * @param WC_Product $product        Product object.
+	 * @param bool       $skip_analyzed  Whether to skip already-analyzed variations.
+	 * @param array      $extra_fields   Extra fields to merge into the product data.
+	 * @return array Product data formatted for the API.
+	 */
+	public static function build_single_product_data( $product, $skip_analyzed = true, $extra_fields = array() ) {
+		$product_id     = $product->get_id();
+		$categories     = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'names' ) );
+		$categories_str = is_array( $categories ) ? implode( ', ', $categories ) : '';
+		$tags           = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'names' ) );
+		$tags_str       = is_array( $tags ) ? implode( ', ', $tags ) : '';
+		$thumbnail_id   = $product->get_image_id();
+		$thumbnail_url  = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : null;
+
+		$product_data = array_merge(
+			array(
+				'id'            => $product_id,
+				'title'         => $product->get_name(),
+				'categories'    => $categories_str,
+				'tags'          => $tags_str,
+				'thumbnail_url' => $thumbnail_url,
+				'variations'    => array(),
+			),
+			$extra_fields
+		);
+
+		if ( $product->is_type( 'variable' ) ) {
+			foreach ( $product->get_children() as $variation_id ) {
+				$variation = wc_get_product( $variation_id );
+				if ( ! $variation || ! $variation->is_in_stock() ) {
+					continue;
+				}
+
+				if ( $skip_analyzed ) {
+					$var_analysis = get_post_meta( $variation_id, '_preview_ai_image_analysis', true );
+					if ( ! empty( $var_analysis ) ) {
+						continue;
+					}
+				}
+
+				$var_image_id = $variation->get_image_id();
+				if ( $var_image_id && $var_image_id !== $thumbnail_id ) {
+					$product_data['variations'][] = array(
+						'variation_id'  => $variation_id,
+						'thumbnail_url' => wp_get_attachment_url( $var_image_id ),
+					);
+				}
+			}
+		}
+
+		return $product_data;
 	}
 
 }

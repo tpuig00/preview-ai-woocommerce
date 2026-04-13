@@ -62,16 +62,55 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
-	 * Register the admin menu under Products.
+	 * Register the top-level Preview AI menu with submenus.
 	 */
 	public function add_admin_menu() {
-		add_submenu_page(
-			'edit.php?post_type=product',
+		$icon_svg = 'data:image/svg+xml;base64,' . base64_encode( '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 2H8.5L4 6l3 2v12h10V8l3-2z"/><path d="M8.5 2C9.5 3.5 10.5 4.5 12 4.5S14.5 3.5 15.5 2"/></svg>' );
+
+		add_menu_page(
 			__( 'Preview AI', 'preview-ai' ),
 			__( 'Preview AI', 'preview-ai' ),
 			'manage_woocommerce',
 			'preview-ai',
-			array( $this, 'render_settings_page' )
+			array( $this, 'render_general_page' ),
+			$icon_svg,
+			58
+		);
+
+		add_submenu_page(
+			'preview-ai',
+			__( 'General', 'preview-ai' ),
+			__( 'General', 'preview-ai' ),
+			'manage_woocommerce',
+			'preview-ai',
+			array( $this, 'render_general_page' )
+		);
+
+		add_submenu_page(
+			'preview-ai',
+			__( 'Widget', 'preview-ai' ),
+			__( 'Widget', 'preview-ai' ),
+			'manage_woocommerce',
+			'preview-ai-widget',
+			array( $this, 'render_widget_page' )
+		);
+
+		add_submenu_page(
+			'preview-ai',
+			__( 'Statistics', 'preview-ai' ),
+			__( 'Statistics', 'preview-ai' ),
+			'manage_woocommerce',
+			'preview-ai-stats',
+			array( $this, 'render_stats_page' )
+		);
+
+		add_submenu_page(
+			'preview-ai',
+			__( 'Products', 'preview-ai' ),
+			__( 'Products', 'preview-ai' ),
+			'manage_woocommerce',
+			'preview-ai-products',
+			array( $this, 'render_products_page' )
 		);
 	}
 
@@ -83,7 +122,7 @@ class PREVIEW_AI_Admin {
 	 */
 	public function add_action_links( $links ) {
 		$settings_link = array(
-			'<a href="' . admin_url( 'edit.php?post_type=product&page=preview-ai' ) . '">' . __( 'Settings', 'preview-ai' ) . '</a>',
+			'<a href="' . admin_url( 'admin.php?page=preview-ai' ) . '">' . __( 'Settings', 'preview-ai' ) . '</a>',
 		);
 		return array_merge( $settings_link, $links );
 	}
@@ -172,6 +211,14 @@ class PREVIEW_AI_Admin {
 		$this->product->show_bulk_action_notice();
 	}
 
+	public function handle_toggle_category() {
+		$this->product->handle_toggle_category();
+	}
+
+	public function handle_get_category_tree() {
+		$this->product->handle_get_category_tree();
+	}
+
 	public function handle_learn_catalog() {
 		$this->catalog->handle_learn_catalog();
 	}
@@ -213,9 +260,9 @@ class PREVIEW_AI_Admin {
 	}
 
 	/**
-	 * Render the settings page.
+	 * Render the General settings page.
 	 */
-	public function render_settings_page() {
+	public function render_general_page() {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			return;
 		}
@@ -227,6 +274,43 @@ class PREVIEW_AI_Admin {
 			add_action( 'admin_footer', array( $this->onboarding, 'render_onboarding_wizard' ) );
 		}
 
+		$preview_ai_current_page = 'general';
+		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-admin-display.php';
+	}
+
+	/**
+	 * Render the Widget settings page.
+	 */
+	public function render_widget_page() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
+
+		$preview_ai_current_page = 'widget';
+		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-admin-display.php';
+	}
+
+	/**
+	 * Render the Statistics page.
+	 */
+	public function render_stats_page() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
+
+		$preview_ai_current_page = 'stats';
+		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-admin-display.php';
+	}
+
+	/**
+	 * Render the Products management page.
+	 */
+	public function render_products_page() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
+
+		$preview_ai_current_page = 'products';
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-admin-display.php';
 	}
 
@@ -394,7 +478,7 @@ class PREVIEW_AI_Admin {
 					'manualAdd'            => __( 'If the widget does not appear automatically, you can add it manually:', 'preview-ai' ),
 					'manualAddNow'         => __( 'You can add the widget manually:', 'preview-ai' ),
 					'elementorSearch'      => __( 'Search for "Preview AI" widget', 'preview-ai' ),
-					'configureIn'          => __( 'Configure in: Products → Preview AI → Widget tab', 'preview-ai' ),
+					'configureIn'          => __( 'Configure in: Preview AI → Widget', 'preview-ai' ),
 					'analyzingBackground'  => __( 'Analyzing and enabling in background', 'preview-ai' ),
 					'productsAnalyzed'     => __( 'products are being analyzed and enabled. This may take a few minutes.', 'preview-ai' ),
 					'closeAndCheck'        => __( 'You can close this window and check progress in Preview AI settings.', 'preview-ai' ),
@@ -414,8 +498,14 @@ class PREVIEW_AI_Admin {
 			)
 		);
 
+		$preview_ai_pages = array(
+			'toplevel_page_preview-ai',
+			'preview-ai_page_preview-ai-widget',
+			'preview-ai_page_preview-ai-stats',
+			'preview-ai_page_preview-ai-products',
+		);
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; determines which scripts to enqueue based on admin page. Values sanitized with sanitize_key().
-		$is_settings_page = ( 'product_page_preview-ai' === $hook || ( isset( $_GET['page'] ) && 'preview-ai' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) );
+		$is_settings_page = ( in_array( $hook, $preview_ai_pages, true ) || ( isset( $_GET['page'] ) && 0 === strpos( sanitize_key( wp_unslash( $_GET['page'] ) ), 'preview-ai' ) ) );
 		$is_product_page  = ( 'post.php' === $hook || 'post-new.php' === $hook );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; conditionally enqueues onboarding script. Value sanitized with sanitize_key().
 		$is_onboarding    = isset( $_GET['onboarding'] ) && 'complete' === sanitize_key( wp_unslash( $_GET['onboarding'] ) );
@@ -434,6 +524,7 @@ class PREVIEW_AI_Admin {
 				'dismissNonce'          => wp_create_nonce( 'preview_ai_dismiss_notice' ),
 				'registerNonce'         => wp_create_nonce( 'preview_ai_register_site' ),
 				'toggleProductNonce'    => wp_create_nonce( 'preview_ai_toggle_product' ),
+				'toggleCategoryNonce'   => wp_create_nonce( 'preview_ai_toggle_category' ),
 				'deactivationNonce'     => wp_create_nonce( 'preview_ai_deactivation_feedback' ),
 				'pluginSlug'            => 'preview-ai',
 				'i18n'                  => array(

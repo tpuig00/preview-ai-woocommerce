@@ -48,6 +48,10 @@ $preview_ai_options = array(
 	'preview_ai_button_position',
 	'preview_ai_button_shape',
 	'preview_ai_button_height',
+	'preview_ai_bulk_activate_status',
+	'preview_ai_bulk_activate_progress',
+	'preview_ai_bulk_activate_pending',
+	'preview_ai_category_rules',
 );
 
 foreach ( $preview_ai_options as $preview_ai_option ) {
@@ -84,8 +88,8 @@ delete_transient( 'preview_ai_account_status' );
  * This is critical to prevent pending actions from continuing to run.
  */
 if ( function_exists( 'as_unschedule_all_actions' ) ) {
-	// Delete all actions for the plugin hook.
 	as_unschedule_all_actions( 'preview_ai_process_catalog_batch' );
+	as_unschedule_all_actions( 'preview_ai_process_bulk_activate_batch' );
 } else {
 	// Fallback: delete directly from the database if Action Scheduler is not available.
 	// First, delete the associated logs.

@@ -12,7 +12,7 @@ class PREVIEW_AI_Admin_Notices {
 		$screen = get_current_screen();
 		if ( ! $screen ) return;
 
-		$relevant_screens = array( 'product_page_preview-ai', 'product', 'edit-product' );
+		$relevant_screens = array( 'toplevel_page_preview-ai', 'preview-ai_page_preview-ai-widget', 'preview-ai_page_preview-ai-stats', 'preview-ai_page_preview-ai-products', 'product', 'edit-product' );
 		if ( ! in_array( $screen->id, $relevant_screens, true ) ) return;
 
 		$api_key = get_option( 'preview_ai_api_key', '' );
@@ -23,7 +23,7 @@ class PREVIEW_AI_Admin_Notices {
 				<p>
 					<strong><?php esc_html_e( 'Preview AI:', 'preview-ai' ); ?></strong>
 					<?php esc_html_e( 'API key not configured. The widget is hidden from your customers.', 'preview-ai' ); ?>
-					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=preview-ai' ) ); ?>">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=preview-ai' ) ); ?>">
 						<?php esc_html_e( 'Configure now', 'preview-ai' ); ?>
 					</a>
 				</p>
