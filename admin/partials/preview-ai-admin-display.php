@@ -206,7 +206,7 @@ if ( ! isset( $preview_ai_current_page ) ) {
 								   step="1"
 							/>
 							<p class="description">
-								<?php esc_html_e( 'Maximum number of previews each visitor can generate per week. Default: 8.', 'preview-ai' ); ?>
+								<?php esc_html_e( 'Maximum number of previews each visitor can generate per week. Default: 20.', 'preview-ai' ); ?>
 							</p>
 						</td>
 					</tr>
