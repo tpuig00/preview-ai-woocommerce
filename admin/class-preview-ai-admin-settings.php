@@ -22,7 +22,7 @@ class PREVIEW_AI_Admin_Settings {
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
-				'default'           => 8,
+				'default'           => 20,
 			)
 		);
 		register_setting( 'preview_ai_general_settings', 'preview_ai_analytics_enabled', 'absint' );
@@ -90,7 +90,7 @@ class PREVIEW_AI_Admin_Settings {
 	 * @return int Maximum number of previews per user per week.
 	 */
 	public static function get_max_previews_per_user_weekly() {
-		return absint( get_option( 'preview_ai_max_previews_per_user_weekly', 8 ) );
+		return absint( get_option( 'preview_ai_max_previews_per_user_weekly', 20 ) );
 	}
 
 	/**
