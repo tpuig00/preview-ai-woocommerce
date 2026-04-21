@@ -898,6 +898,41 @@
 	padding: 10px 16px !important;
 }
 
+/* Quota / Upgrade Notices */
+.preview-ai-quota-notice {
+	padding: 16px 20px !important;
+}
+
+.preview-ai-quota-notice__inner {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+
+.preview-ai-quota-notice__body {
+	flex: 1;
+	min-width: 200px;
+}
+
+.preview-ai-quota-notice__title {
+	margin: 0 0 4px !important;
+	font-size: 14px !important;
+}
+
+.preview-ai-quota-notice__desc {
+	margin: 0 !important;
+	color: #64748b !important;
+	font-size: 13px !important;
+}
+
+.preview-ai-quota-notice__btn {
+	flex-shrink: 0;
+	height: auto !important;
+	padding: 10px 20px !important;
+	white-space: nowrap;
+}
+
 /* ================================
    Deactivation Feedback Modal
    ================================ */

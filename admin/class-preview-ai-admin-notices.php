@@ -81,6 +81,72 @@ class PREVIEW_AI_Admin_Notices {
 			<?php
 			return;
 		}
+
+		$tokens_remaining = isset( $status['tokens_remaining'] ) ? intval( $status['tokens_remaining'] ) : -1;
+		$tokens_limit     = isset( $status['tokens_limit'] ) ? intval( $status['tokens_limit'] ) : 0;
+		$upgrade_url      = ! empty( $status['recomended_plan'] ) ? $status['recomended_plan'] : 'https://previewai.app/pricing';
+		$renew_date       = ! empty( $status['current_period_end'] ) ? date_i18n( get_option( 'date_format' ), strtotime( $status['current_period_end'] ) ) : '';
+
+		// Tokens exhausted — widget is silently disabled for shoppers.
+		if ( 0 === $tokens_remaining ) {
+			?>
+			<div class="notice notice-error preview-ai-quota-notice">
+				<div class="preview-ai-quota-notice__inner">
+					<div class="preview-ai-quota-notice__body">
+						<p class="preview-ai-quota-notice__title">
+							<strong><?php esc_html_e( 'Your customers can\'t try on your products right now.', 'preview-ai' ); ?></strong>
+						</p>
+						<p class="preview-ai-quota-notice__desc">
+							<?php
+							if ( $renew_date ) {
+								printf(
+									/* translators: %s: renewal date */
+									esc_html__( 'You\'ve used all your Preview AI quota. The virtual try-on widget is hidden from your store until your plan resets on %s — every shopper visiting your product pages between now and then leaves without seeing your clothes on themselves.', 'preview-ai' ),
+									'<strong>' . esc_html( $renew_date ) . '</strong>'
+								);
+							} else {
+								esc_html_e( 'You\'ve used all your Preview AI quota. The virtual try-on widget is hidden from your store — every shopper visiting your product pages leaves without seeing your clothes on themselves.', 'preview-ai' );
+							}
+							?>
+						</p>
+					</div>
+					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary preview-ai-quota-notice__btn">
+						<?php esc_html_e( 'Upgrade My Plan →', 'preview-ai' ); ?>
+					</a>
+				</div>
+			</div>
+			<?php
+			return;
+		}
+
+		// Tokens running low — warn before the widget goes dark.
+		if ( $tokens_limit > 0 && $tokens_remaining >= 0 && ( $tokens_remaining / $tokens_limit ) < 0.2 ) {
+			?>
+			<div class="notice notice-warning preview-ai-quota-notice">
+				<div class="preview-ai-quota-notice__inner">
+					<div class="preview-ai-quota-notice__body">
+						<p class="preview-ai-quota-notice__title">
+							<strong>
+								<?php
+								printf(
+									/* translators: %s: number of remaining previews */
+									esc_html__( 'Heads up — only %s try-on previews left this period.', 'preview-ai' ),
+									'<strong>' . esc_html( number_format_i18n( $tokens_remaining ) ) . '</strong>'
+								);
+								?>
+							</strong>
+						</p>
+						<p class="preview-ai-quota-notice__desc">
+							<?php esc_html_e( 'When they run out, the virtual try-on disappears from your store and shoppers go back to guessing whether it fits. Upgrade now to keep converting browsers into buyers.', 'preview-ai' ); ?>
+						</p>
+					</div>
+					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary preview-ai-quota-notice__btn">
+						<?php esc_html_e( 'Get More Previews →', 'preview-ai' ); ?>
+					</a>
+				</div>
+			</div>
+			<?php
+		}
 	}
 
 	/**
