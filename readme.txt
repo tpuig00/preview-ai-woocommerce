@@ -3,11 +3,11 @@ Contributors: previewai
 Donate link: https://previewai.app/
 Tags: virtual try-on, fashion, clothing, woocommerce, apparel
 Requires at least: 6.0
-Tested up to: 6.9
+Tested up to: 7.0.1
 Requires PHP: 7.4
 WC requires at least: 8.0
-WC tested up to: 10.5.1
-Stable tag: 1.5.1
+WC tested up to: 10.9.4
+Stable tag: 1.5.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -149,6 +149,10 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.5.2 =
+– Minor fixes and internal improvements.
+– Compatibility verified with WordPress 7.0.1.
+
 = 1.5.0 =
 – New top-level "Preview AI" menu with dedicated subpages: General, Widget, Statistics, and Products.
 – Added category-based product control: enable or disable Preview AI for entire categories at once.
@@ -207,6 +211,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.5.2 =
+Minor fixes and compatibility with WordPress 7.0.1.
 
 = 1.5.0 =
 New dedicated Preview AI menu with category-based product control.
