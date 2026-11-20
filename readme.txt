@@ -7,7 +7,7 @@ Tested up to: 7.0.1
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.9.4
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -149,9 +149,15 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.5.3 =
+– Fixed: "Generate preview" button could stay disabled when caching or JS-optimization plugins removed the widget's inline script data. The widget now carries its own configuration as a fallback.
+
 = 1.5.2 =
 – Minor fixes and internal improvements.
 – Compatibility verified with WordPress 7.0.1.
+
+= 1.5.1 =
+– Increased the maximum number of previews per visitor per week from 8 to 20.
 
 = 1.5.0 =
 – New top-level "Preview AI" menu with dedicated subpages: General, Widget, Statistics, and Products.
@@ -212,8 +218,14 @@ Preview AI currently supports:
 
 == Upgrade Notice ==
 
+= 1.5.3 =
+Fixes the "Generate preview" button staying disabled on sites using caching or JS-optimization plugins. Clear your site caches after updating.
+
 = 1.5.2 =
 Minor fixes and compatibility with WordPress 7.0.1.
+
+= 1.5.1 =
+Weekly preview limit per visitor raised from 8 to 20.
 
 = 1.5.0 =
 New dedicated Preview AI menu with category-based product control.

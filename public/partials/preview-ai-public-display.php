@@ -44,10 +44,16 @@ $preview_ai_shape_class    = 'preview-ai-shape-' . esc_attr( $preview_ai_button_
 $preview_ai_height_style   = ( 38 !== (int) $preview_ai_button_height ) ? 'height:' . absint( $preview_ai_button_height ) . 'px !important;' : '';
 $preview_ai_width_style    = ( ! empty( $preview_ai_button_full_width ) ) ? 'width: 100% !important; justify-content: center !important;' : '';
 $preview_ai_inline_style   = $preview_ai_height_style . $preview_ai_width_style;
+
+// Script data fallback (read by JS when the localized previewAiData inline script is missing).
+if ( ! isset( $preview_ai_config ) && $preview_ai_product_id ) {
+	$preview_ai_config = PREVIEW_AI_Public::get_script_data( $preview_ai_product_id );
+}
+$preview_ai_config_attr = ! empty( $preview_ai_config ) ? wp_json_encode( $preview_ai_config ) : '';
 ?>
 
 <!-- Action Chip Container -->
-<div class="preview-ai-chip-wrapper <?php echo esc_attr( $preview_ai_position_class ); ?>">
+<div class="preview-ai-chip-wrapper <?php echo esc_attr( $preview_ai_position_class ); ?>"<?php if ( $preview_ai_config_attr ) : ?> data-preview-ai-config="<?php echo esc_attr( $preview_ai_config_attr ); ?>"<?php endif; ?>>
 	<button type="button" id="preview-ai-trigger" class="preview-ai-chip <?php echo esc_attr( $preview_ai_shape_class ); ?>" <?php echo $preview_ai_inline_style ? 'style="' . esc_attr( $preview_ai_inline_style ) . '"' : ''; ?>>
 		<span class="preview-ai-chip-icon"><?php
 			echo wp_kses(

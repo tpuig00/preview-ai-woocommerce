@@ -3,6 +3,44 @@
 
 	window.PreviewAI = window.PreviewAI || {};
 
+	/**
+	 * Ensure the global previewAiData config exists.
+	 *
+	 * It is normally printed by wp_localize_script(), but that inline script
+	 * can be missing (widget HTML served from a page-builder/element cache,
+	 * JS optimizers stripping or delaying inline scripts, widget rendered after
+	 * footer scripts were printed...). In that case, fall back to the JSON
+	 * embedded in the widget markup (data-preview-ai-config).
+	 */
+	function ensurePreviewAiData() {
+		var data = window.previewAiData;
+
+		if ( ! data || typeof data !== 'object' || ! data.ajaxUrl ) {
+			var raw = $( '[data-preview-ai-config]' ).first().attr( 'data-preview-ai-config' );
+			if ( raw ) {
+				try {
+					data = JSON.parse( raw );
+				} catch ( e ) {
+					data = null;
+				}
+			}
+		}
+
+		if ( ! data || typeof data !== 'object' ) {
+			data = {};
+		}
+		if ( ! data.i18n || typeof data.i18n !== 'object' ) {
+			data.i18n = {};
+		}
+
+		window.previewAiData = data;
+	}
+
+	ensurePreviewAiData();
+	// Re-run on DOM ready in case the widget markup wasn't parsed yet.
+	// Registered before other Preview AI ready handlers (this file loads first).
+	$( ensurePreviewAiData );
+
 	PreviewAI.Storage = (function() {
 		// localStorage keys.
 		var STORAGE_KEY        = 'previewAiUserPhoto';
