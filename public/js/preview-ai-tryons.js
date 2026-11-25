@@ -193,12 +193,12 @@
 				$list.empty();
 
 				if ( tryOns.length === 0 ) {
-					$empty.addClass( 'is-visible' );
+					$empty.addClass( 'pai-is-visible' );
 					$count.text( '' );
 					return;
 				}
 
-				$empty.removeClass( 'is-visible' );
+				$empty.removeClass( 'pai-is-visible' );
 				var countText = tryOns.length + ' ' + ( tryOns.length === 1 ? ( previewAiData.i18n.result || 'result' ) : ( previewAiData.i18n.results || 'results' ) );
 				$count.text( countText );
 
@@ -213,31 +213,31 @@
 			updateBadge: function( $els ) {
 				var tryOns = PreviewAI.Storage.getTryOns();
 				if ( tryOns.length > 0 ) {
-					$els.$tryonsBadge.text( tryOns.length ).addClass( 'is-visible' );
+					$els.$tryonsBadge.text( tryOns.length ).addClass( 'pai-is-visible' );
 					$els.$viewTryonsBtn.addClass( 'has-tryons' );
-					$els.$instructionsLooksBadge.text( tryOns.length ).addClass( 'is-visible' );
+					$els.$instructionsLooksBadge.text( tryOns.length ).addClass( 'pai-is-visible' );
 					$els.$instructionsLooksBtn.addClass( 'has-looks' );
 				} else {
-					$els.$tryonsBadge.text( '' ).removeClass( 'is-visible' );
+					$els.$tryonsBadge.text( '' ).removeClass( 'pai-is-visible' );
 					$els.$viewTryonsBtn.removeClass( 'has-tryons' );
-					$els.$instructionsLooksBadge.text( '' ).removeClass( 'is-visible' );
+					$els.$instructionsLooksBadge.text( '' ).removeClass( 'pai-is-visible' );
 					$els.$instructionsLooksBtn.removeClass( 'has-looks' );
 				}
 			},
 
 			showSection: function( $els ) {
 				this.renderList( $els.$tryonsList, $els.$tryonsEmpty, $els.$tryonsCount );
-				$els.$savedPhoto.removeClass( 'is-visible' );
-				$els.$instructions.addClass( 'is-hidden' );
-				$els.$stage.removeClass( 'is-visible' );
-				$els.$actions.removeClass( 'is-visible' );
-				$els.$tryons.addClass( 'is-visible' );
+				$els.$savedPhoto.removeClass( 'pai-is-visible' );
+				$els.$instructions.addClass( 'pai-is-hidden' );
+				$els.$stage.removeClass( 'pai-is-visible' );
+				$els.$actions.removeClass( 'pai-is-visible' );
+				$els.$tryons.addClass( 'pai-is-visible' );
 			},
 
 			hideSection: function( $els, showSavedPhotoSection ) {
-				$els.$tryons.removeClass( 'is-visible' );
+				$els.$tryons.removeClass( 'pai-is-visible' );
 				showSavedPhotoSection();
-				$els.$instructions.removeClass( 'is-hidden' );
+				$els.$instructions.removeClass( 'pai-is-hidden' );
 			}
 		};
 	})();

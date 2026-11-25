@@ -265,6 +265,7 @@ class PREVIEW_AI_Public {
 		$preview_ai_button_shape      = $button_shape;
 		$preview_ai_button_height     = $button_height;
 		$preview_ai_button_full_width = $button_full_width;
+		$preview_ai_show_credit       = ! empty( $widget_settings['show_credit'] ) ? 1 : 0;
 		$preview_ai_clothing_subtype  = $clothing_subtype;
 		$preview_ai_tips              = $tips;
 		$preview_ai_config            = $script_data;

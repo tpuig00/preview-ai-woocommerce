@@ -113,10 +113,6 @@ msgstr ""
 msgid "Upload a Full Body Image"
 msgstr ""
 
-#: public/partials/preview-ai-public-display.php:177
-msgid "Tip: wearing a similar item helps the preview look more realistic"
-msgstr ""
-
 #: public/partials/preview-ai-public-display.php:183
 msgid "Add your photo"
 msgstr ""
@@ -147,10 +143,6 @@ msgstr ""
 
 #: public/partials/preview-ai-public-display.php:242
 msgid "New photo"
-msgstr ""
-
-#: public/partials/preview-ai-public-display.php:255
-msgid "This is an AI-generated preview for reference only. <strong>Actual fit and appearance may vary</strong> — please check the size guide before ordering."
 msgstr ""
 
 #: public/class-preview-ai-public.php:152
@@ -1081,4 +1073,32 @@ msgstr ""
 
 #: includes/widgets/class-preview-ai-elementor-widget.php:174
 msgid "Preview AI: Use this widget on a product page."
+msgstr ""
+
+#. translators: %s: link to the try-on privacy terms.
+#: public/partials/preview-ai-public-display.php
+#, php-format
+msgid "By using this service, you agree to the %s. AI can make mistakes."
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php
+msgid "try-on privacy terms"
+msgstr ""
+
+#: public/partials/preview-ai-public-display.php
+msgid "AI-generated preview for reference only. Actual fit may vary."
+msgstr ""
+
+#. translators: %s: Preview AI brand name, linked.
+#: public/partials/preview-ai-public-display.php
+#, php-format
+msgid "Powered by %s"
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php
+msgid "Show \"Powered by\""
+msgstr ""
+
+#: admin/partials/preview-ai-admin-display.php
+msgid "Show a small \"Powered by Preview AI\" link at the bottom of the try-on window. Off by default."
 msgstr ""

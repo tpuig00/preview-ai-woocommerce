@@ -10,7 +10,7 @@
 	transition: opacity 0.3s ease;
 }
 
-.preview-ai-demo-overlay.is-active {
+.preview-ai-demo-overlay.pai-is-active {
 	opacity: 1;
 }
 
@@ -59,7 +59,7 @@
 	transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.preview-ai-demo-tooltip.is-visible {
+.preview-ai-demo-tooltip.pai-is-visible {
 	opacity: 1;
 	transform: translateY(0);
 }
@@ -99,7 +99,7 @@
 		transform: translateX(-50%) translateY(30px);
 	}
 	
-	.preview-ai-demo-tooltip.is-visible {
+	.preview-ai-demo-tooltip.pai-is-visible {
 		transform: translateX(-50%) translateY(0);
 	}
 	
@@ -156,7 +156,7 @@
 	transition: all 0.3s ease;
 }
 
-.preview-ai-demo-step-dot.is-active {
+.preview-ai-demo-step-dot.pai-is-active {
 	background: #3b82f6;
 	width: 24px;
 	border-radius: 4px;

@@ -16,11 +16,11 @@
 				var savedData = PreviewAI.Storage.getSavedPhoto();
 				if ( savedData ) {
 					$els.$savedThumb.attr( 'src', savedData );
-					$els.$savedPhoto.addClass( 'is-visible' );
-					$els.$instructions.addClass( 'has-saved-photo' );
+					$els.$savedPhoto.addClass( 'pai-is-visible' );
+					$els.$instructions.addClass( 'pai-has-saved-photo' );
 				} else {
-					$els.$savedPhoto.removeClass( 'is-visible' );
-					$els.$instructions.removeClass( 'has-saved-photo' );
+					$els.$savedPhoto.removeClass( 'pai-is-visible' );
+					$els.$instructions.removeClass( 'pai-has-saved-photo' );
 				}
 			},
 
@@ -39,14 +39,14 @@
 
 				state.selectedFile = PreviewAI.Image.base64ToFile( savedData, 'saved-photo.jpg' );
 				$els.$imgBefore.attr( 'src', savedData );
-				$els.$savedPhoto.removeClass( 'is-visible' );
-				$els.$instructions.addClass( 'is-hidden' );
-				$els.$stage.addClass( 'is-visible' ).removeClass( 'is-result' );
-				$els.$actions.addClass( 'is-visible' );
-				$els.$generate.removeClass( 'is-hidden' );
+				$els.$savedPhoto.removeClass( 'pai-is-visible' );
+				$els.$instructions.addClass( 'pai-is-hidden' );
+				$els.$stage.addClass( 'pai-is-visible' ).removeClass( 'pai-is-result' );
+				$els.$actions.addClass( 'pai-is-visible' );
+				$els.$generate.removeClass( 'pai-is-hidden' );
 				$els.$generate.prop( 'disabled', true );
-				$els.$resultActions.removeClass( 'is-visible' );
-				$els.$disclaimer.removeClass( 'is-visible' );
+				$els.$resultActions.removeClass( 'pai-is-visible' );
+				$els.$disclaimer.removeClass( 'pai-is-visible' );
 				startPrecheck( state.selectedFile );
 			},
 
@@ -63,19 +63,19 @@
 				}
 
 				// Reset to first step
-				$steps.removeClass( 'is-active is-exiting' );
-				$steps.eq( 0 ).addClass( 'is-active' );
+				$steps.removeClass( 'pai-is-active pai-is-exiting' );
+				$steps.eq( 0 ).addClass( 'pai-is-active' );
 
 				loadingInterval = setInterval( function() {
 					var $current = $steps.eq( current );
 					var next = ( current + 1 ) % total;
 					var $next = $steps.eq( next );
 
-					$current.addClass( 'is-exiting' ).removeClass( 'is-active' );
+					$current.addClass( 'pai-is-exiting' ).removeClass( 'pai-is-active' );
 
 					setTimeout( function() {
-						$current.removeClass( 'is-exiting' );
-						$next.addClass( 'is-active' );
+						$current.removeClass( 'pai-is-exiting' );
+						$next.addClass( 'pai-is-active' );
 					}, 200 );
 
 					current = next;
@@ -90,8 +90,8 @@
 					clearInterval( loadingInterval );
 					loadingInterval = null;
 				}
-				$( '.preview-ai-step' ).removeClass( 'is-active is-exiting' );
-				$( '.preview-ai-step' ).first().addClass( 'is-active' );
+				$( '.preview-ai-step' ).removeClass( 'pai-is-active pai-is-exiting' );
+				$( '.preview-ai-step' ).first().addClass( 'pai-is-active' );
 			},
 
 			/**
@@ -100,9 +100,9 @@
 			 * @param {jQuery} $modal Modal element.
 			 */
 			close: function( $modal ) {
-				$modal.removeClass( 'is-visible' );
+				$modal.removeClass( 'pai-is-visible' );
 				setTimeout( function() {
-					$modal.removeClass( 'is-open' );
+					$modal.removeClass( 'pai-is-open' );
 				}, 200 );
 				$( 'body' ).css( 'overflow', '' );
 			},
@@ -127,22 +127,22 @@
 				$els.$generate.prop( 'disabled', true );
 				$els.$imgBefore.attr( 'src', '' );
 				$els.$imgAfter.attr( 'src', '' );
-				$els.$stage.removeClass( 'is-visible is-loading is-result' );
-				$els.$actions.removeClass( 'is-visible' );
-				$els.$generate.removeClass( 'is-hidden' );
-				$els.$changeBtn.removeClass( 'is-hidden' );
-				$els.$resultActions.removeClass( 'is-visible' );
-				$els.$disclaimer.removeClass( 'is-visible' );
-				$els.$instructions.removeClass( 'is-hidden' );
-				$els.$tryons.removeClass( 'is-visible' );
+				$els.$stage.removeClass( 'pai-is-visible pai-is-loading pai-is-result' );
+				$els.$actions.removeClass( 'pai-is-visible' );
+				$els.$generate.removeClass( 'pai-is-hidden' );
+				$els.$changeBtn.removeClass( 'pai-is-hidden' );
+				$els.$resultActions.removeClass( 'pai-is-visible' );
+				$els.$disclaimer.removeClass( 'pai-is-visible' );
+				$els.$instructions.removeClass( 'pai-is-hidden' );
+				$els.$tryons.removeClass( 'pai-is-visible' );
 
 				// Check for saved photo again (unless explicitly disabled)
 				if ( showSaved !== false ) {
 					this.showSavedPhotoSection( $els );
 				} else {
 					// Hide saved photo section and go directly to upload
-					$els.$savedPhoto.removeClass( 'is-visible' );
-					$els.$instructions.removeClass( 'has-saved-photo' );
+					$els.$savedPhoto.removeClass( 'pai-is-visible' );
+					$els.$instructions.removeClass( 'pai-has-saved-photo' );
 				}
 			}
 		};

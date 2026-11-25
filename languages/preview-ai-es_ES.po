@@ -114,10 +114,6 @@ msgstr "Ejemplo de foto incorrecta"
 msgid "Upload a Full Body Image"
 msgstr "Sube una imagen de cuerpo completo"
 
-#: public/partials/preview-ai-public-display.php:177
-msgid "Tip: wearing a similar item helps the preview look more realistic"
-msgstr "Consejo: llevar una prenda similar ayuda a que la vista previa sea más realista"
-
 #: public/partials/preview-ai-public-display.php:183
 msgid "Add your photo"
 msgstr "Añade tu foto"
@@ -149,10 +145,6 @@ msgstr "Descargar"
 #: public/partials/preview-ai-public-display.php:242
 msgid "New photo"
 msgstr "Nueva foto"
-
-#: public/partials/preview-ai-public-display.php:255
-msgid "This is an AI-generated preview for reference only. <strong>Actual fit and appearance may vary</strong> — please check the size guide before ordering."
-msgstr "Esta es una vista previa generada por IA solo como referencia. <strong>El ajuste y apariencia real pueden variar</strong> — por favor consulta la guía de tallas antes de pedir."
 
 #: public/class-preview-ai-public.php:152
 msgid "Demo Tour"
@@ -1083,3 +1075,31 @@ msgstr "Imagen demasiado grande. Máximo 5MB."
 #: includes/widgets/class-preview-ai-elementor-widget.php:174
 msgid "Preview AI: Use this widget on a product page."
 msgstr "Preview AI: Usa este widget en una página de producto."
+
+#. translators: %s: link to the try-on privacy terms.
+#: public/partials/preview-ai-public-display.php
+#, php-format
+msgid "By using this service, you agree to the %s. AI can make mistakes."
+msgstr "Al usar este servicio, aceptas los %s. La IA puede cometer errores."
+
+#: public/partials/preview-ai-public-display.php
+msgid "try-on privacy terms"
+msgstr "términos de privacidad de la prueba"
+
+#: public/partials/preview-ai-public-display.php
+msgid "AI-generated preview for reference only. Actual fit may vary."
+msgstr "Vista previa generada por IA, solo como referencia. El ajuste real puede variar."
+
+#. translators: %s: Preview AI brand name, linked.
+#: public/partials/preview-ai-public-display.php
+#, php-format
+msgid "Powered by %s"
+msgstr "Con tecnología de %s"
+
+#: admin/partials/preview-ai-admin-display.php
+msgid "Show \"Powered by\""
+msgstr "Mostrar \"Con tecnología de\""
+
+#: admin/partials/preview-ai-admin-display.php
+msgid "Show a small \"Powered by Preview AI\" link at the bottom of the try-on window. Off by default."
+msgstr "Muestra un pequeño enlace \"Con tecnología de Preview AI\" al pie de la ventana de prueba. Desactivado por defecto."

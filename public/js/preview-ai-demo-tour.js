@@ -127,7 +127,7 @@
 		for (var i = 0; i < steps.length; i++) {
 			var dotClass = 'preview-ai-demo-step-dot';
 			if (i < stepIndex) dotClass += ' is-completed';
-			if (i === stepIndex) dotClass += ' is-active';
+			if (i === stepIndex) dotClass += ' pai-is-active';
 			dotsHtml += '<span class="' + dotClass + '"></span>';
 		}
 
@@ -164,10 +164,10 @@
 		scrollToElement(elements[0]);
 
 		// Hide tooltip during transition, then show
-		tooltip.classList.remove('is-visible');
+		tooltip.classList.remove('pai-is-visible');
 		
 		setTimeout(function() {
-			tooltip.classList.add('is-visible');
+			tooltip.classList.add('pai-is-visible');
 		}, 400);
 
 		// Bind events
@@ -195,8 +195,8 @@
 
 	function closeDemo() {
 		clearHighlights();
-		tooltip.classList.remove('is-visible');
-		overlay.classList.remove('is-active');
+		tooltip.classList.remove('pai-is-visible');
+		overlay.classList.remove('pai-is-active');
 
 		setTimeout(function() {
 			if (overlay && overlay.parentNode) overlay.remove();
@@ -230,7 +230,7 @@
 
 		// Activate overlay and start tour
 		setTimeout(function() {
-			overlay.classList.add('is-active');
+			overlay.classList.add('pai-is-active');
 			renderStep(0);
 		}, 300);
 

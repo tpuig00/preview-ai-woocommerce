@@ -190,10 +190,10 @@
 			 * @param {Function} stopLoadingSteps Callback to stop loading.
 			 */
 			showError: function( $els, message, stopLoadingSteps ) {
-				$els.$stage.removeClass( 'is-loading' );
+				$els.$stage.removeClass( 'pai-is-loading' );
 				stopLoadingSteps();
-				$els.$generate.removeClass( 'is-hidden' );
-				$els.$changeBtn.removeClass( 'is-hidden' );
+				$els.$generate.removeClass( 'pai-is-hidden' );
+				$els.$changeBtn.removeClass( 'pai-is-hidden' );
 
 				var errorMsg = message || ( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.';
 
@@ -235,9 +235,9 @@
 					return;
 				}
 
-				$els.$stage.addClass( 'is-loading' );
-				$els.$generate.addClass( 'is-hidden' );
-				$els.$changeBtn.addClass( 'is-hidden' );
+				$els.$stage.addClass( 'pai-is-loading' );
+				$els.$generate.addClass( 'pai-is-hidden' );
+				$els.$changeBtn.addClass( 'pai-is-hidden' );
 				$els.$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().hide();
 				modal.startLoadingSteps();
 
@@ -264,7 +264,7 @@
 						contentType: false,
 						processData: false,
 						success: function( res ) {
-							$els.$stage.removeClass( 'is-loading' );
+							$els.$stage.removeClass( 'pai-is-loading' );
 							modal.stopLoadingSteps();
 
 							if ( res && res.success && res.data && res.data.generated_image_url ) {
@@ -272,9 +272,9 @@
 								img.onload = function() {
 									state.generatedImageUrl = res.data.generated_image_url;
 									$els.$imgAfter.attr( 'src', state.generatedImageUrl );
-									$els.$stage.addClass( 'is-result' );
-									$els.$resultActions.addClass( 'is-visible' );
-									$els.$disclaimer.addClass( 'is-visible' );
+									$els.$stage.addClass( 'pai-is-result' );
+									$els.$resultActions.addClass( 'pai-is-visible' );
+									$els.$disclaimer.addClass( 'pai-is-visible' );
 
 									// Increment weekly usage counter.
 									PreviewAI.Storage.incrementWeeklyUsage();

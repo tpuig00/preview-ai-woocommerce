@@ -51,9 +51,9 @@
 
 		// Open modal
 		$els.$trigger.on( 'click', function() {
-			$els.$modal.addClass( 'is-open' );
+			$els.$modal.addClass( 'pai-is-open' );
 			setTimeout( function() {
-				$els.$modal.addClass( 'is-visible' );
+				$els.$modal.addClass( 'pai-is-visible' );
 			}, 10 );
 			$( 'body' ).css( 'overflow', 'hidden' );
 
@@ -72,16 +72,16 @@
 		$els.$newPhotoLink.on( 'click', function( e ) {
 			e.preventDefault();
 			PreviewAI.Storage.forgetSavedPhoto();
-			$els.$savedPhoto.removeClass( 'is-visible' );
-			$els.$instructions.removeClass( 'has-saved-photo' );
+			$els.$savedPhoto.removeClass( 'pai-is-visible' );
+			$els.$instructions.removeClass( 'pai-has-saved-photo' );
 		} );
 
 		// Forget saved photo
 		$els.$forgetPhoto.on( 'click', function( e ) {
 			e.preventDefault();
 			PreviewAI.Storage.forgetSavedPhoto();
-			$els.$savedPhoto.removeClass( 'is-visible' );
-			$els.$instructions.removeClass( 'has-saved-photo' );
+			$els.$savedPhoto.removeClass( 'pai-is-visible' );
+			$els.$instructions.removeClass( 'pai-has-saved-photo' );
 		} );
 
 		// Close modal
@@ -103,9 +103,9 @@
 
 		$( document ).on( 'keydown', function( e ) {
 			if ( e.key === 'Escape' ) {
-				if ( $els.$lightbox.hasClass( 'is-open' ) ) {
-					$els.$lightbox.removeClass( 'is-open' );
-				} else if ( $els.$modal.hasClass( 'is-open' ) ) {
+				if ( $els.$lightbox.hasClass( 'pai-is-open' ) ) {
+					$els.$lightbox.removeClass( 'pai-is-open' );
+				} else if ( $els.$modal.hasClass( 'pai-is-open' ) ) {
 					PreviewAI.Modal.close( $els.$modal );
 					setTimeout( function() {
 						PreviewAI.Modal.resetToInstructions( $els, state, true, PreviewAI.Api );
@@ -126,14 +126,14 @@
 
 					PreviewAI.Storage.savePhoto( base64Data );
 
-					$els.$savedPhoto.removeClass( 'is-visible' );
-					$els.$instructions.addClass( 'is-hidden' );
-					$els.$stage.addClass( 'is-visible' ).removeClass( 'is-result' );
-					$els.$actions.addClass( 'is-visible' );
-					$els.$generate.removeClass( 'is-hidden' );
+					$els.$savedPhoto.removeClass( 'pai-is-visible' );
+					$els.$instructions.addClass( 'pai-is-hidden' );
+					$els.$stage.addClass( 'pai-is-visible' ).removeClass( 'pai-is-result' );
+					$els.$actions.addClass( 'pai-is-visible' );
+					$els.$generate.removeClass( 'pai-is-hidden' );
 					$els.$generate.prop( 'disabled', true );
-					$els.$resultActions.removeClass( 'is-visible' );
-					$els.$disclaimer.removeClass( 'is-visible' );
+					$els.$resultActions.removeClass( 'pai-is-visible' );
+					$els.$disclaimer.removeClass( 'pai-is-visible' );
 					PreviewAI.Api.startPrecheck( state.selectedFile, $els, state );
 				} );
 			}
@@ -164,15 +164,15 @@
 
 		// Open lightbox
 		$els.$imgAfter.on( 'click', function() {
-			if ( $els.$stage.hasClass( 'is-result' ) ) {
+			if ( $els.$stage.hasClass( 'pai-is-result' ) ) {
 				$els.$lbImg.attr( 'src', $( this ).attr( 'src' ) );
-				$els.$lightbox.addClass( 'is-open' );
+				$els.$lightbox.addClass( 'pai-is-open' );
 			}
 		} );
 
 		// Close lightbox
 		$els.$lightbox.on( 'click', function() {
-			$( this ).removeClass( 'is-open' );
+			$( this ).removeClass( 'pai-is-open' );
 		} );
 
 		// View looks
@@ -220,7 +220,7 @@
 			var src = $( this ).attr( 'src' );
 			if ( src ) {
 				$els.$lbImg.attr( 'src', src );
-				$els.$lightbox.addClass( 'is-open' );
+				$els.$lightbox.addClass( 'pai-is-open' );
 			}
 		} );
 

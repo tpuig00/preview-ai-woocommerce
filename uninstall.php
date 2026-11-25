@@ -48,6 +48,8 @@ $preview_ai_options = array(
 	'preview_ai_button_position',
 	'preview_ai_button_shape',
 	'preview_ai_button_height',
+	'preview_ai_button_full_width',
+	'preview_ai_show_credit',
 	'preview_ai_bulk_activate_status',
 	'preview_ai_bulk_activate_progress',
 	'preview_ai_bulk_activate_pending',

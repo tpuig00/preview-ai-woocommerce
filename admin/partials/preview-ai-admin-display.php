@@ -569,6 +569,30 @@ if ( ! isset( $preview_ai_current_page ) ) {
 						</td>
 					</tr>
 
+					<!-- Powered by credit (opt-in) -->
+					<tr>
+						<th scope="row">
+							<label for="preview_ai_show_credit">
+								<?php esc_html_e( 'Show "Powered by"', 'preview-ai' ); ?>
+							</label>
+						</th>
+						<td>
+							<label class="preview-ai-toggle">
+								<input type="hidden" name="preview_ai_show_credit" value="0" />
+								<input type="checkbox"
+									   id="preview_ai_show_credit"
+									   name="preview_ai_show_credit"
+									   value="1"
+									   <?php checked( 1, (int) $preview_ai_widget_settings['show_credit'] ); ?>
+								/>
+								<span class="preview-ai-toggle__slider"></span>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Show a small "Powered by Preview AI" link at the bottom of the try-on window. Off by default.', 'preview-ai' ); ?>
+							</p>
+						</td>
+					</tr>
+
 					<!-- Accent Color -->
 					<tr>
 						<th scope="row">

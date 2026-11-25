@@ -15,6 +15,7 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Requires Plugins:  woocommerce
+ * WC tested up to:   11.3.1
  * Text Domain:       preview-ai
  * Domain Path:       /languages
  */
@@ -29,6 +30,21 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'PREVIEW_AI_VERSION', '1.5.4' );
 define( 'PREVIEW_AI_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+
+/**
+ * Declare compatibility with WooCommerce features.
+ * Orders are only accessed through the WC CRUD API (wc_get_order, get_meta, update_meta_data),
+ * and checkout hooks cover both classic and Store API (block) checkout.
+ */
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
+		}
+	}
+);
 
 /**
  * The code that runs during plugin activation.

@@ -38,6 +38,9 @@ if ( ! isset( $preview_ai_button_height ) ) {
 if ( ! isset( $preview_ai_button_full_width ) ) {
 	$preview_ai_button_full_width = 0;
 }
+if ( ! isset( $preview_ai_show_credit ) ) {
+	$preview_ai_show_credit = 0;
+}
 
 $preview_ai_position_class = 'preview-ai-position-' . esc_attr( $preview_ai_button_position );
 $preview_ai_shape_class    = 'preview-ai-shape-' . esc_attr( $preview_ai_button_shape );
@@ -180,7 +183,6 @@ $preview_ai_config_attr = ! empty( $preview_ai_config ) ? wp_json_encode( $previ
 						<li><?php echo esc_html( $preview_ai_tip ); ?></li>
 					<?php endforeach; ?>
 				</ul>
-				<p class="preview-ai-tips-pro"><?php esc_html_e( 'Tip: wearing a similar item helps the preview look more realistic', 'preview-ai' ); ?></p>
 			</div>
 
 			<!-- Upload button -->
@@ -212,7 +214,7 @@ $preview_ai_config_attr = ! empty( $preview_ai_config ) ? wp_json_encode( $previ
 				<div class="preview-ai-loading-content">
 					<div class="preview-ai-loading-spinner"></div>
 				<div class="preview-ai-loading-steps">
-					<span class="preview-ai-step is-active"><?php esc_html_e( 'Analyzing your photo...', 'preview-ai' ); ?></span>
+					<span class="preview-ai-step pai-is-active"><?php esc_html_e( 'Analyzing your photo...', 'preview-ai' ); ?></span>
 					<span class="preview-ai-step"><?php esc_html_e( 'Preparing garment...', 'preview-ai' ); ?></span>
 					<span class="preview-ai-step"><?php esc_html_e( 'Fitting to your body...', 'preview-ai' ); ?></span>
 					<span class="preview-ai-step"><?php esc_html_e( 'Applying garment...', 'preview-ai' ); ?></span>
@@ -231,6 +233,17 @@ $preview_ai_config_attr = ! empty( $preview_ai_config ) ? wp_json_encode( $previ
 				<?php esc_html_e( 'Generate preview', 'preview-ai' ); ?>
 			</button>
 			<div id="preview-ai-check-status" class="preview-ai-check-status" role="status" aria-live="polite"></div>
+			<!-- Legal notice (shown with the Generate button) -->
+			<p class="preview-ai-legal">
+				<?php
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Format string and link parts are escaped individually.
+				printf(
+					/* translators: %s: link to the try-on privacy terms. */
+					esc_html__( 'By using this service, you agree to the %s. AI can make mistakes.', 'preview-ai' ),
+					'<a href="' . esc_url( 'https://www.previewai.app/terms/privacy-policy' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'try-on privacy terms', 'preview-ai' ) . '</a>'
+				);
+				?>
+			</p>
 			<div id="preview-ai-result-actions" class="preview-ai-result-actions">
 				<button type="button" id="preview-ai-download" class="preview-ai-action-btn">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -256,10 +269,23 @@ $preview_ai_config_attr = ! empty( $preview_ai_config ) ? wp_json_encode( $previ
 			</div>
 
 			<!-- AI Disclaimer -->
-			<div id="preview-ai-disclaimer" class="preview-ai-disclaimer">
-				<span class="preview-ai-disclaimer-icon">✨</span>
-				<p><?php echo wp_kses( __( 'This is an AI-generated preview for reference only. <strong>Actual fit and appearance may vary</strong> — please check the size guide before ordering.', 'preview-ai' ), array( 'strong' => array() ) ); ?></p>
-			</div>
+			<p id="preview-ai-disclaimer" class="preview-ai-disclaimer">
+				<?php esc_html_e( 'AI-generated preview for reference only. Actual fit may vary.', 'preview-ai' ); ?>
+			</p>
+
+			<?php if ( ! empty( $preview_ai_show_credit ) ) : ?>
+				<!-- Opt-in credit (Settings > Widget > Show "Powered by"). Off by default. -->
+				<p class="preview-ai-credit">
+					<?php
+					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Format string and link parts are escaped individually.
+					printf(
+						/* translators: %s: Preview AI brand name, linked. */
+						esc_html__( 'Powered by %s', 'preview-ai' ),
+						'<a href="' . esc_url( 'https://previewai.app/' ) . '" target="_blank" rel="noopener">Preview AI</a>'
+					);
+					?>
+				</p>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>
