@@ -7,7 +7,7 @@ Tested up to: 7.0.1
 Requires PHP: 7.4
 WC requires at least: 8.0
 WC tested up to: 10.9.4
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -149,6 +149,9 @@ Preview AI currently supports:
 
 == Changelog ==
 
+= 1.5.4 =
+– Fixed: try-on modal layout on themes without a global box-sizing reset (e.g. Hostinger AI Theme). The "Add your photo" button overflowed the modal and caused a horizontal scrollbar. The widget's styles are now independent of the theme's box-sizing.
+
 = 1.5.3 =
 – Fixed: "Generate preview" button could stay disabled when caching or JS-optimization plugins removed the widget's inline script data. The widget now carries its own configuration as a fallback.
 
@@ -217,6 +220,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.5.4 =
+Fixes the try-on modal layout (overflowing button and horizontal scrollbar) on themes without a global box-sizing reset.
 
 = 1.5.3 =
 Fixes the "Generate preview" button staying disabled on sites using caching or JS-optimization plugins. Clear your site caches after updating.
