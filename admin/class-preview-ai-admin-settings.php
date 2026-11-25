@@ -124,99 +124,49 @@ class PREVIEW_AI_Admin_Settings {
 	}
 
 	/**
-	 * Get clothing subtypes with example items and tips.
+	 * Get clothing subtypes with example items.
 	 */
 	public static function get_clothing_subtypes() {
 		return array(
 			'mixed' => array(
 				'label'    => __( 'Mixed / All types', 'preview-ai' ),
 				'examples' => __( 'All types of clothing', 'preview-ai' ),
-				'tips'     => array(
-					__( 'One person only', 'preview-ai' ),
-					__( 'Front-facing, good lighting', 'preview-ai' ),
-					__( 'Avoid heavy cropping and occlusions', 'preview-ai' ),
-				),
 			),
 			'upper_body' => array(
 				'label'    => __( 'Upper Body', 'preview-ai' ),
 				'examples' => __( 'T-shirts, shirts, blouses, jackets, hoodies, tops', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Front-facing with shoulders and torso visible', 'preview-ai' ),
-					__( 'Arms relaxed', 'preview-ai' ),
-					__( 'Good light, no torso occlusions', 'preview-ai' ),
-				),
 			),
 			'lower_body' => array(
 				'label'    => __( 'Lower Body', 'preview-ai' ),
 				'examples' => __( 'Pants, shorts, leggings, skirts', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Hips, knees and full feet visible (no crop)', 'preview-ai' ),
-					__( 'Standing, front-facing', 'preview-ai' ),
-					__( 'Good light, no leg occlusions', 'preview-ai' ),
-				),
 			),
 			'full_body' => array(
 				'label'    => __( 'Full Body', 'preview-ai' ),
 				'examples' => __( 'Dresses, jumpsuits, full suits', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Full body head-to-toe (no crop)', 'preview-ai' ),
-					__( 'Front-facing and upright (avoid side pose or crouching)', 'preview-ai' ),
-					__( 'One person, simple background, good light', 'preview-ai' ),
-				),
 			),
 			'headwear' => array(
 				'label'    => __( 'Headwear', 'preview-ai' ),
 				'examples' => __( 'Caps, hats, berets, head scarves', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include head plus some torso', 'preview-ai' ),
-					__( 'Front-facing, good lighting', 'preview-ai' ),
-					__( 'No occlusions over the head (hair/hands/objects)', 'preview-ai' ),
-				),
 			),
 			'footwear' => array(
 				'label'    => __( 'Footwear', 'preview-ai' ),
 				'examples' => __( 'Shoes, boots, sandals, slippers', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Both feet fully visible (not cropped)', 'preview-ai' ),
-					__( 'Best framing: knees-to-feet, front-facing', 'preview-ai' ),
-					__( 'Good light, sharp photo', 'preview-ai' ),
-				),
 			),
 			'neckwear' => array(
 				'label'    => __( 'Neckwear', 'preview-ai' ),
 				'examples' => __( 'Necklaces, scarves, chokers', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include face, neck and some torso (no extreme close-up)', 'preview-ai' ),
-					__( 'Front-facing, good lighting', 'preview-ai' ),
-					__( 'No occlusions over the accessory', 'preview-ai' ),
-				),
 			),
 			'waistwear' => array(
 				'label'    => __( 'Waistwear', 'preview-ai' ),
 				'examples' => __( 'Belts, fanny packs, waist bags', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Front-facing with waist and hips visible', 'preview-ai' ),
-					__( 'No hands/objects covering the waist area', 'preview-ai' ),
-					__( 'One person, good lighting', 'preview-ai' ),
-				),
 			),
 			'wrist_hand' => array(
 				'label'    => __( 'Wrist & Hand', 'preview-ai' ),
 				'examples' => __( 'Bracelets, watches, rings', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include arm and some torso (no extreme close-up)', 'preview-ai' ),
-					__( 'Keep the accessory visible (no motion blur)', 'preview-ai' ),
-					__( 'Good light, simple background', 'preview-ai' ),
-				),
 			),
 			'ear' => array(
 				'label'    => __( 'Ear Accessories', 'preview-ai' ),
 				'examples' => __( 'Earrings, hoops, ear cuffs', 'preview-ai' ),
-				'tips'     => array(
-					__( 'Include face and some torso (no extreme close-up)', 'preview-ai' ),
-					__( 'Good light, ear not covered by hair/hands', 'preview-ai' ),
-					__( 'One person only', 'preview-ai' ),
-				),
 			),
 		);
 	}

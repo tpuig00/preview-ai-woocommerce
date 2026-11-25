@@ -41,6 +41,9 @@ if ( ! isset( $preview_ai_button_full_width ) ) {
 if ( ! isset( $preview_ai_show_credit ) ) {
 	$preview_ai_show_credit = 0;
 }
+if ( ! isset( $preview_ai_product_image ) ) {
+	$preview_ai_product_image = PREVIEW_AI_Public::get_intro_product_image( $preview_ai_product_id );
+}
 
 $preview_ai_position_class = 'preview-ai-position-' . esc_attr( $preview_ai_button_position );
 $preview_ai_shape_class    = 'preview-ai-shape-' . esc_attr( $preview_ai_button_shape );
@@ -137,57 +140,36 @@ $preview_ai_config_attr = ! empty( $preview_ai_config ) ? wp_json_encode( $previ
 		<!-- Instructions -->
 		<div id="preview-ai-instructions" class="preview-ai-instructions">
 			<div class="preview-ai-instructions-header">
-				<h3><?php esc_html_e( 'See it on you', 'preview-ai' ); ?></h3>
-				<p><?php esc_html_e( 'See how this product looks on you', 'preview-ai' ); ?></p>
+				<h3><?php esc_html_e( 'Try it on before you buy', 'preview-ai' ); ?></h3>
+				<p><?php esc_html_e( 'Upload a photo and see how it looks on you in seconds.', 'preview-ai' ); ?></p>
 			</div>
 
-			<?php
-			// `$preview_ai_clothing_subtype` is set by `PREVIEW_AI_Public::render_widget_output()`.
-			$preview_ai_clothing_subtype = isset( $preview_ai_clothing_subtype ) ? sanitize_key( $preview_ai_clothing_subtype ) : 'mixed';
-
-			// For now, we only show examples for: full_body, upper_body, lower_body (legs).
-			$preview_ai_ui_subtype = $preview_ai_clothing_subtype;
-			if ( 'lower_body' === $preview_ai_ui_subtype ) {
-				$preview_ai_ui_subtype = 'legs';
-			}
-			if ( ! in_array( $preview_ai_ui_subtype, array( 'full_body', 'upper_body', 'legs' ), true ) ) {
-				$preview_ai_ui_subtype = 'full_body';
-			}
-
-			$preview_ai_subtype_class = 'pai-subtype-' . sanitize_html_class( $preview_ai_ui_subtype );
-			$preview_ai_label         = __( 'Upload a Full Body Image', 'preview-ai' );
-
-			$preview_ai_img_base = plugin_dir_url( __FILE__ ) . '../images/';
-			$preview_ai_img_good = $preview_ai_img_base . 'example_good.png';
-			$preview_ai_img_bad  = $preview_ai_img_base . 'example_bad.png';
-			?>
-
-			<div class="preview-ai-illustration">
-				<div class="pai-examples <?php echo esc_attr( $preview_ai_subtype_class ); ?>" aria-hidden="true">
-					<div class="pai-examples__stage">
-						<figure class="pai-example pai-example--good">
-							<img src="<?php echo esc_url( $preview_ai_img_good ); ?>" alt="<?php esc_attr_e( 'Good example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
-						</figure>
-						<figure class="pai-example pai-example--bad">
-							<img src="<?php echo esc_url( $preview_ai_img_bad ); ?>" alt="<?php esc_attr_e( 'Bad example photo', 'preview-ai' ); ?>" loading="lazy" decoding="async" />
-						</figure>
+			<!-- Your photo + this item -->
+			<div class="pai-combo" aria-hidden="true">
+				<div class="pai-combo__item">
+					<div class="pai-combo__card pai-combo__card--you">
+						<span class="pai-combo__silhouette"></span>
 					</div>
-					<div class="pai-examples__label"><?php echo esc_html( $preview_ai_label ); ?></div>
+					<span class="pai-combo__caption"><?php esc_html_e( 'Your photo', 'preview-ai' ); ?></span>
+				</div>
+				<span class="pai-combo__plus">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+				</span>
+				<div class="pai-combo__item">
+					<div class="pai-combo__card pai-combo__card--product">
+						<img id="preview-ai-intro-product" src="<?php echo esc_url( $preview_ai_product_image ); ?>" alt="" loading="lazy" decoding="async" />
+					</div>
+					<span class="pai-combo__caption"><?php esc_html_e( 'This item', 'preview-ai' ); ?></span>
 				</div>
 			</div>
-
-			<div class="preview-ai-tips">
-				<p class="preview-ai-tips-title"><?php esc_html_e( 'For best results', 'preview-ai' ); ?></p>
-				<ul>
-					<?php foreach ( $preview_ai_tips as $preview_ai_tip ) : ?>
-						<li><?php echo esc_html( $preview_ai_tip ); ?></li>
-					<?php endforeach; ?>
-				</ul>
-			</div>
+			<p class="pai-combo__hint"><?php esc_html_e( 'Works best with a full-body photo', 'preview-ai' ); ?></p>
 
 			<!-- Upload button -->
 			<label for="preview_ai_upload" class="preview-ai-upload-btn">
-				<span class="preview-ai-upload-icon">📷</span>
+				<svg class="preview-ai-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+					<circle cx="12" cy="13" r="4"/>
+				</svg>
 				<span class="preview-ai-upload-text"><?php esc_html_e( 'Add your photo', 'preview-ai' ); ?></span>
 			</label>
 
@@ -210,29 +192,43 @@ $preview_ai_config_attr = ! empty( $preview_ai_config ) ? wp_json_encode( $previ
 			<img id="preview-ai-img-after" class="preview-ai-img-after" src="" alt="<?php esc_attr_e( 'Generated preview', 'preview-ai' ); ?>" />
 
 			<div id="preview-ai-loading" class="preview-ai-loading">
-				<div class="preview-ai-loading-shimmer"></div>
 				<div class="preview-ai-loading-content">
-					<div class="preview-ai-loading-spinner"></div>
-				<div class="preview-ai-loading-steps">
-					<span class="preview-ai-step pai-is-active"><?php esc_html_e( 'Analyzing your photo...', 'preview-ai' ); ?></span>
-					<span class="preview-ai-step"><?php esc_html_e( 'Preparing garment...', 'preview-ai' ); ?></span>
-					<span class="preview-ai-step"><?php esc_html_e( 'Fitting to your body...', 'preview-ai' ); ?></span>
-					<span class="preview-ai-step"><?php esc_html_e( 'Applying garment...', 'preview-ai' ); ?></span>
-					<span class="preview-ai-step"><?php esc_html_e( 'Adding final touches...', 'preview-ai' ); ?></span>
-				</div>
+					<!-- Your photo + this item, merging -->
+					<div class="pai-gen" aria-hidden="true">
+						<div class="pai-gen__card pai-gen__card--you"><img id="preview-ai-gen-photo" src="" alt="" /></div>
+						<div class="pai-gen__card pai-gen__card--product"><img id="preview-ai-gen-product" src="" alt="" /></div>
+						<span class="pai-gen__spinner">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M21 12a9 9 0 0 1-15.5 6.2"/><path d="M3 12A9 9 0 0 1 18.5 5.8"/>
+								<polyline points="18.5 1.8 18.5 5.8 14.5 5.8"/><polyline points="5.5 22.2 5.5 18.2 9.5 18.2"/>
+							</svg>
+						</span>
+					</div>
+					<div class="preview-ai-loading-steps" aria-live="polite">
+						<span class="preview-ai-step pai-is-active"><?php esc_html_e( 'Analyzing your photo...', 'preview-ai' ); ?></span>
+						<span class="preview-ai-step"><?php esc_html_e( 'Preparing garment...', 'preview-ai' ); ?></span>
+						<span class="preview-ai-step"><?php esc_html_e( 'Fitting to your body...', 'preview-ai' ); ?></span>
+						<span class="preview-ai-step"><?php esc_html_e( 'Applying garment...', 'preview-ai' ); ?></span>
+						<span class="preview-ai-step"><?php esc_html_e( 'Adding final touches...', 'preview-ai' ); ?></span>
+					</div>
+					<div class="pai-gen__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="<?php esc_attr_e( 'Generating preview', 'preview-ai' ); ?>">
+						<span class="pai-gen__bar" id="preview-ai-gen-bar"></span>
+					</div>
+					<span class="pai-gen__percent" id="preview-ai-gen-percent">0%</span>
+					<p class="pai-gen__note"><?php esc_html_e( 'Keep this window open while we create your look.', 'preview-ai' ); ?></p>
 				</div>
 			</div>
 		</div>
 
 		<!-- Action Buttons -->
 		<div id="preview-ai-actions" class="preview-ai-actions">
+			<div id="preview-ai-check-status" class="preview-ai-check-status" role="status" aria-live="polite"></div>
 			<button type="button" id="preview-ai-change" class="preview-ai-change-link">
 				<?php esc_html_e( 'Change photo', 'preview-ai' ); ?>
 			</button>
 			<button type="button" id="preview-ai-generate" class="preview-ai-generate">
 				<?php esc_html_e( 'Generate preview', 'preview-ai' ); ?>
 			</button>
-			<div id="preview-ai-check-status" class="preview-ai-check-status" role="status" aria-live="polite"></div>
 			<!-- Legal notice (shown with the Generate button) -->
 			<p class="preview-ai-legal">
 				<?php

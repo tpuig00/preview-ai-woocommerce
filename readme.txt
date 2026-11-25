@@ -3,10 +3,10 @@ Contributors: previewai
 Donate link: https://previewai.app/
 Tags: virtual try-on, fashion, clothing, woocommerce, apparel
 Requires at least: 6.0
-Tested up to: 7.0.1
+Tested up to: 7.1
 Requires PHP: 7.4
 WC tested up to: 11.3.1
-Stable tag: 1.5.4
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -98,7 +98,7 @@ All communication is authenticated via the store's API key and transmitted over 
 
 == Compatibility ==
 
-– WooCommerce: Optimized for current versions
+– WooCommerce: Optimized for current versions, including High-Performance Order Storage (HPOS) and Cart & Checkout blocks
 – Elementor: Includes a widget for custom product templates
 – Themes: Compatible with Astra, Hello Elementor, OceanWP, and most WooCommerce themes
 – Responsive across all modern devices
@@ -147,6 +147,17 @@ Preview AI currently supports:
 4. Product-level configuration options
 
 == Changelog ==
+
+= 1.6.0 =
+– New: redesigned try-on window. The first step now shows "Your photo + this item" with the product image (it follows the selected variation) instead of a list of photo tips.
+– New: loading screen with your photo and the product side by side, step-by-step status and a progress bar. The result only appears once it has fully loaded.
+– New: cleaner photo-check messages (good / could be better / not valid) with icons, shown right above the "Generate preview" button.
+– New: short privacy notice with a link to the try-on privacy terms before generating, and a more discreet AI disclaimer under the result.
+– New: optional "Powered by Preview AI" link in the try-on window (Widget settings, off by default).
+– Improved: theme compatibility. All the widget's state classes are now prefixed (pai-), so theme styles for generic classes such as .is-active, .is-visible or .is-error no longer affect the try-on window.
+– Improved: declared compatibility with WooCommerce High-Performance Order Storage (HPOS) and Cart & Checkout blocks, so WooCommerce no longer lists the plugin as incompatible.
+– Updated the translation template and the Spanish translation.
+– Removed unused images, styles and texts.
 
 = 1.5.4 =
 – Fixed: try-on modal layout on themes without a global box-sizing reset (e.g. Hostinger AI Theme). The "Add your photo" button overflowed the modal and caused a horizontal scrollbar. The widget's styles are now independent of the theme's box-sizing.
@@ -219,6 +230,9 @@ Preview AI currently supports:
 – Basic analytics and email capture
 
 == Upgrade Notice ==
+
+= 1.6.0 =
+Redesigned try-on window (new first step, loading screen and photo-check messages), better theme compatibility and declared WooCommerce HPOS support. Clear your site caches after updating.
 
 = 1.5.4 =
 Fixes the try-on modal layout (overflowing button and horizontal scrollbar) on themes without a global box-sizing reset.

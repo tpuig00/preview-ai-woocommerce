@@ -42,22 +42,29 @@
 			 * @param {Array} warnings Array of warnings.
 			 */
 			renderCheckStatus: function( $checkStatus, status, message, warnings ) {
-				$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty();
+				$checkStatus.removeClass( 'pai-is-ok pai-is-warning pai-is-error pai-is-checking' ).empty();
 
 				if ( ! message && ( ! warnings || ! warnings.length ) ) {
 					return;
 				}
 
-				if ( status === 'ok' ) {
-					$checkStatus.addClass( 'is-ok' );
-				} else if ( status === 'warning' ) {
-					$checkStatus.addClass( 'is-warning' );
-				} else if ( status === 'error' ) {
-					$checkStatus.addClass( 'is-error' );
-				}
+				var icons = {
+					ok: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+					warning: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+					error: '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>'
+				};
+				var stateClass = icons[ status ] ? 'pai-is-' + status : 'pai-is-checking';
+				$checkStatus.addClass( stateClass );
 
 				if ( message ) {
-					$( '<div />' ).text( message ).appendTo( $checkStatus );
+					var $head = $( '<div class="pai-check__head" />' );
+					if ( icons[ status ] ) {
+						$head.append( '<svg class="pai-check__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icons[ status ] + '</svg>' );
+					} else {
+						$head.append( '<span class="pai-check__spinner" aria-hidden="true"></span>' );
+					}
+					$( '<span class="pai-check__msg" />' ).text( message ).appendTo( $head );
+					$head.appendTo( $checkStatus );
 				}
 
 				if ( warnings && warnings.length ) {
@@ -197,7 +204,7 @@
 
 				var errorMsg = message || ( previewAiData.i18n && previewAiData.i18n.error ) || 'Something went wrong. Please try again later.';
 
-				$els.$stage.addClass( 'is-error' );
+				$els.$stage.addClass( 'pai-is-error' );
 				$els.$stage.append(
 					'<div class="preview-ai-error-overlay">' +
 					'<span class="preview-ai-error-icon">😔</span>' +
@@ -207,7 +214,7 @@
 
 				setTimeout( function() {
 					$els.$stage.find( '.preview-ai-error-overlay' ).remove();
-					$els.$stage.removeClass( 'is-error' );
+					$els.$stage.removeClass( 'pai-is-error' );
 				}, 3000 );
 			},
 
@@ -238,7 +245,7 @@
 				$els.$stage.addClass( 'pai-is-loading' );
 				$els.$generate.addClass( 'pai-is-hidden' );
 				$els.$changeBtn.addClass( 'pai-is-hidden' );
-				$els.$checkStatus.removeClass( 'is-ok is-warning is-error' ).empty().hide();
+				$els.$checkStatus.removeClass( 'pai-is-ok pai-is-warning pai-is-error' ).empty().hide();
 				modal.startLoadingSteps();
 
 				var self = this;
@@ -264,17 +271,22 @@
 						contentType: false,
 						processData: false,
 						success: function( res ) {
-							$els.$stage.removeClass( 'pai-is-loading' );
-							modal.stopLoadingSteps();
-
 							if ( res && res.success && res.data && res.data.generated_image_url ) {
 								var img = new Image();
 								img.onload = function() {
 									state.generatedImageUrl = res.data.generated_image_url;
 									$els.$imgAfter.attr( 'src', state.generatedImageUrl );
-									$els.$stage.addClass( 'pai-is-result' );
-									$els.$resultActions.addClass( 'pai-is-visible' );
-									$els.$disclaimer.addClass( 'pai-is-visible' );
+
+									modal.completeLoading( function() {
+										// Modal was closed or reset meanwhile.
+										if ( ! $els.$stage.hasClass( 'pai-is-loading' ) ) {
+											return;
+										}
+										$els.$stage.removeClass( 'pai-is-loading' ).addClass( 'pai-is-result' );
+										modal.stopLoadingSteps();
+										$els.$resultActions.addClass( 'pai-is-visible' );
+										$els.$disclaimer.addClass( 'pai-is-visible' );
+									} );
 
 									// Increment weekly usage counter.
 									PreviewAI.Storage.incrementWeeklyUsage();

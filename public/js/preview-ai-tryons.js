@@ -214,14 +214,14 @@
 				var tryOns = PreviewAI.Storage.getTryOns();
 				if ( tryOns.length > 0 ) {
 					$els.$tryonsBadge.text( tryOns.length ).addClass( 'pai-is-visible' );
-					$els.$viewTryonsBtn.addClass( 'has-tryons' );
+					$els.$viewTryonsBtn.addClass( 'pai-has-tryons' );
 					$els.$instructionsLooksBadge.text( tryOns.length ).addClass( 'pai-is-visible' );
-					$els.$instructionsLooksBtn.addClass( 'has-looks' );
+					$els.$instructionsLooksBtn.addClass( 'pai-has-looks' );
 				} else {
 					$els.$tryonsBadge.text( '' ).removeClass( 'pai-is-visible' );
-					$els.$viewTryonsBtn.removeClass( 'has-tryons' );
+					$els.$viewTryonsBtn.removeClass( 'pai-has-tryons' );
 					$els.$instructionsLooksBadge.text( '' ).removeClass( 'pai-is-visible' );
-					$els.$instructionsLooksBtn.removeClass( 'has-looks' );
+					$els.$instructionsLooksBtn.removeClass( 'pai-has-looks' );
 				}
 			},
 

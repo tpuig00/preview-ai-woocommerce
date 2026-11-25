@@ -246,17 +246,6 @@ class PREVIEW_AI_Public {
 		// Button full width.
 		$button_full_width = ! empty( $widget_settings['button_full_width'] ) ? (int) $widget_settings['button_full_width'] : 0;
 
-		// Get clothing subtype and tips for this product.
-		$clothing_subtype  = get_post_meta( $product_id, '_preview_ai_recommended_subtype', true );
-		$clothing_subtypes = PREVIEW_AI_Admin::get_clothing_subtypes();
-
-		// Default to 'mixed' if no subtype set.
-		if ( empty( $clothing_subtype ) || ! isset( $clothing_subtypes[ $clothing_subtype ] ) ) {
-			$clothing_subtype = 'mixed';
-		}
-
-		$tips = $clothing_subtypes[ $clothing_subtype ]['tips'];
-
 		// Prepare variables for the partial.
 		$preview_ai_product_id        = $product_id;
 		$preview_ai_button_text       = $button_text;
@@ -266,13 +255,33 @@ class PREVIEW_AI_Public {
 		$preview_ai_button_height     = $button_height;
 		$preview_ai_button_full_width = $button_full_width;
 		$preview_ai_show_credit       = ! empty( $widget_settings['show_credit'] ) ? 1 : 0;
-		$preview_ai_clothing_subtype  = $clothing_subtype;
-		$preview_ai_tips              = $tips;
+		$preview_ai_product_image     = self::get_intro_product_image( $product_id, $product );
 		$preview_ai_config            = $script_data;
 
 		ob_start();
 		include plugin_dir_path( __FILE__ ) . 'partials/preview-ai-public-display.php';
 		return ob_get_clean();
+	}
+
+	/**
+	 * Product image shown in the modal intro ("Your photo + this item").
+	 *
+	 * Uses the gallery size so the browser usually has it cached already.
+	 *
+	 * @since 1.6.0
+	 * @param int             $product_id Product ID.
+	 * @param WC_Product|null $product    Optional product object.
+	 * @return string Image URL (WooCommerce placeholder if the product has no image).
+	 */
+	public static function get_intro_product_image( $product_id, $product = null ) {
+		if ( ! $product && $product_id ) {
+			$product = wc_get_product( $product_id );
+		}
+
+		$image_id = $product ? $product->get_image_id() : 0;
+		$src      = $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_single' ) : '';
+
+		return $src ? $src : wc_placeholder_img_src( 'woocommerce_single' );
 	}
 
 	/**

@@ -47,6 +47,18 @@
 			checkToken:        0
 		};
 
+		// Keep the intro product image in sync with the selected variation.
+		var $introProduct = $( '#preview-ai-intro-product' );
+		var introDefaultSrc = $introProduct.attr( 'src' );
+		$( document.body )
+			.on( 'found_variation', 'form.variations_form', function( e, variation ) {
+				var src = variation && variation.image && variation.image.src;
+				$introProduct.attr( 'src', src || introDefaultSrc );
+			} )
+			.on( 'reset_data', 'form.variations_form', function() {
+				$introProduct.attr( 'src', introDefaultSrc );
+			} );
+
 		// --- Event Handlers ---
 
 		// Open modal

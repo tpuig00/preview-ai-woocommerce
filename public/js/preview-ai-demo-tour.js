@@ -126,7 +126,7 @@
 		var dotsHtml = '';
 		for (var i = 0; i < steps.length; i++) {
 			var dotClass = 'preview-ai-demo-step-dot';
-			if (i < stepIndex) dotClass += ' is-completed';
+			if (i < stepIndex) dotClass += ' pai-is-completed';
 			if (i === stepIndex) dotClass += ' pai-is-active';
 			dotsHtml += '<span class="' + dotClass + '"></span>';
 		}
